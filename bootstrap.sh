@@ -7,7 +7,7 @@ set -e
 LIBCXX_SRC=http://releases.llvm.org/6.0.0/libcxx-6.0.0.src.tar.xz
 LIBCXXABI_SRC=http://releases.llvm.org/6.0.0/libcxxabi-6.0.0.src.tar.xz
 
-LLVM_SRCDIR=$(pwd)/llvm_src
+LLVM_SRCDIR=$(pwd)
 OSX_BUILDDIR=$(pwd)/build_osx
 IOS_BUILDDIR=$(pwd)/build_ios
 IOS_SYSTEM=$(pwd)/../ios_system/
@@ -62,8 +62,8 @@ popd
 # get libcxx and libcxxabi out of the way:
 rm -rf dontBuild
 mkdir dontBuild
-mv llvm_src/projects/libcxx dontBuild
-mv llvm_src/projects/libcxxabi dontBuild
+mv $LLVM_SRCDIR/projects/libcxx dontBuild
+mv $LLVM_SRCDIR/projects/libcxxabi dontBuild
 # TODO: some combination of build variables might allow us to build these too. 
 # Right now, they fail. Maybe CFLAGS with: -D__need_size_t -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS 
 # If we can compile 
@@ -91,7 +91,8 @@ cmake -DBUILD_SHARED_LIBS=ON -DLLVM_TARGET_ARCH=AArch64 \
 -DCMAKE_INCLUDE_PATH=${OSX_BUILDDIR}/include/ \
 -DCMAKE_C_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -I${OSX_BUILDDIR}/include/ -I/Users/holzschu/src/Xcode_iPad/ios_system/ -miphoneos-version-min=11" \
 -DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11" \
--DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system"\
--DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system"\
-$LLVM_SRCDIR
+-DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system" \
+-DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system" \
+..
+cmake --build . 
 popd
