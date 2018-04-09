@@ -46,7 +46,7 @@ using namespace cl;
 
 #ifdef __APPLE__
 #include <TargetConditionals.h>
-#if defined (TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR)
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 #include "ios_error.h"
 #undef exit
 #define exit(a) { llvm_shutdown(); ios_exit(a); }

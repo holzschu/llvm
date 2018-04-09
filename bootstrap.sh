@@ -54,7 +54,8 @@ if [ ! -d $OSX_BUILDDIR ]; then
   mkdir $OSX_BUILDDIR
 fi
 pushd $OSX_BUILDDIR
-cmake -DBUILD_SHARED_LIBS=ON ..
+cmake -DBUILD_SHARED_LIBS=ON \
+..
 cmake --build .
 popd
 
