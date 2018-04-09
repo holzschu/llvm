@@ -63,6 +63,18 @@
 #endif
 #endif
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if defined (TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#undef exit
+#define exit(a) { llvm_shutdown(); ios_exit(a); }
+extern "C" {
+void my_exit(int a) { llvm_shutdown(); ios_exit(a); }
+}
+#endif
+#endif
+
 using namespace llvm;
 
 #define DEBUG_TYPE "lli"
@@ -319,7 +331,9 @@ int main(int argc, char **argv, char * const *envp) {
   sys::PrintStackTraceOnErrorSignal(argv[0]);
   PrettyStackTraceProgram X(argc, argv);
 
+#if !defined (TARGET_OS_IPHONE) && !defined(TARGET_IPHONE_SIMULATOR)
   atexit(llvm_shutdown); // Call llvm_shutdown() on exit.
+#endif
 
   if (argc > 1)
     ExitOnErr.setBanner(std::string(argv[0]) + ": ");
@@ -555,7 +569,11 @@ int main(int argc, char **argv, char * const *envp) {
   if (!RemoteMCJIT) {
     // If the program doesn't explicitly call exit, we will need the Exit
     // function later on to make an explicit call, so get the function now.
+#if !defined (TARGET_OS_IPHONE) && !defined(TARGET_IPHONE_SIMULATOR)
     Constant *Exit = Mod->getOrInsertFunction("exit", Type::getVoidTy(Context),
+#else 
+    Constant *Exit = Mod->getOrInsertFunction("my_exit", Type::getVoidTy(Context),
+#endif
                                                       Type::getInt32Ty(Context));
 
     // Run static constructors.
@@ -652,6 +670,7 @@ int main(int argc, char **argv, char * const *envp) {
 }
 
 std::unique_ptr<FDRawChannel> launchRemote() {
+	// TODO. The usual.
 #ifndef LLVM_ON_UNIX
   llvm_unreachable("launchRemote not supported on non-Unix platforms");
 #else
