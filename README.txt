@@ -52,11 +52,13 @@ I welcome all help on this project, including on this README file.
 LLVM iOS version TODO list:
 ===========================
 
-- make it easier to add "binaries" to existing projects, with associated dylibs
+- make it easier to add llvm binaries to existing iOS projects, with associated dylibs
 - replace all calls to exit() with calls to ios_exit()
 - replace stdout, stderr, stdin with ios_system's thread_stdout, thread_stderr...
 - replace progname() with argv[0] (progname is "OpenTerm", argv[0] is "clang")
 - work on calls to fork/exec, posix_spawn, etc.
+- create dynamic libraries instead of executables
+- create frameworks with the dynamic libraries
 
 LLVM iOS version wish list:
 ===========================
