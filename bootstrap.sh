@@ -68,7 +68,7 @@ mv llvm_src/projects/libcxxabi dontBuild
 # Right now, they fail. Maybe CFLAGS with: -D__need_size_t -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS 
 # If we can compile 
 # Now, compile for iOS using the previous build:
-# About 24h, 13 GB of disk space
+# About 24h, 5 GB of disk space
 # Flags you could use: LLVM_LINK_LLVM_DYLIB and BUILD_SHARED_LIBS, to make everything use dynamic libraries
 # (I did not test these)
 
