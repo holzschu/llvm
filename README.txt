@@ -39,7 +39,7 @@ git submodule update --init --recursive
 - compile LLVM and clang for iOS (that's the long step)
 
 "bootstrap.sh" in this directory takes care of all these steps. Remember, 
-you have time for a long walk in the woods while it compiles. "compile_ios.sh"
+you have time for a long walk in the woods while it compiles. "build_ios.sh"
 does only the "compile LLVM and clang for iOS" part. This is the part I expect
 to be doing multiple times.
 
@@ -69,6 +69,8 @@ X run lli on a llvm intermediate representation, on an iOS device.
 - run lli on binary intermediate representation
 - use lli to run a "serious" application (multiple source files, command line
   arguments)
+
+- compile libcxx and libcxxabi for iOS as well.
 
 
 
