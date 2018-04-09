@@ -44,9 +44,7 @@ if [ ! -d libcxxabi ]; then
   curl $LIBCXXABI_SRC | tar xz -C libcxxabi --strip-components 1
 fi
 popd
-
 # End downloading source
-popd
 
 # compile for OSX (about 3h, 8GB of disk space)
 if [ $CLEAN ]; then
