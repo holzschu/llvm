@@ -39,6 +39,13 @@
 using Instr = llvm::cfi_verify::FileAnalysis::Instr;
 using LLVMSymbolizer = llvm::symbolize::LLVMSymbolizer;
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#endif
+#endif
+
 namespace llvm {
 namespace cfi_verify {
 

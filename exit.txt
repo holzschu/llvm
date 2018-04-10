@@ -1,3 +1,8 @@
+Legend: nothing = not done. N = appeared in the grep search, but not really exit(). X = done
+# That was only tools (*.h, *.c, *.cpp)
+# TODO: same on lib, projects
+# TODO: other files with exit() ?
+
 [ache:~/src/Xcode_iPad/llvm] holzschu% find tools -name \*.h -exec grep "exit(" {} \; -print
 void exit(int);
 tools/clang/test/Analysis/Inputs/system-header-simulator-for-simple-stream.h
@@ -105,240 +110,79 @@ tools/llvm-c-test/object.c
 tools/llvm-c-test/module.c
 
 
-[ache:~/src/Xcode_iPad/llvm] holzschu% find tools -name \*.cpp -exec grep "exit(" {} \; -print
-  exit(1);
-    exit(1);
-  exit(1);
 tools/llvm-cxxdump/llvm-cxxdump.cpp
-  exit(1);
 tools/llvm-cvtres/llvm-cvtres.cpp
-      exit(1);
-  exit(1);
-tools/llvm-config/llvm-config.cpp
-        exit(1);
-tools/clang/tools/clang-refactor/ClangRefactor.cpp
-          exit(1); // error has occurred.
-tools/clang/tools/clang-refactor/TestSupport.cpp
-  exit(GenCrashDiag ? 70 : 1);
-tools/clang/tools/driver/cc1_main.cpp
-  exit(1);
-tools/clang/tools/driver/cc1as_main.cpp
-      exit(-1);
-    exit(-1);
-tools/clang/tools/clang-import-test/clang-import-test.cpp
-void exit(int);
-      exit(1);
-tools/clang/test/Analysis/new-ctor-symbolic.cpp
-extern "C" void __attribute__((noreturn)) PR9645_exit(int i);
-  PR9645_exit(i); // no-warning
-tools/clang/test/Analysis/misc-ps-region-store.cpp
-void exit(int);
-tools/clang/test/Analysis/new-ctor-recursive.cpp
-void exit(int);
-    exit(1);
-tools/clang/test/Analysis/new-ctor-inlined.cpp
-extern "C" int exit(int);
-        exit(1);
-            exit(1);
-tools/clang/test/SemaCXX/blocks-1.cpp
-  void exit(int);
-tools/clang/test/SemaCXX/goto.cpp
-// CHECK-NEXT:  call i32 @atexit(void ()* @"??__Fs@?1??g@@YAAAUS@@XZ@YAXXZ")
-tools/clang/test/CodeGenCXX/microsoft-abi-thread-safe-statics.cpp
-// CHECK-NEXT: call i32 @atexit(void ()* @__dtor_a)
-// CHECK-NEXT: call i32 @atexit(void ()* @__dtor_b)
-// CHECK-NEXT: call i32 @atexit(void ()* @__dtor__ZZ4funcvE2a1)
-// CHECK-NEXT: call i32 @atexit(void ()* @__dtor__ZZ4funcvE2a2)
-tools/clang/test/CodeGenCXX/global-dtor-no-atexit.cpp
-// CHECK-NEXT: call i32 @__cxa_atexit(void (i8*)* bitcast ([[A]]* ([[A]]*)* @_ZN5test01AD1Ev to void (i8*)*), i8* bitcast ([[A]]* @_ZN5test06globalE to i8*), i8* @__dso_handle) [[NOUNWIND:#[0-9]+]]
-// CHECK: declare i32 @__cxa_atexit(void (i8*)*, i8*, i8*) [[NOUNWIND]]
-tools/clang/test/CodeGenCXX/runtimecc.cpp
-// CHECK: call i32 @__cxa_atexit(
-tools/clang/test/CodeGenCXX/cxx11-initializer-aggregate.cpp
-// CHECK: call i32 @__cxa_atexit(void (i8*)* bitcast (void (%struct.A*)* @_ZN1AD1Ev to void (i8*)*), i8* getelementptr inbounds (%struct.A, %struct.A* @a, i32 0, i32 0), i8* @__dso_handle)
-// CHECK: call i32 @__cxa_atexit(void (i8*)* bitcast (void (%struct.B*)* @_ZN1BD1Ev to void (i8*)*), i8* getelementptr inbounds (%struct.B, %struct.B* @b, i32 0, i32 0), i8* @__dso_handle)
-// CHECK: call i32 @__cxa_atexit(void (i8*)* bitcast (void (%struct.D*)* @_ZN1DD1Ev to void (i8*)*), i8* getelementptr inbounds (%struct.D, %struct.D* @d, i32 0, i32 0), i8* @__dso_handle)
-// CHECK: call i32 @__cxa_atexit({{.*}} @_ZN5test21AD1Ev {{.*}} @_ZN5test21aE
-  // CHECK: call i32 @__cxa_atexit({{.*}} @_ZN5test71BD1Ev{{.*}} @_ZN5test7L2b1E
-  // CHECK: call i32 @__cxa_atexit({{.*}} @_ZN5test71BD1Ev{{.*}} @_ZGRN5test72b2E
-tools/clang/test/CodeGenCXX/global-init.cpp
-// CHECK-MS-DAG: declare dso_local i32 @atexit(void ()*)
-// CHECK-DYNAMIC-IA-DAG: declare dllimport i32 @__cxa_thread_atexit(void (i8*)*, i8*, i8*)
-// CHECK-DYNAMIC-IA-DAG: declare dllimport i32 @__cxa_atexit(void (i8*)*, i8*, i8*)
-// CHECK-STATIC-IA-DAG: declare dso_local i32 @__cxa_thread_atexit(void (i8*)*, i8*, i8*)
-// CHECK-STATIC-IA-DAG: declare dso_local i32 @__cxa_atexit(void (i8*)*, i8*, i8*)
-tools/clang/test/CodeGenCXX/runtime-dllstorage.cpp
-  // CHECK: call {{.*}} @__cxa_atexit({{.*}} @_ZN6DR15601AD1Ev {{.*}} @_ZGRN6DR15601rE
-tools/clang/test/CodeGenCXX/throw-expressions.cpp
-  // CHECK: call i32 @__cxa_atexit({{.*}} bitcast ({{.*}} @_ZN15BindToSubobject1AD1Ev to void (i8*)*), i8* bitcast ({{.*}} @_ZGRN15BindToSubobject1aE_ to i8*), i8* @__dso_handle)
-  // CHECK: call i32 @__cxa_atexit({{.*}} bitcast ({{.*}} @_ZN15BindToSubobject1AD1Ev to void (i8*)*), i8* bitcast ({{.*}} @_ZGRN15BindToSubobject1bE_ to i8*), i8* @__dso_handle)
-  // CHECK: call i32 @__cxa_atexit({{.*}} bitcast ({{.*}} @_ZN15BindToSubobject1AD1Ev to void (i8*)*), i8* bitcast ({{.*}} @_ZGRN15BindToSubobject1cE_ to i8*), i8* @__dso_handle)
-  // CHECK: call i32 @__cxa_atexit({{.*}} bitcast ({{.*}} @_ZN15BindToSubobject1BD1Ev to void (i8*)*), i8* bitcast ({{.*}} @_ZGRN15BindToSubobject1dE_ to i8*), i8* @__dso_handle)
-  // CHECK: call i32 @__cxa_atexit({{.*}} @_ZN17MultipleExtension1AD1Ev {{.*}} @[[TEMPA]]
-  // CHECK: call i32 @__cxa_atexit({{.*}} @_ZN17MultipleExtension1DD1Ev {{.*}} @[[TEMPD]]
-  // CHECK: call i32 @__cxa_atexit({{.*}} @_ZN17MultipleExtension1ED1Ev {{.*}} @[[TEMPE]]
-  // CHECK: call i32 @__cxa_atexit({{.*}} @_ZN17MultipleExtension1AD1Ev {{.*}} @[[TEMPA]]
-  // CHECK: call i32 @__cxa_atexit({{.*}} @_ZN17MultipleExtension1DD1Ev {{.*}} @[[TEMPD]]
-  // CHECK: call i32 @__cxa_atexit({{.*}} @_ZN17MultipleExtension1ED1Ev {{.*}} @[[E]]
-tools/clang/test/CodeGenCXX/temporaries.cpp
-// CHECK-NO-KEXT: call i32 @__cxa_atexit({{.*}} @_ZN3fooD1Ev
-// CHECK-KEXT-NOT: call i32 @__cxa_atexit({{.*}} @_ZN3fooD1Ev
-tools/clang/test/CodeGenCXX/cxx-apple-kext.cpp
-  // CHECK: call i32 @__cxa_atexit(void (i8*)* bitcast (void (%struct.A*)* @_ZN1AD1Ev to void (i8*)*), i8* getelementptr inbounds (%struct.A, %struct.A* @_ZZ1fvE1a, i32 0, i32 0), i8* @__dso_handle)
-tools/clang/test/CodeGenCXX/static-init.cpp
-// CHECK: __cxa_atexit({{.*}} @_ZN1BD1Ev {{.*}} @b
-tools/clang/test/CodeGenCXX/const-init-cxx1y.cpp
-extern "C" void exit(int);
-extern void exit(int);
-		  exit(1);
-		  exit(2);
-		  exit(3);
-		  exit(4);
-tools/clang/test/CodeGenCXX/cp-blocks-linetables.cpp
-  // CHECK: call {{.*}} @__cxa_atexit({{.*}} @_ZN8Constant1DD1Ev {{.*}} @_ZN8Constant2d1E
-  // CHECK: call {{.*}} @__cxa_atexit({{.*}} @_ZN8Constant1DD1Ev {{.*}} @_ZN8Constant2d2E
-  // CHECK: call {{.*}} @__cxa_atexit({{.*}} @_ZN8Constant1DD1Ev {{.*}} @_ZN8Constant2d3E
-  // CHECK: call {{.*}} @__cxa_atexit({{.*}} @_ZN7Dynamic1DD1Ev {{.*}} @_ZN7Dynamic2d1E
-  // CHECK: call {{.*}} @__cxa_atexit({{.*}} @_ZN7Dynamic1DD1Ev {{.*}} @_ZN7Dynamic2d2E
-  // CHECK: call {{.*}} @__cxa_atexit({{.*}} @_ZN7Dynamic1DD1Ev {{.*}} @_ZN7Dynamic2d3E to i8*
-tools/clang/test/CodeGenCXX/cxx1z-initializer-aggregate.cpp
-//   CHECK: call i32 @__cxa_atexit({{.*}}@_ZN1XD1Ev{{.*}}@_ZGR2b1_
-tools/clang/test/CodeGenCXX/cxx1z-decomposition.cpp
-  // CHECK3: call i32 @__cxa_atexit({{.*}}@_ZN5test61AD2Ev
-  // CHECK4: call i32 @__cxa_atexit({{.*}}@_ZN5test83barD2Ev
-tools/clang/test/CodeGenCXX/ctor-dtor-alias.cpp
-// CHECK: @_tlv_atexit({{.*}}@_ZN1AD1Ev
-tools/clang/test/CodeGenCXX/tls-init-funcs.cpp
-// X86:   call i32 @__cxa_atexit(void (i8*)* bitcast (void (%class.Foo*)* @_ZN3FooD1Ev to void (i8*)*), i8* getelementptr inbounds (%class.Foo, %class.Foo* @global, i32 0, i32 0), i8* @__dso_handle)
-// ARM:   call i32 @__cxa_atexit(void (i8*)* bitcast (%class.Foo* (%class.Foo*)* @_ZN3FooD1Ev to void (i8*)*), i8* getelementptr inbounds (%class.Foo, %class.Foo* @global, i32 0, i32 0), i8* @__dso_handle)
-// WASM: call i32 @__cxa_atexit(void (i8*)* @__cxx_global_array_dtor, i8* null, i8* @__dso_handle)
-tools/clang/test/CodeGenCXX/static-destructor.cpp
-  // ITANIUM: call i32 @__cxa_atexit(
-tools/clang/test/CodeGenCXX/inheriting-constructor.cpp
-extern "C" void exit(int) throw();
-  // CHECK: tail call void @exit(i32 1)
-  exit(1);
-tools/clang/test/CodeGenCXX/nrvo.cpp
-// CHECK: call i32 @atexit(void ()* @"??__Fs@@YAXXZ")
-// CHECK: call i32 @atexit(void ()* @"??__FTheS@?1??getS@@YAAAUS@@XZ@YAXXZ")
-// CHECK: call i32 @atexit(void ()* @"??__Ffoo@?$B@H@@2VA@@A@YAXXZ")
-tools/clang/test/CodeGenCXX/microsoft-abi-static-initializers.cpp
-// Make sure atexit(3) is used for global dtors.
-// CHECK-NEXT: call i32 @atexit(void ()* @__dtor_baz)
-tools/clang/test/CodeGenCXX/arm.cpp
-// LINUX: declare i32 @__cxa_thread_atexit(void (i8*)*, i8*, i8*)
-// DARWIN: declare i32 @_tlv_atexit(void (i8*)*, i8*, i8*)
-  // LINUX: call i32 @__cxa_thread_atexit({{.*}}@_ZN1SD1Ev {{.*}} @_ZZ8tls_dtorvE1s{{.*}} @__dso_handle
-  // DARWIN: call i32 @_tlv_atexit({{.*}}@_ZN1SD1Ev {{.*}} @_ZZ8tls_dtorvE1s{{.*}} @__dso_handle
-  // LINUX: call i32 @__cxa_thread_atexit({{.*}}@_ZN1TD1Ev {{.*}}@_ZZ8tls_dtorvE1t{{.*}} @__dso_handle
-  // DARWIN: call i32 @_tlv_atexit({{.*}}@_ZN1TD1Ev {{.*}}@_ZZ8tls_dtorvE1t{{.*}} @__dso_handle
-  // LINUX: call i32 @__cxa_thread_atexit({{.*}}@_ZN1SD1Ev {{.*}} @_ZGRZ8tls_dtorvE1u_{{.*}} @__dso_handle
-  // DARWIN: call i32 @_tlv_atexit({{.*}}@_ZN1SD1Ev {{.*}} @_ZGRZ8tls_dtorvE1u_{{.*}} @__dso_handle
-tools/clang/test/CodeGenCXX/cxx11-thread-local.cpp
-//CHECK:     call i32 @__cxa_atexit(void (i8*)* @[[UNREGFN]], i8* bitcast ([[DSCTY]]* [[DESC]] to i8*),
-tools/clang/test/OpenMP/target_teams_distribute_codegen_registration.cpp
-//CHECK:     call i32 @__cxa_atexit(void (i8*)* @[[UNREGFN]], i8* bitcast ([[DSCTY]]* [[DESC]] to i8*),
-tools/clang/test/OpenMP/target_parallel_codegen_registration.cpp
-//CHECK:     call i32 @__cxa_atexit(void (i8*)* @[[UNREGFN]], i8* bitcast ([[DSCTY]]* [[DESC]] to i8*),
-tools/clang/test/OpenMP/target_teams_codegen_registration.cpp
-//CHECK:     call i32 @__cxa_atexit(void (i8*)* @[[UNREGFN]], i8* bitcast ([[DSCTY]]* [[DESC]] to i8*),
-tools/clang/test/OpenMP/target_teams_distribute_simd_codegen_registration.cpp
-//CHECK:     call i32 @__cxa_atexit(void (i8*)* @[[UNREGFN]], i8* bitcast ([[DSCTY]]* [[DESC]] to i8*),
-tools/clang/test/OpenMP/target_teams_distribute_parallel_for_simd_codegen_registration.cpp
-//CHECK:     call i32 @__cxa_atexit(void (i8*)* @[[UNREGFN]], i8* bitcast ([[DSCTY]]* [[DESC]] to i8*),
-tools/clang/test/OpenMP/target_parallel_for_simd_codegen_registration.cpp
-// CHECK-TLS-NEXT: call i32 @__cxa_thread_atexit(void (i8*)* bitcast (void ([[SMAIN]]*)* [[SM_DTOR1:@.*]] to void (i8*)*), i8* bitcast ([[SMAIN]]* [[SM]] to i8*), i8* @__dso_handle)
-// CHECK-TLS: call i32 @__cxa_thread_atexit(void (i8*)* bitcast (void ([[S1]]*)* [[GS1_DTOR1:.*]] to void (i8*)*), i8* bitcast ([[S1]]* [[GS1]] to i8*)
-// CHECK-TLS: call i32 @__cxa_atexit(void (i8*)* bitcast (void ([[S2]]*)* [[GS2_DTOR1:.*]] to void (i8*)*), i8* bitcast ([[S2]]* [[GS2]] to i8*)
-// CHECK-TLS: call i32 @__cxa_thread_atexit(void (i8*)* [[ARR_X_CXX_DTOR:@[^,]+]]
-// CHECK-TLS: call i32 @__cxa_thread_atexit(void (i8*)* bitcast (void ([[S4]]*)* [[ST_S4_ST_DTOR1:.*]] to void (i8*)*), i8* bitcast ([[S4]]* [[ST_S4_ST]] to i8*)
-tools/clang/test/OpenMP/threadprivate_codegen.cpp
-//CHECK:     call i32 @__cxa_atexit(void (i8*)* @[[UNREGFN]], i8* bitcast ([[DSCTY]]* [[DESC]] to i8*),
-tools/clang/test/OpenMP/target_codegen_registration.cpp
-//CHECK:     call i32 @__cxa_atexit(void (i8*)* @[[UNREGFN]], i8* bitcast ([[DSCTY]]* [[DESC]] to i8*),
-tools/clang/test/OpenMP/target_simd_codegen_registration.cpp
-//CHECK:     call i32 @__cxa_atexit(void (i8*)* @[[UNREGFN]], i8* bitcast ([[DSCTY]]* [[DESC]] to i8*),
-tools/clang/test/OpenMP/target_parallel_for_codegen_registration.cpp
-               "  exit(42);\n"
-tools/clang/unittests/Format/FormatTest.cpp
-               "  exit(42);\n"
-tools/clang/unittests/Format/FormatTestObjC.cpp
-/// @try stmt @finally { objc_sync_exit(expr); }
-  buf += "  if (!_rethrow) objc_exception_try_exit(&_stack);\n";
-  syncBuf += " objc_sync_exit(";
-    buf = "{ objc_exception_try_exit(&_stack); return";
-    buf = "{ objc_exception_try_exit(&_stack);";
-    buf += " objc_exception_try_exit(&_stack);\n";
-    InsertText(startLoc, " if (!_rethrow) objc_exception_try_exit(&_stack);\n");
-    buf += " if (!_rethrow) objc_exception_try_exit(&_stack);\n";
-  Preamble += "__OBJC_RW_DLLIMPORT void objc_exception_try_exit(void *);\n";
-  Preamble += "__OBJC_RW_DLLIMPORT int objc_sync_exit(struct objc_object *);\n";
-tools/clang/lib/Frontend/Rewrite/RewriteObjC.cpp
-/// @try stmt @finally { objc_sync_exit(expr); }
-  buf += "try {\n\tstruct _SYNC_EXIT { _SYNC_EXIT(id arg) : sync_exit(arg) {}";
-  buf += "\n\t~_SYNC_EXIT() {objc_sync_exit(sync_exit);}";
-  buf += "\n\t} _sync_exit(_sync_obj);\n";
-  Preamble += "__OBJC_RW_DLLIMPORT int objc_sync_exit( struct objc_object *);\n";
-tools/clang/lib/Frontend/Rewrite/RewriteModernObjC.cpp
-    reportBug("Return", C, "call _exit() instead");
-tools/clang/lib/StaticAnalyzer/Checkers/VforkChecker.cpp
-    //     with __noreturn functions such as assert() or exit(). We choose not
-tools/clang/lib/StaticAnalyzer/Checkers/MallocChecker.cpp
-  // Sinks are higher importance bugs as well as calls to assert() or exit(0).
-tools/clang/lib/StaticAnalyzer/Checkers/SimpleStreamChecker.cpp
-  // extern "C" int atexit(void (*f)(void));
-tools/clang/lib/CodeGen/CGDeclCXX.cpp
-  auto UnbindOnExit = llvm::make_scope_exit([&] { Binder.unbind(CGF); });
-tools/clang/lib/CodeGen/CGCoroutine.cpp
-    // "exit();".  Since expression emission doesn't otherwise create
-tools/clang/lib/CodeGen/CGStmt.cpp
-void CodeGenFunction::FinallyInfo::exit(CodeGenFunction &CGF) {
-tools/clang/lib/CodeGen/CGException.cpp
-    FinallyInfo.exit(CGF);
-tools/clang/lib/CodeGen/CGObjCRuntime.cpp
-  // int objc_sync_exit(id);
-tools/clang/lib/CodeGen/CGObjCGNU.cpp
-  //         ... queue object destructor with __cxa_atexit() ...;
-  // extern "C" int __cxa_atexit(void (*f)(void *), void *p, void *d);
-tools/clang/lib/CodeGen/ItaniumCXXABI.cpp
-        // Emit objc_sync_exit(expr); as finally's sole statement for
-  objc_exception_try_exit(&d);
-    @try { stmt; } @finally { objc_sync_exit(synch_value); }
-tools/clang/lib/CodeGen/CGObjCMac.cpp
-  exit(1);
-    exit(1);
-tools/llvm-lto2/llvm-lto2.cpp
-      exit(EXIT_FAILURE);
-      exit(EXIT_FAILURE);
-tools/llvm-cfi-verify/llvm-cfi-verify.cpp
-    exit(EXIT_FAILURE);
-tools/llvm-cfi-verify/lib/FileAnalysis.cpp
-      ::exit(1);
-      ::exit(0);
-tools/llvm-cov/CodeCoverage.cpp
-  exit(1);
-  exit(1);
-  exit(1);
-  exit(1);
-  exit(1);
-  exit(1);
-tools/llvm-objdump/llvm-objdump.cpp
-  exit(1);
-tools/llvm-rc/llvm-rc.cpp
-  exit(1);
-tools/llvm-rtdyld/llvm-rtdyld.cpp
-        exit(1);
-  exit(1);
-tools/llvm-lto/llvm-lto.cpp
-    exit(-1);
-    exit(-1);
-      exit(-1);
-      exit(-1);
-tools/llvm-c-test/echo.cpp
-    exit(1);
-tools/llvm-isel-fuzzer/llvm-isel-fuzzer.cpp
-    exit(1);
-tools/llvm-as/llvm-as.cpp
+X tools/llvm-config/llvm-config.cpp: no calls to llvm_shutdown
+X tools/clang/tools/clang-refactor/ClangRefactor.cpp
+X tools/clang/tools/clang-refactor/TestSupport.cpp
+X tools/clang/tools/driver/cc1_main.cpp
+X tools/clang/tools/driver/cc1as_main.cpp
+X tools/clang/tools/clang-import-test/clang-import-test.cpp
+    tools/clang/test: never calls exit()
+N tools/clang/test/Analysis/new-ctor-symbolic.cpp
+N tools/clang/test/Analysis/misc-ps-region-store.cpp
+N tools/clang/test/Analysis/new-ctor-recursive.cpp
+N tools/clang/test/Analysis/new-ctor-inlined.cpp
+N tools/clang/test/SemaCXX/blocks-1.cpp
+N tools/clang/test/SemaCXX/goto.cpp
+N tools/clang/test/CodeGenCXX/microsoft-abi-thread-safe-statics.cpp
+N tools/clang/test/CodeGenCXX/global-dtor-no-atexit.cpp
+N tools/clang/test/CodeGenCXX/runtimecc.cpp
+N tools/clang/test/CodeGenCXX/cxx11-initializer-aggregate.cpp
+N tools/clang/test/CodeGenCXX/global-init.cpp
+N tools/clang/test/CodeGenCXX/runtime-dllstorage.cpp
+N tools/clang/test/CodeGenCXX/throw-expressions.cpp
+N tools/clang/test/CodeGenCXX/temporaries.cpp
+N tools/clang/test/CodeGenCXX/cxx-apple-kext.cpp
+N tools/clang/test/CodeGenCXX/static-init.cpp
+N tools/clang/test/CodeGenCXX/const-init-cxx1y.cpp
+N tools/clang/test/CodeGenCXX/cp-blocks-linetables.cpp
+N tools/clang/test/CodeGenCXX/cxx1z-initializer-aggregate.cpp
+N tools/clang/test/CodeGenCXX/cxx1z-decomposition.cpp
+N tools/clang/test/CodeGenCXX/ctor-dtor-alias.cpp
+N tools/clang/test/CodeGenCXX/tls-init-funcs.cpp
+N tools/clang/test/CodeGenCXX/static-destructor.cpp
+N tools/clang/test/CodeGenCXX/inheriting-constructor.cpp
+N tools/clang/test/CodeGenCXX/nrvo.cpp
+N tools/clang/test/CodeGenCXX/microsoft-abi-static-initializers.cpp
+N tools/clang/test/CodeGenCXX/arm.cpp
+N tools/clang/test/CodeGenCXX/cxx11-thread-local.cpp
+N tools/clang/test/OpenMP/target_teams_distribute_codegen_registration.cpp
+N tools/clang/test/OpenMP/target_parallel_codegen_registration.cpp
+N tools/clang/test/OpenMP/target_teams_codegen_registration.cpp
+N tools/clang/test/OpenMP/target_teams_distribute_simd_codegen_registration.cpp
+N tools/clang/test/OpenMP/target_teams_distribute_parallel_for_simd_codegen_registration.cpp
+N tools/clang/test/OpenMP/target_parallel_for_simd_codegen_registration.cpp
+N tools/clang/test/OpenMP/threadprivate_codegen.cpp
+N tools/clang/test/OpenMP/target_codegen_registration.cpp
+N tools/clang/test/OpenMP/target_simd_codegen_registration.cpp
+N tools/clang/test/OpenMP/target_parallel_for_codegen_registration.cpp
+N tools/clang/unittests/Format/FormatTest.cpp
+N tools/clang/unittests/Format/FormatTestObjC.cpp
+N tools/clang/lib/Frontend/Rewrite/RewriteObjC.cpp
+N tools/clang/lib/Frontend/Rewrite/RewriteModernObjC.cpp
+N tools/clang/lib/StaticAnalyzer/Checkers/VforkChecker.cpp
+N tools/clang/lib/StaticAnalyzer/Checkers/MallocChecker.cpp
+N tools/clang/lib/StaticAnalyzer/Checkers/SimpleStreamChecker.cpp
+N tools/clang/lib/CodeGen/CGDeclCXX.cpp
+N tools/clang/lib/CodeGen/CGCoroutine.cpp
+N tools/clang/lib/CodeGen/CGStmt.cpp
+N tools/clang/lib/CodeGen/CGException.cpp
+N tools/clang/lib/CodeGen/CGObjCRuntime.cpp
+N tools/clang/lib/CodeGen/CGObjCGNU.cpp
+N tools/clang/lib/CodeGen/ItaniumCXXABI.cpp
+N tools/clang/lib/CodeGen/CGObjCMac.cpp
+X tools/llvm-lto2/llvm-lto2.cpp: no calls to llvm_shutdown
+X tools/llvm-cfi-verify/llvm-cfi-verify.cpp
+X tools/llvm-cfi-verify/lib/FileAnalysis.cpp
+X tools/llvm-cov/CodeCoverage.cpp: uses "::exit"
+X tools/llvm-objdump/llvm-objdump.cpp
+X tools/llvm-rc/llvm-rc.cpp
+X tools/llvm-rtdyld/llvm-rtdyld.cpp
+X tools/llvm-lto/llvm-lto.cpp
+X tools/llvm-c-test/echo.cpp: no calls to llvm_shutdown
+X tools/llvm-isel-fuzzer/llvm-isel-fuzzer.cpp: no calls to llvm_shutdown
+X tools/llvm-as/llvm-as.cpp
 X tools/llvm-ar/llvm-ar.cpp
 X tools/llvm-dis/llvm-dis.cpp
 X tools/gold/gold-plugin.cpp: no calls to llvm_shutdown

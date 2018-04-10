@@ -23,6 +23,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#endif
+#endif
+
 using namespace llvm;
 
 // Provide DenseMapInfo for C API opaque types.

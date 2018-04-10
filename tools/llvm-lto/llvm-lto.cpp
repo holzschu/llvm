@@ -63,6 +63,15 @@
 #include <utility>
 #include <vector>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#undef exit
+#define exit(a) { llvm_shutdown(); ios_exit(a); }
+#endif
+#endif
+
 using namespace llvm;
 
 static cl::opt<char>
