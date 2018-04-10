@@ -56,10 +56,13 @@ LLVM iOS version TODO list:
 X replace all calls to exit() with calls to ios_exit()
 - replace stdout, stderr, stdin with ios_system's thread_stdout, thread_stderr...
 - replace progname() with argv[0] (progname is "OpenTerm", argv[0] is "clang")
-     - clang calls Execute() in lib/Support/Unix/Program.inc
+     - clang calls ExecuteAndWait(), defined in lib/Support/Unix/Program.inc
      - Execute() calls posix_spawn()
+     - Execute() is static, defined in lib/Support/Program.cpp
+     - the rest of LLVM calls either ExecuteAndWait() or ExecuteNoWait()
      - program name probably obtained by "auto ClangBinary = sys::findProgramByName("clang", Dir);"
        (in tools/clang//tools/clang-offload-bundler/ClangOffloadBundler.cpp)
+     - unless it's from Program.str().c_str() in ./lib/Support/Unix/Program.inc
 - work on calls to fork/exec, posix_spawn, etc.
 - create dynamic libraries instead of executables
 - create frameworks with the dynamic libraries
