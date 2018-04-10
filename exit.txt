@@ -124,3 +124,37 @@ X tools/yaml2obj/yaml2obj.cpp
 X tools/yaml2obj/yaml2elf.cpp: no calls to llvm_shutdown
 X tools/llvm-split/llvm-split.cpp: no calls to llvm_shutdown
 X tools/llvm-mt/llvm-mt.cpp
+
+
+
+# files in lib/  Aded llvm_shutdown to all.
+# C++ files
+N lib//Analysis/ScalarEvolution.cpp
+N lib//Analysis/InlineCost.cpp
+N lib//Analysis/LoopInfo.cpp
+N lib//Analysis/LazyCallGraph.cpp
+X lib//IR/LLVMContext.cpp
+N lib//Target/PowerPC/PPCISelDAGToDAG.cpp
+N lib//Target/WebAssembly/WebAssemblyLowerGlobalDtors.cpp
+N lib//Target/X86/Disassembler/X86DisassemblerDecoder.cpp
+X lib//Target/Nios2/Nios2Subtarget.cpp
+X lib//FuzzMutate/FuzzerCLI.cpp
+N lib//CodeGen/ResetMachineFunctionPass.cpp
+N lib//CodeGen/GlobalISel/IRTranslator.cpp
+N lib//CodeGen/IfConversion.cpp
+N lib//ExecutionEngine/Interpreter/ExternalFunctions.cpp --> defines exit() as exitCalled() in IR
+lib//ExecutionEngine/Interpreter/Execution.cpp --> actual call to exit() in IR
+N lib//ExecutionEngine/RuntimeDyld/RTDyldMemoryManager.cpp
+X lib//LTO/LTOBackend.cpp
+N lib//Transforms/IPO/GlobalOpt.cpp
+N lib//Transforms/Utils/LoopUtils.cpp
+N lib//Transforms/Scalar/StructurizeCFG.cpp
+N lib//Transforms/Scalar/JumpThreading.cpp
+N lib//Support/LockFileManager.cpp
+N lib//Support/raw_ostream.cpp
+X lib//Support/ErrorHandling.cpp
+X lib//Support/CommandLine.cpp
+X lib//MC/MCContext.cpp
+X lib//TableGen/Error.cpp
+
+

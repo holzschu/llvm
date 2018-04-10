@@ -14,6 +14,13 @@
 #include "Nios2Subtarget.h"
 #include "Nios2.h"
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#endif
+#endif
+
 using namespace llvm;
 
 #define DEBUG_TYPE "nios2-subtarget"

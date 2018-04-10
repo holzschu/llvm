@@ -18,6 +18,13 @@
 #include "llvm/Support/raw_ostream.h"
 #include <cstdlib>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#endif
+#endif
+
 namespace llvm {
 
 SourceMgr SrcMgr;
@@ -71,14 +78,22 @@ void PrintFatalError(const Twine &Msg) {
   PrintError(Msg);
   // The following call runs the file cleanup handlers.
   sys::RunInterruptHandlers();
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+  llvm_shutdown(); ios_exit(a); 
+#else
   std::exit(1);
+#endif
 }
 
 void PrintFatalError(ArrayRef<SMLoc> ErrorLoc, const Twine &Msg) {
   PrintError(ErrorLoc, Msg);
   // The following call runs the file cleanup handlers.
   sys::RunInterruptHandlers();
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+  llvm_shutdown(); ios_exit(a); 
+#else
   std::exit(1);
+#endif
 }
 
 } // end namespace llvm
