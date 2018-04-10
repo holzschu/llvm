@@ -22,6 +22,13 @@
 #include "llvm/Support/raw_ostream.h"
 #include <fstream>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#endif
+#endif
+
 using namespace llvm;
 
 namespace {

@@ -38,6 +38,13 @@
 #include <utility>
 #include <vector>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#endif
+#endif
+
 // FIXME: remove this declaration when we stop maintaining Ubuntu Quantal and
 // Precise and Debian Wheezy (binutils 2.23 is required)
 #define LDPO_PIE 3
