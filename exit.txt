@@ -3,113 +3,33 @@ Legend: nothing = not done. N = appeared in the grep search, but not really exit
 # TODO: same on lib, projects
 # TODO: other files with exit() ?
 
-[ache:~/src/Xcode_iPad/llvm] holzschu% find tools -name \*.h -exec grep "exit(" {} \; -print
-void exit(int);
-tools/clang/test/Analysis/Inputs/system-header-simulator-for-simple-stream.h
-void exit(int status) __attribute__ ((__noreturn__));
-void _exit(int status) __attribute__ ((__noreturn__));
-tools/clang/test/Analysis/Inputs/system-header-simulator.h
-  const BasicBlock *exit() const { return Exit; }
-  BasicBlock *exit() { return Exit; }
-tools/clang/include/clang/Analysis/Analyses/ThreadSafetyTIL.h
-    void exit(CodeGenFunction &CGF);
-    void exit(CodeGenFunction &CGF) {
-    ~OMPCancelStackRAII() { CGF.OMPCancelStack.exit(CGF); }
-  /// Call atexit() with a function that passes the given argument to
-tools/clang/lib/CodeGen/CodeGenFunction.h
-[ache:~/src/Xcode_iPad/llvm] holzschu% 
+# Header files
+N tools/clang/test/Analysis/Inputs/system-header-simulator.h
+N tools/clang/include/clang/Analysis/Analyses/ThreadSafetyTIL.h
+N tools/clang/lib/CodeGen/CodeGenFunction.h
 
-static void flush_atexit(void) {
-  atexit(flush_atexit);
-tools/clang/tools/c-index-test/c-index-test.c
-        exit(EXIT_FAILURE);
-        exit(EXIT_FAILURE);
-        exit(EXIT_FAILURE);
-        exit(EXIT_FAILURE);
-            exit(EXIT_FAILURE);                                                \
-            exit(EXIT_FAILURE);                                                \
-        exit(EXIT_FAILURE);
-        exit(EXIT_FAILURE);
-        exit(EXIT_FAILURE);
-tools/clang/tools/scan-build-py/tests/functional/exec/main.c
-        exit(EXIT_FAILURE);                                                    \
-        exit(EXIT_FAILURE);
-        exit(EXIT_FAILURE);
-        exit(EXIT_FAILURE);
-        exit(EXIT_FAILURE);
-        exit(EXIT_FAILURE);
-        exit(EXIT_FAILURE);
-            exit(EXIT_FAILURE);
-            exit(EXIT_FAILURE);
-        exit(EXIT_FAILURE);
-        exit(EXIT_FAILURE);
-            exit(EXIT_FAILURE);
-        exit(EXIT_FAILURE);
-tools/clang/tools/scan-build-py/libear/ear.c
-static void flush_atexit(void) {
-  atexit(flush_atexit);
-tools/clang/tools/c-arcmt-test/c-arcmt-test.c
-      exit(0);
-tools/clang/test/Analysis/simple-stream-checks.c
-// reason for the sink (eg. no-return function such as "exit()") due to analysis
-extern void exit(int) __attribute__ ((__noreturn__));
-  exit(0);
-    exit(0);
-    exit(1);
-  exit(1);
-      exit(1);
-    exit(1);
-tools/clang/test/Analysis/max-nodes-suppress-on-sink.c
-    _exit(1); // no-warning
-    return 0; // expected-warning{{Return is prohibited after a successful vfork; call _exit() instead}}
-    _exit(1); // no-warning
-    return 0; // expected-warning{{Return is prohibited after a successful vfork; call _exit() instead}}
-    _exit(1);
-        exit(1);
-    exit(1);  // expected-warning{{This function call is prohibited after a successful vfork}}
-tools/clang/test/Analysis/vfork.c
-extern void exit(int) __attribute__ ((__noreturn__));
-    exit(1);
-tools/clang/test/Analysis/malloc.c
-void exit(int) __attribute__ ((__noreturn__));
-    exit(0);
-tools/clang/test/Analysis/malloc-interprocedural.c
-void exit(int);
-    exit(0); // no-warning (symbol should not die here)
-    // exit() is noreturn.
-    // We exit()ed under these constraints earlier.
-  // The exit() call invalidates globals. The symbol will die here because
-  // the exit() statement itself is already over and there's no better statement
-tools/clang/test/Analysis/symbol-reaper.c
-void exit();
-        exit(test("",foo));
-tools/clang/test/Sema/knr-variadic-def.c
-void exit(int);
-  exit(1);
-tools/clang/test/Sema/return.c
-extern void exit(int);
-exit(0);
-tools/clang/test/CodeGen/2010-07-14-ref-off-end.c
-__attribute__((noreturn)) void __cdecl _exit(int _Code);
-__inline void __cdecl _Exit(int status) { _exit(status); }
-tools/clang/test/CodeGen/inline.c
-  exit(1);
-tools/clang/test/CodeGen/builtin-attributes.c
-unsigned cfg_long_chain_multiple_exit(unsigned x) {
-tools/clang/INPUTS/cfg-long-chain2.c
-unsigned cfg_long_chain_single_exit(unsigned x) {
-tools/clang/INPUTS/cfg-long-chain1.c
-    exit(1);
-    exit(1);
-    exit(1);
-    exit(1);
-tools/llvm-c-test/object.c
-  exit(1);
-    exit(1);
-    exit(1);
-tools/llvm-c-test/module.c
+# C files
+  tools/clang/tools/c-index-test/c-index-test.c
+X tools/clang/tools/scan-build-py/tests/functional/exec/main.c
+X tools/clang/tools/scan-build-py/libear/ear.c
+X tools/clang/tools/c-arcmt-test/c-arcmt-test.c
+  tools/clang/test/Analysis/simple-stream-checks.c
+  tools/clang/test/Analysis/max-nodes-suppress-on-sink.c
+  tools/clang/test/Analysis/vfork.c
+  tools/clang/test/Analysis/malloc.c
+  tools/clang/test/Analysis/malloc-interprocedural.c
+  tools/clang/test/Analysis/symbol-reaper.c
+  tools/clang/test/Sema/knr-variadic-def.c
+  tools/clang/test/Sema/return.c
+  tools/clang/test/CodeGen/2010-07-14-ref-off-end.c
+  tools/clang/test/CodeGen/inline.c
+  tools/clang/test/CodeGen/builtin-attributes.c
+N tools/clang/INPUTS/cfg-long-chain2.c
+N tools/clang/INPUTS/cfg-long-chain1.c
+X tools/llvm-c-test/object.c
+X tools/llvm-c-test/module.c
 
-
+# C++ files
 tools/llvm-cxxdump/llvm-cxxdump.cpp
 tools/llvm-cvtres/llvm-cvtres.cpp
 X tools/llvm-config/llvm-config.cpp: no calls to llvm_shutdown
