@@ -28,6 +28,15 @@
 
 #include <system_error>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#undef exit
+#define exit(a) { llvm_shutdown(); ios_exit(a); }
+#endif
+#endif
+
 using namespace llvm;
 
 namespace {
@@ -96,7 +105,7 @@ int main(int argc, const char **argv) {
   SpecificBumpPtrAllocator<char> ArgAllocator;
   ExitOnErr(errorCodeToError(sys::Process::GetArgumentVector(
       argv_buf, makeArrayRef(argv, argc), ArgAllocator)));
-  llvm_shutdown_obj Y; // Call llvm_shutdown() on exit.
+  llvm_shutdown_obj Y; // Call llvm_shutdown() on exit (and return).
 
   CvtResOptTable T;
   unsigned MAI, MAC;

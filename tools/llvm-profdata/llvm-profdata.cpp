@@ -33,6 +33,13 @@
 #include "llvm/Support/raw_ostream.h"
 #include <algorithm>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#endif
+#endif
+
 using namespace llvm;
 
 enum ProfileFormat { PF_None = 0, PF_Text, PF_Binary, PF_GCC };
@@ -50,7 +57,12 @@ static void warn(StringRef Prefix, Twine Message, std::string Whence = "",
 static void exitWithError(Twine Message, std::string Whence = "",
                           std::string Hint = "") {
   warn("error: ", Message, Whence, Hint);
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+  llvm_shutdown(); 
+  ios_exit(1);
+#else  
   ::exit(1);
+#endif
 }
 
 static void exitWithError(Error E, StringRef Whence = "") {
