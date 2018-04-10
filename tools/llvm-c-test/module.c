@@ -17,6 +17,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#endif
+#endif
+
 static void diagnosticHandler(LLVMDiagnosticInfoRef DI, void *C) {
   char *CErr = LLVMGetDiagInfoDescription(DI);
   fprintf(stderr, "Error with new bitcode parser: %s\n", CErr);
