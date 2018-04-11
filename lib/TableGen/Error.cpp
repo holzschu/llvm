@@ -79,7 +79,7 @@ void PrintFatalError(const Twine &Msg) {
   // The following call runs the file cleanup handlers.
   sys::RunInterruptHandlers();
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-  llvm_shutdown(); ios_exit(a); 
+  ios_exit(1); 
 #else
   std::exit(1);
 #endif
@@ -90,7 +90,7 @@ void PrintFatalError(ArrayRef<SMLoc> ErrorLoc, const Twine &Msg) {
   // The following call runs the file cleanup handlers.
   sys::RunInterruptHandlers();
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-  llvm_shutdown(); ios_exit(a); 
+  ios_exit(1); 
 #else
   std::exit(1);
 #endif
