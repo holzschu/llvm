@@ -152,7 +152,7 @@ N lib//Transforms/Scalar/StructurizeCFG.cpp
 N lib//Transforms/Scalar/JumpThreading.cpp
 N lib//Support/LockFileManager.cpp
 N lib//Support/raw_ostream.cpp
-X lib//Support/ErrorHandling.cpp
+X lib//Support/ErrorHandling.cpp: can't add llvm_shutdown
 X lib//Support/CommandLine.cpp
 X lib//MC/MCContext.cpp
 X lib//TableGen/Error.cpp

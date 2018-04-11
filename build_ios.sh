@@ -4,7 +4,7 @@
 # Bail out on error
 set -e
 
-LLVM_SRCDIR=$(pwd)/llvm_src
+LLVM_SRCDIR=$(pwd)
 OSX_BUILDDIR=$(pwd)/build_osx
 IOS_BUILDDIR=$(pwd)/build_ios
 IOS_SYSTEM=$(pwd)/../ios_system/
@@ -34,7 +34,7 @@ if [ ! -d $IOS_BUILDDIR ]; then
 fi
 pushd $IOS_BUILDDIR
 cmake -DBUILD_SHARED_LIBS=ON -DLLVM_TARGET_ARCH=AArch64 \
--DLLVM_TARGETS_TO_BUILD=AArch64 \
+-DLLVM_TARGETS_TO_BUILD="AArch64" \
 -DLLVM_DEFAULT_TARGET_TRIPLE=arm64-apple-darwin17.5.0 \
 -DLLVM_ENABLE_THREADS=OFF \
 -DLLVM_TABLEGEN=${OSX_BUILDDIR}/bin/llvm-tblgen \
@@ -47,6 +47,6 @@ cmake -DBUILD_SHARED_LIBS=ON -DLLVM_TARGET_ARCH=AArch64 \
 -DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11" \
 -DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system" \
 -DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system" \
-$LLVM_SRCDIR
-cmake --build .
+..
+cmake --build . 
 popd
