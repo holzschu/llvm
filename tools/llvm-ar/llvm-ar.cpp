@@ -38,6 +38,12 @@
 #include "llvm/Support/ToolOutputFile.h"
 #include "llvm/Support/raw_ostream.h"
 
+#if !defined(_MSC_VER) && !defined(__MINGW32__)
+#include <unistd.h>
+#else
+#include <io.h>
+#endif
+
 #ifdef __APPLE__
 #include <TargetConditionals.h>
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
@@ -45,12 +51,6 @@
 #undef exit
 #define exit(a) { llvm_shutdown(); ios_exit(a); }
 #endif
-#endif
-
-#if !defined(_MSC_VER) && !defined(__MINGW32__)
-#include <unistd.h>
-#else
-#include <io.h>
 #endif
 
 using namespace llvm;
