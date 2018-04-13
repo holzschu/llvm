@@ -55,7 +55,10 @@ LLVM iOS version TODO list:
 - make it easier to add llvm binaries to existing iOS projects, with associated dylibs
 X replace all calls to exit() with calls to ios_exit()
 - replace stdout, stderr, stdin with ios_system's thread_stdout, thread_stderr...
-- replace progname() with argv[0] (progname is "OpenTerm", argv[0] is "clang")
+X replace progname() with argv[0] (progname is "OpenTerm", argv[0] is "clang")
+   - Done, but now we get:
+         clang: error: unable to execute command: Executable "clang" doesn't exist!
+- make sure posix_spawn works:
      - clang calls ExecuteAndWait(), defined in lib/Support/Program.cpp
      - Execute() calls posix_spawn()
      - Execute() is static, defined in lib/Support/Unix/Program.inc
@@ -64,8 +67,33 @@ X replace all calls to exit() with calls to ios_exit()
        (in tools/clang//tools/clang-offload-bundler/ClangOffloadBundler.cpp)
      - unless it's from Program.str().c_str() in ./lib/Support/Unix/Program.inc
 - work on calls to fork/exec, posix_spawn, etc.
+- check that memory is freed when LLVM exits, that flags are reset
 - create dynamic libraries instead of executables
 - create frameworks with the dynamic libraries
+
+
+Analysis information:
+---------------------
+- lli calls the JIT compiler. "-force-interpreter=true" fails on "LLVM ERROR: Tried to execute an unknown external function: my_exit" (not impossible to solve)
+
+- if we use the JIT compiler, EE (ExecutionEngine) is called. Otherwise (-force-interpreter=true), Interpreter is called. 
+Each of them deals with external functions differently.
+
+
+Line 814 in Job.cpp: Executable is "OpenTerm"
+line 4795 in Clang.cpp: Exec is "OpenTerm"
+line 4661 in Clang.cpp: const char *Exec = D.getClangProgramPath();
+line 314 in Driver.h: return ClangExecutable.c_str(); ClangExecutable is "OpenTerm"
+line 462 in driver.cpp: Driver TheDriver(Path, llvm::sys::getDefaultTargetTriple(), Diags);
+line 439 in driver.cpp: std::string Path = GetExecutablePath(argv[0], CanonicalPrefixes);
+line 55 in driver.cpp: llvm::sys::fs::getMainExecutable(Argv0, P) where P is a pointer to a function
+
+Also: apparently, Driver is not deleted when clang exits. 
+   Doesn't break down things, but not reinitialized. llvm::sys::fs::getMainExecutable(Argv0, P)
+
+Done, but now we get:
+clang: error: unable to execute command: Executable "clang" doesn't exist!
+   
 
 LLVM iOS version wish list:
 ===========================
