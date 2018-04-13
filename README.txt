@@ -54,7 +54,13 @@ LLVM iOS version TODO list:
 
 - make it easier to add llvm binaries to existing iOS projects, with associated dylibs
 X replace all calls to exit() with calls to ios_exit()
+X By default, lli calls the JIT compiler. That does not work outside of Xcode, and also might
+  cause issues in the AppStore. 
+   X Move to ForceInterpreter = true by default on iOS
+   - Make this dependent on sideloading.
 - replace stdout, stderr, stdin with ios_system's thread_stdout, thread_stderr...
+   - in the Interpreter
+   - in the JIT compiler (sideloading only)
 X replace progname() with argv[0] (progname is "OpenTerm", argv[0] is "clang")
    - Done, but now we get:
          clang: error: unable to execute command: Executable "clang" doesn't exist!
@@ -74,11 +80,12 @@ X replace progname() with argv[0] (progname is "OpenTerm", argv[0] is "clang")
 
 Analysis information:
 ---------------------
-- lli calls the JIT compiler. "-force-interpreter=true" fails on "LLVM ERROR: Tried to execute an unknown external function: my_exit" (not impossible to solve)
+- lli calls the JIT compiler. "-force-interpreter=true" fails on "LLVM ERROR: Tried to execute an unknown external function: my_exit" (easy to solve).
 
 - if we use the JIT compiler, EE (ExecutionEngine) is called. Otherwise (-force-interpreter=true), Interpreter is called. 
 Each of them deals with external functions differently.
 
+- MCJIT::createJIT is called (MCJIT::createJIT), which calls new MCJIT::MCJIT (call started with builder.create in lli.cpp/main() l. 437.
 
 Line 814 in Job.cpp: Executable is "OpenTerm"
 line 4795 in Clang.cpp: Exec is "OpenTerm"
@@ -100,8 +107,9 @@ LLVM iOS version wish list:
 
 X run lli on a llvm intermediate representation, on an iOS device.
 - ...with output on the application screen.
-- generate llvm intermediate representation locally on iOS device
-- ...and run it using lli
+X generate llvm intermediate representation locally on iOS device
+X ...and run it using lli
+- ...without the need to specify "clang -cc1"
 
 - run lli on binary intermediate representation
 - use lli to run a "serious" application (multiple source files, command line
