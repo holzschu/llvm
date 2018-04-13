@@ -38,6 +38,7 @@
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #include <sys/attr.h>
+#include <TargetConditionals.h>
 #endif
 
 // Both stdio.h and cstdio are included via different paths and
@@ -154,6 +155,10 @@ getprogpath(char ret[PATH_MAX], const char *bin)
 /// value of argv[0] from program startup.
 std::string getMainExecutable(const char *argv0, void *MainAddr) {
 #if defined(__APPLE__)
+#if TARGET_OS_IPHONE || TARGET_OS_SIMULATOR
+  // On iOS, we can't get the actual executable path (because of ios_system)
+  	return argv0; 
+#endif
   // On OS X the executable path is saved to the stack by dyld. Reading it
   // from there is much faster than calling dladdr, especially for large
   // binaries with symbols.

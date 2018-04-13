@@ -91,7 +91,13 @@ namespace {
 
   cl::opt<bool> ForceInterpreter("force-interpreter",
                                  cl::desc("Force interpretation: disable JIT"),
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+                                 // force use of interpreter on iOS:
+                                 // JIT compiler works inside of Xcode, not outside.
+                                 cl::init(true));
+#else
                                  cl::init(false));
+#endif
 
   cl::opt<JITKind> UseJITKind("jit-kind",
                               cl::desc("Choose underlying JIT kind."),
@@ -569,11 +575,14 @@ int main(int argc, char **argv, char * const *envp) {
   if (!RemoteMCJIT) {
     // If the program doesn't explicitly call exit, we will need the Exit
     // function later on to make an explicit call, so get the function now.
-#if !defined (TARGET_OS_IPHONE) && !defined(TARGET_IPHONE_SIMULATOR)
-    Constant *Exit = Mod->getOrInsertFunction("exit", Type::getVoidTy(Context),
-#else 
-    Constant *Exit = Mod->getOrInsertFunction("my_exit", Type::getVoidTy(Context),
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+	  // on iOS, normally, ForceInterpreter = true, but if your run the JIT you need this:
+	  if (!ForceInterpreter) {
+		  Constant *Exit = Mod->getOrInsertFunction("my_exit", Type::getVoidTy(Context),
+                                                      Type::getInt32Ty(Context));
+	  } else 
 #endif
+		  Constant *Exit = Mod->getOrInsertFunction("exit", Type::getVoidTy(Context),
                                                       Type::getInt32Ty(Context));
 
     // Run static constructors.

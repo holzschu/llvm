@@ -420,6 +420,7 @@ static GenericValue lle_X_printf(FunctionType *FT,
   NewArgs.push_back(PTOGV((void*)&Buffer[0]));
   NewArgs.insert(NewArgs.end(), Args.begin(), Args.end());
   GenericValue GV = lle_X_sprintf(FT, NewArgs);
+  printf("lle_X_printf was called: %s \n", Buffer); 
   outs() << Buffer;
   return GV;
 }
