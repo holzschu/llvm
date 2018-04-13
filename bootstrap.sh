@@ -54,9 +54,10 @@ if [ ! -d $OSX_BUILDDIR ]; then
   mkdir $OSX_BUILDDIR
 fi
 pushd $OSX_BUILDDIR
-cmake -DBUILD_SHARED_LIBS=ON \
+cmake -G Ninja \
+-DBUILD_SHARED_LIBS=ON \
 ..
-cmake --build .
+ninja
 popd
 
 # get libcxx and libcxxabi out of the way:
@@ -69,9 +70,9 @@ mv $LLVM_SRCDIR/projects/libcxxabi dontBuild
 # If we can compile 
 # Now, compile for iOS using the previous build:
 # About 24h, 5 GB of disk space
-# Flags you could use: LLVM_LINK_LLVM_DYLIB and BUILD_SHARED_LIBS, to make everything use dynamic libraries
-# (I did not test these)
-
+#
+# building clang phase 2 in the first phase might speed up this build, but phase2 build is > 4h.
+#
 if [ $CLEAN ]; then
   rm -rf $IOS_BUILDDIR
 fi
@@ -79,7 +80,7 @@ if [ ! -d $IOS_BUILDDIR ]; then
   mkdir $IOS_BUILDDIR
 fi
 pushd $IOS_BUILDDIR
-cmake -DBUILD_SHARED_LIBS=ON -DLLVM_TARGET_ARCH=AArch64 \
+cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DLLVM_TARGET_ARCH=AArch64 \
 -DLLVM_TARGETS_TO_BUILD="AArch64" \
 -DLLVM_DEFAULT_TARGET_TRIPLE=arm64-apple-darwin17.5.0 \
 -DLLVM_ENABLE_THREADS=OFF \
@@ -94,5 +95,5 @@ cmake -DBUILD_SHARED_LIBS=ON -DLLVM_TARGET_ARCH=AArch64 \
 -DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system" \
 -DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system" \
 ..
-cmake --build . 
+ninja
 popd
