@@ -73,6 +73,7 @@ mv $LLVM_SRCDIR/projects/libcxxabi dontBuild
 #
 # building clang phase 2 in the first phase might speed up this build, but phase2 build is > 4h.
 #
+# add LLVM_ENABLE_FFI + FFI_INCLUDE_DIR and FFI_LIBRARY_DIR
 if [ $CLEAN ]; then
   rm -rf $IOS_BUILDDIR
 fi
