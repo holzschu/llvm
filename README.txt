@@ -61,18 +61,25 @@ X By default, lli calls the JIT compiler. That does not work outside of Xcode, a
 - replace stdout, stderr, stdin with ios_system's thread_stdout, thread_stderr...
    - in the Interpreter
    - in the JIT compiler (sideloading only)
+   - work in progress, see raw_ostream.cpp 
+   - works for stdout, fails if stdout is redirected
+      - because at close time, thread_stdout == 0. But why??
+      - only if thread_stdout was a file, opened with ">".
+      - apparently also fails to write to it. It was opened, right? 
+      - problem happen in raw_ostream::flush()
+      - act only at write time (flush) and only if FD == STDOUT_FILENO / STDERR_FILENO
+      - try putting llvm_shutdown back into ExternalFunctions.cpp
+
 X replace progname() with argv[0] (progname is "OpenTerm", argv[0] is "clang")
    - Done, but now we get:
          clang: error: unable to execute command: Executable "clang" doesn't exist!
-- make sure posix_spawn works:
+- Execute() (lib/Support/Unix/Program.inc) calls posix_spawn:
+     - I can't create a fake posix_spawn, because file actions are a secret API.
+     - so I undefined HAVE_POSIX_SPAWN and we go through fork + exec 
+     - bonus: it's been tested before, so it should work
      - clang calls ExecuteAndWait(), defined in lib/Support/Program.cpp
-     - Execute() calls posix_spawn()
-     - Execute() is static, defined in lib/Support/Unix/Program.inc
-     - the rest of LLVM calls either ExecuteAndWait() or ExecuteNoWait()
-     - program name probably obtained by "auto ClangBinary = sys::findProgramByName("clang", Dir);"
-       (in tools/clang//tools/clang-offload-bundler/ClangOffloadBundler.cpp)
-     - unless it's from Program.str().c_str() in ./lib/Support/Unix/Program.inc
-- work on calls to fork/exec, posix_spawn, etc.
+     - lib/Support/Program.cpp contains ExecuteAndWait() and ExecuteNoWait()
+     - both call Execute()
 - check that memory is freed when LLVM exits, that flags are reset
 - create dynamic libraries instead of executables
 - create frameworks with the dynamic libraries
@@ -80,20 +87,14 @@ X replace progname() with argv[0] (progname is "OpenTerm", argv[0] is "clang")
 
 Analysis information:
 ---------------------
-- lli calls the JIT compiler. "-force-interpreter=true" fails on "LLVM ERROR: Tried to execute an unknown external function: my_exit" (easy to solve).
+- By default, lli calls the JIT compiler (MCJIT). The JIT compiler only works if "get-task-allow" is defined.
+- By default, this is true when running from Xcode, false as a standalone app
+- It can be forced to true by editing the entitlements file, but only for sideloading (not on the AppStore)
+- So we do "-force-interpreter=true" as a default setting on iOS
+- Later, we might do the JIT branch. The interest is limited, though.
 
-- if we use the JIT compiler, EE (ExecutionEngine) is called. Otherwise (-force-interpreter=true), Interpreter is called. 
-Each of them deals with external functions differently.
 
-- MCJIT::createJIT is called (MCJIT::createJIT), which calls new MCJIT::MCJIT (call started with builder.create in lli.cpp/main() l. 437.
 
-Line 814 in Job.cpp: Executable is "OpenTerm"
-line 4795 in Clang.cpp: Exec is "OpenTerm"
-line 4661 in Clang.cpp: const char *Exec = D.getClangProgramPath();
-line 314 in Driver.h: return ClangExecutable.c_str(); ClangExecutable is "OpenTerm"
-line 462 in driver.cpp: Driver TheDriver(Path, llvm::sys::getDefaultTargetTriple(), Diags);
-line 439 in driver.cpp: std::string Path = GetExecutablePath(argv[0], CanonicalPrefixes);
-line 55 in driver.cpp: llvm::sys::fs::getMainExecutable(Argv0, P) where P is a pointer to a function
 
 Also: apparently, Driver is not deleted when clang exits. 
    Doesn't break down things, but not reinitialized. llvm::sys::fs::getMainExecutable(Argv0, P)
@@ -110,15 +111,12 @@ X run lli on a llvm intermediate representation, on an iOS device.
 X generate llvm intermediate representation locally on iOS device
 X ...and run it using lli
 - ...without the need to specify "clang -cc1"
+- add libFFI to lli, to load dynamic libraries
+- install headers on iOS device, for compilation
 
-- run lli on binary intermediate representation
+X run lli on binary intermediate representation
 - use lli to run a "serious" application (multiple source files, command line
   arguments)
 
 - compile libcxx and libcxxabi for iOS as well.
-
-
-
-
-
 

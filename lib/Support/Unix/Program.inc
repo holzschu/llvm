@@ -44,6 +44,10 @@
 
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#undef HAVE_POSIX_SPAWN // function is present, but not working
+#include "ios_error.h"
+#endif
 #endif
 
 #if defined(__APPLE__) && !(defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE)
@@ -167,9 +171,9 @@ static void SetMemoryLimits(unsigned size) {
 static bool Execute(ProcessInfo &PI, StringRef Program, const char **Args,
                     const char **Envp, ArrayRef<Optional<StringRef>> Redirects,
                     unsigned MemoryLimit, std::string *ErrMsg) {
-  if (!llvm::sys::fs::exists(Program)
+  if (!llvm::sys::fs::exists(Program)         // file exists 
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-	|| ios_executable(Program.str().c_str())
+	|| ios_executable(Program.str().c_str())  // one of the commands in ios_system
 #endif
   ) {
     if (ErrMsg)
@@ -247,7 +251,11 @@ static bool Execute(ProcessInfo &PI, StringRef Program, const char **Args,
 #endif
 
   // Create a child process.
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+	int child = 0;  // no fork available
+#else 
   int child = fork();
+#endif
   switch (child) {
     // An error occurred:  Return to the caller.
     case -1:
@@ -295,14 +303,15 @@ static bool Execute(ProcessInfo &PI, StringRef Program, const char **Args,
       // object destructors cloned from the parent process aren't
       // redundantly run, and so that any data buffered in stdio buffers
       // cloned from the parent aren't redundantly written out.
+#if (!TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR)
       _exit(errno == ENOENT ? 127 : 126);
+#endif 
     }
 
     // Parent process: Break out of the switch to do our processing.
     default:
       break;
   }
-
   PI.Pid = child;
 
   return true;
@@ -312,6 +321,10 @@ namespace llvm {
 
 ProcessInfo sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
                       bool WaitUntilTerminates, std::string *ErrMsg) {
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+	// This is relatively crude, but there's not much we can do:
+	if (ios_getLastThreadId() > 0) pthread_join(ios_getLastThreadId(), NULL);
+#else
   struct sigaction Act, Old;
   assert(PI.Pid && "invalid pid to wait on, process not started?");
 
@@ -405,6 +418,7 @@ ProcessInfo sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
     // signal during execution as opposed to failing to execute.
     WaitResult.ReturnCode = -2;
   }
+#endif // (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
   return WaitResult;
 }
 
