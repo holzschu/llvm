@@ -575,14 +575,15 @@ int main(int argc, char **argv, char * const *envp) {
   if (!RemoteMCJIT) {
     // If the program doesn't explicitly call exit, we will need the Exit
     // function later on to make an explicit call, so get the function now.
+    Constant *Exit;
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 	  // on iOS, normally, ForceInterpreter = true, but if your run the JIT you need this:
 	  if (!ForceInterpreter) {
-		  Constant *Exit = Mod->getOrInsertFunction("my_exit", Type::getVoidTy(Context),
+		  Exit = Mod->getOrInsertFunction("my_exit", Type::getVoidTy(Context),
                                                       Type::getInt32Ty(Context));
 	  } else 
 #endif
-		  Constant *Exit = Mod->getOrInsertFunction("exit", Type::getVoidTy(Context),
+		  Exit = Mod->getOrInsertFunction("exit", Type::getVoidTy(Context),
                                                       Type::getInt32Ty(Context));
 
     // Run static constructors.

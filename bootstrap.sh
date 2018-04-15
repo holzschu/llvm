@@ -54,10 +54,10 @@ if [ ! -d $OSX_BUILDDIR ]; then
   mkdir $OSX_BUILDDIR
 fi
 pushd $OSX_BUILDDIR
-cmake \
+cmake -G Ninja \
 -DBUILD_SHARED_LIBS=ON \
 ..
-cmake --build . 
+ninja
 popd
 
 # get libcxx and libcxxabi out of the way:
@@ -81,7 +81,7 @@ if [ ! -d $IOS_BUILDDIR ]; then
   mkdir $IOS_BUILDDIR
 fi
 pushd $IOS_BUILDDIR
-cmake -DBUILD_SHARED_LIBS=ON -DLLVM_TARGET_ARCH=AArch64 \
+cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DLLVM_TARGET_ARCH=AArch64 \
 -DLLVM_TARGETS_TO_BUILD="AArch64" \
 -DLLVM_DEFAULT_TARGET_TRIPLE=arm64-apple-darwin17.5.0 \
 -DLLVM_ENABLE_THREADS=OFF \
@@ -96,5 +96,5 @@ cmake -DBUILD_SHARED_LIBS=ON -DLLVM_TARGET_ARCH=AArch64 \
 -DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system" \
 -DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system" \
 ..
-cmake --build .
+ninja
 popd
