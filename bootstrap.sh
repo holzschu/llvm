@@ -34,10 +34,15 @@ git submodule update --init --recursive
 
 # Get libcxx and libcxxabi
 pushd projects
-
+if [ -d $LLVM_SRCDIR/dontBuild/libcxx ]; then
+	mv $LLVM_SRCDIR/dontBuild/libcxx .
+fi
 if [ ! -d libcxx ]; then
   mkdir libcxx
   curl $LIBCXX_SRC | tar xz -C libcxx --strip-components 1
+fi
+if [ -d $LLVM_SRCDIR/dontBuild/libcxxabi ]; then
+	mv $LLVM_SRCDIR/dontBuild/libcxxabi .
 fi
 if [ ! -d libcxxabi ]; then
   mkdir libcxxabi
