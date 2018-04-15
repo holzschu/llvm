@@ -56,6 +56,13 @@
 #endif
 #endif
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#endif
+#endif
+
 using namespace llvm;
 
 static ManagedStatic<sys::Mutex> FunctionsLock;
@@ -317,6 +324,7 @@ static GenericValue lle_X_atexit(FunctionType *FT,
 
 // void exit(int)
 static GenericValue lle_X_exit(FunctionType *FT, ArrayRef<GenericValue> Args) {
+  	// TODO: insert here cleanup functions, if required.
   TheInterpreter->exitCalled(Args[0]);
   return GenericValue();
 }
@@ -420,7 +428,6 @@ static GenericValue lle_X_printf(FunctionType *FT,
   NewArgs.push_back(PTOGV((void*)&Buffer[0]));
   NewArgs.insert(NewArgs.end(), Args.begin(), Args.end());
   GenericValue GV = lle_X_sprintf(FT, NewArgs);
-  printf("lle_X_printf was called: %s \n", Buffer); 
   outs() << Buffer;
   return GV;
 }
