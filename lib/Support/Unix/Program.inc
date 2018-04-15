@@ -167,7 +167,11 @@ static void SetMemoryLimits(unsigned size) {
 static bool Execute(ProcessInfo &PI, StringRef Program, const char **Args,
                     const char **Envp, ArrayRef<Optional<StringRef>> Redirects,
                     unsigned MemoryLimit, std::string *ErrMsg) {
-  if (!llvm::sys::fs::exists(Program)) {
+  if (!llvm::sys::fs::exists(Program)
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+	|| ios_executable(Program.str().c_str())
+#endif
+  ) {
     if (ErrMsg)
       *ErrMsg = std::string("Executable \"") + Program.str() +
                 std::string("\" doesn't exist!");
