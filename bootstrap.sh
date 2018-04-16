@@ -29,7 +29,7 @@ esac
 done
 
 
-# get clang
+# get clang and lld
 git submodule update --init --recursive
 
 # Get libcxx and libcxxabi
@@ -70,6 +70,22 @@ rm -rf dontBuild
 mkdir dontBuild
 mv $LLVM_SRCDIR/projects/libcxx dontBuild
 mv $LLVM_SRCDIR/projects/libcxxabi dontBuild
+
+# get libffi:
+if [ ! -d libffi-3.2.1 ]; then 
+	echo "Downloading libffi-3.2.1" 
+	curl -OL https://www.mirrorservice.org/sites/sourceware.org/pub/libffi/libffi-3.2.1.tar.gz 
+	tar -xvzf libffi-3.2.1.tar.gz
+	rm libffi-3.2.1.tar.gz
+	echo "Applying patch to libffi-3.2.1:"
+	pushd libffi-3.2.1
+	patch -p 1 < ../libffi-3.2.1_patch
+	echo "Compiling libffi:"
+	xcodebuild -project libffi.xcodeproj -target libffi-iOS -sdk iphoneos -arch arm64 -configuration Debug -quiet
+	popd
+fi
+
+
 # TODO: some combination of build variables might allow us to build these too. 
 # Right now, they fail. Maybe CFLAGS with: -D__need_size_t -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS 
 # If we can compile 
@@ -77,8 +93,6 @@ mv $LLVM_SRCDIR/projects/libcxxabi dontBuild
 # About 24h, 5 GB of disk space
 #
 # building clang phase 2 in the first phase might speed up this build, but phase2 build is > 4h.
-#
-# add LLVM_ENABLE_FFI + FFI_INCLUDE_DIR and FFI_LIBRARY_DIR
 if [ $CLEAN ]; then
   rm -rf $IOS_BUILDDIR
 fi
@@ -90,6 +104,10 @@ cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DLLVM_TARGET_ARCH=AArch64 \
 -DLLVM_TARGETS_TO_BUILD="AArch64" \
 -DLLVM_DEFAULT_TARGET_TRIPLE=arm64-apple-darwin17.5.0 \
 -DLLVM_ENABLE_THREADS=OFF \
+-DLLVM_ENABLE_LLD=ON \
+-DLLVM_ENABLE_FFI=ON \
+-DFFI_LIBRARY_DIR=$LLVM_SRCDIR/libffi-3.2.1/build/Debug-iphoneos \
+-DFFI_INCLUDE_DIR=$LLVM_SRCDIR/libffi-3.2.1/build_iphoneos-arm64/include \
 -DLLVM_TABLEGEN=${OSX_BUILDDIR}/bin/llvm-tblgen \
 -DCLANG_TABLEGEN=${OSX_BUILDDIR}/bin/clang-tblgen \
 -DCMAKE_OSX_SYSROOT=${IOS_SDKROOT} \
