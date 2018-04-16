@@ -173,7 +173,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program, const char **Args,
                     unsigned MemoryLimit, std::string *ErrMsg) {
   if (!llvm::sys::fs::exists(Program)         // file exists 
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-	|| ios_executable(Program.str().c_str())  // one of the commands in ios_system
+	&& !ios_executable(Program.str().c_str())  // one of the commands in ios_system
 #endif
   ) {
     if (ErrMsg)
@@ -322,8 +322,9 @@ namespace llvm {
 ProcessInfo sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
                       bool WaitUntilTerminates, std::string *ErrMsg) {
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-	// This is relatively crude, but there's not much we can do:
-	if (ios_getLastThreadId() > 0) pthread_join(ios_getLastThreadId(), NULL);
+  // This is relatively crude, but there's not much we can do:
+  if (ios_getLastThreadId()) pthread_join(ios_getLastThreadId(), NULL);
+  ProcessInfo WaitResult;
 #else
   struct sigaction Act, Old;
   assert(PI.Pid && "invalid pid to wait on, process not started?");
