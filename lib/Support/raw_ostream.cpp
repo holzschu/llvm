@@ -59,6 +59,13 @@
 #endif
 #endif
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#endif
+#endif
+
 #ifdef LLVM_ON_WIN32
 #include "Windows/WindowsSupport.h"
 #endif
@@ -594,8 +601,16 @@ void raw_fd_ostream::write_impl(const char *Ptr, size_t Size) {
 
   do {
     size_t ChunkSize = std::min(Size, MaxWriteSize);
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+	ssize_t ret; 
+	if (FD == STDOUT_FILENO) 
+		ret = ::write(fileno(thread_stdout), Ptr, ChunkSize); 
+	else if  (FD == STDERR_FILENO) 
+		ret = ::write(fileno(thread_stderr), Ptr, ChunkSize); 
+	else ret = ::write(FD, Ptr, ChunkSize);
+#else
     ssize_t ret = ::write(FD, Ptr, ChunkSize);
-
+#endif
     if (ret < 0) {
       // If it's a recoverable error, swallow it and retry the write.
       //
