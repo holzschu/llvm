@@ -59,31 +59,19 @@ X By default, lli calls the JIT compiler. That does not work outside of Xcode, a
    X Move to ForceInterpreter = true by default on iOS
    - Make this dependent on sideloading.
 - replace stdout, stderr, stdin with ios_system's thread_stdout, thread_stderr...
-   - in the Interpreter
+   X in the Interpreter
    - in the JIT compiler (sideloading only)
-   - work in progress, see raw_ostream.cpp 
-   - works for stdout, fails if stdout is redirected
-      - because at close time, thread_stdout == 0. But why??
-      - only if thread_stdout was a file, opened with ">".
-      - apparently also fails to write to it. It was opened, right? 
-      - problem happen in raw_ostream::flush()
-      - act only at write time (flush) and only if FD == STDOUT_FILENO / STDERR_FILENO
-      - try putting llvm_shutdown back into ExternalFunctions.cpp
 
 X replace progname() with argv[0] (progname is "OpenTerm", argv[0] is "clang")
-   - Done, but now we get:
-         clang: error: unable to execute command: Executable "clang" doesn't exist!
+   - Done. Now we need "ld" for some programs.
 - Execute() (lib/Support/Unix/Program.inc) calls posix_spawn:
      - I can't create a fake posix_spawn, because file actions are a secret API.
      - so I undefined HAVE_POSIX_SPAWN and we go through fork + exec 
-     - bonus: it's been tested before, so it should work
-     - clang calls ExecuteAndWait(), defined in lib/Support/Program.cpp
-     - lib/Support/Program.cpp contains ExecuteAndWait() and ExecuteNoWait()
-     - both call Execute()
 - check that memory is freed when LLVM exits, that flags are reset
 - create dynamic libraries instead of executables
 - create frameworks with the dynamic libraries
 
+- add libFFI to the interpreter, for aux libraries
 
 Analysis information:
 ---------------------
@@ -94,13 +82,9 @@ Analysis information:
 - Later, we might do the JIT branch. The interest is limited, though.
 
 
-
-
 Also: apparently, Driver is not deleted when clang exits. 
    Doesn't break down things, but not reinitialized. llvm::sys::fs::getMainExecutable(Argv0, P)
 
-Done, but now we get:
-clang: error: unable to execute command: Executable "clang" doesn't exist!
    
 
 LLVM iOS version wish list:
