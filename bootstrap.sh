@@ -6,11 +6,13 @@ set -e
 
 LIBCXX_SRC=http://releases.llvm.org/6.0.0/libcxx-6.0.0.src.tar.xz
 LIBCXXABI_SRC=http://releases.llvm.org/6.0.0/libcxxabi-6.0.0.src.tar.xz
+LIBFFI_SRC=https://www.mirrorservice.org/sites/sourceware.org/pub/libffi/libffi-3.2.1.tar.gz
 
 LLVM_SRCDIR=$(pwd)
 OSX_BUILDDIR=$(pwd)/build_osx
 IOS_BUILDDIR=$(pwd)/build_ios
 IOS_SYSTEM=$(pwd)/../ios_system/
+FFI_SRCDIR=$(pwd)/libffi-3.2.1/
 
 IOS_SDKROOT=$(xcrun --sdk iphoneos --show-sdk-path)
 
@@ -72,13 +74,11 @@ mv $LLVM_SRCDIR/projects/libcxx dontBuild
 mv $LLVM_SRCDIR/projects/libcxxabi dontBuild
 
 # get libffi:
-if [ ! -d libffi-3.2.1 ]; then 
+if [ ! -d $FFI_SRCDIR ]; then 
 	echo "Downloading libffi-3.2.1" 
-	curl -OL https://www.mirrorservice.org/sites/sourceware.org/pub/libffi/libffi-3.2.1.tar.gz 
-	tar -xvzf libffi-3.2.1.tar.gz
-	rm libffi-3.2.1.tar.gz
+	curl $LIBFFI_SRC | tar xz 
 	echo "Applying patch to libffi-3.2.1:"
-	pushd libffi-3.2.1
+	pushd $FFI_SRCDIR
 	patch -p 1 < ../libffi-3.2.1_patch
 	echo "Compiling libffi:"
 	xcodebuild -project libffi.xcodeproj -target libffi-iOS -sdk iphoneos -arch arm64 -configuration Debug -quiet
@@ -88,7 +88,7 @@ fi
 
 # TODO: some combination of build variables might allow us to build these too. 
 # Right now, they fail. Maybe CFLAGS with: -D__need_size_t -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS 
-# If we can compile 
+# TODO: use LLD in linking second phase. Cmake can't find it.
 # Now, compile for iOS using the previous build:
 # About 24h, 5 GB of disk space
 #
@@ -104,20 +104,19 @@ cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DLLVM_TARGET_ARCH=AArch64 \
 -DLLVM_TARGETS_TO_BUILD="AArch64" \
 -DLLVM_DEFAULT_TARGET_TRIPLE=arm64-apple-darwin17.5.0 \
 -DLLVM_ENABLE_THREADS=OFF \
--DLLVM_ENABLE_LLD=ON \
 -DLLVM_ENABLE_FFI=ON \
--DFFI_LIBRARY_DIR=$LLVM_SRCDIR/libffi-3.2.1/build/Debug-iphoneos \
--DFFI_INCLUDE_DIR=$LLVM_SRCDIR/libffi-3.2.1/build_iphoneos-arm64/include \
+-DFFI_LIBRARY_PATH=${FFI_SRCDIR}/build/Debug-iphoneos/libffi.a \
+-DFFI_INCLUDE_DIR=${FFI_SRCDIR}/build_iphoneos-arm64/include \
 -DLLVM_TABLEGEN=${OSX_BUILDDIR}/bin/llvm-tblgen \
 -DCLANG_TABLEGEN=${OSX_BUILDDIR}/bin/clang-tblgen \
 -DCMAKE_OSX_SYSROOT=${IOS_SDKROOT} \
 -DCMAKE_C_COMPILER=${OSX_BUILDDIR}/bin/clang \
 -DCMAKE_LIBRARY_PATH=${OSX_BUILDDIR}/lib/ \
 -DCMAKE_INCLUDE_PATH=${OSX_BUILDDIR}/include/ \
--DCMAKE_C_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -I${OSX_BUILDDIR}/include/ -I/Users/holzschu/src/Xcode_iPad/ios_system/ -miphoneos-version-min=11" \
+-DCMAKE_C_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -I${OSX_BUILDDIR}/include/ -I${IOS_SYSTEM} -miphoneos-version-min=11" \
 -DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11" \
--DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system" \
--DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system" \
+-DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system " \
+-DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system " \
 ..
 ninja
 popd
