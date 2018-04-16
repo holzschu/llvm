@@ -23,7 +23,6 @@
 #include "llvm/Bitcode/BitcodeReader.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
 #include "llvm/Bitcode/BitcodeWriterPass.h"
-#include "llvm/ExecutionEngine/ObjectMemoryBuffer.h"
 #include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/DiagnosticPrinter.h"
 #include "llvm/IR/LLVMContext.h"
@@ -37,6 +36,7 @@
 #include "llvm/Support/CachePruning.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/ObjectMemoryBuffer.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/SHA1.h"
 #include "llvm/Support/TargetRegistry.h"
@@ -947,12 +947,12 @@ void ThinLTOCodeGenerator::run() {
   std::vector<int> ModulesOrdering;
   ModulesOrdering.resize(Modules.size());
   std::iota(ModulesOrdering.begin(), ModulesOrdering.end(), 0);
-  std::sort(ModulesOrdering.begin(), ModulesOrdering.end(),
-            [&](int LeftIndex, int RightIndex) {
-              auto LSize = Modules[LeftIndex].getBuffer().size();
-              auto RSize = Modules[RightIndex].getBuffer().size();
-              return LSize > RSize;
-            });
+  llvm::sort(ModulesOrdering.begin(), ModulesOrdering.end(),
+             [&](int LeftIndex, int RightIndex) {
+               auto LSize = Modules[LeftIndex].getBuffer().size();
+               auto RSize = Modules[RightIndex].getBuffer().size();
+               return LSize > RSize;
+             });
 
   // Parallel optimizer + codegen
   {

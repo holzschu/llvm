@@ -481,6 +481,8 @@ raw_ostream &raw_ostream::indent(unsigned NumSpaces) {
   return *this;
 }
 
+void raw_ostream::anchor() {}
+
 //===----------------------------------------------------------------------===//
 //  Formatted Output
 //===----------------------------------------------------------------------===//
@@ -742,6 +744,8 @@ bool raw_fd_ostream::has_colors() const {
   return sys::Process::FileDescriptorHasColors(FD);
 }
 
+void raw_fd_ostream::anchor() {}
+
 //===----------------------------------------------------------------------===//
 //  outs(), errs(), nulls()
 //===----------------------------------------------------------------------===//
@@ -819,3 +823,5 @@ uint64_t raw_null_ostream::current_pos() const {
 
 void raw_null_ostream::pwrite_impl(const char *Ptr, size_t Size,
                                    uint64_t Offset) {}
+
+void raw_pwrite_stream::anchor() {}

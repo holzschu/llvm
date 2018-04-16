@@ -230,6 +230,8 @@ def FeatureMWAITX  : SubtargetFeature<"mwaitx", "HasMWAITX", "true",
                                       "Enable MONITORX/MWAITX timer functionality">;
 def FeatureCLZERO  : SubtargetFeature<"clzero", "HasCLZERO", "true",
                                       "Enable Cache Line Zero">;
+def FeatureCLDEMOTE  : SubtargetFeature<"cldemote", "HasCLDEMOTE", "true",
+                                      "Enable Cache Demote">;
 def FeatureMPX     : SubtargetFeature<"mpx", "HasMPX", "true",
                                       "Support MPX instructions">;
 def FeatureLEAForSP : SubtargetFeature<"lea-sp", "UseLeaForSP", "true",
@@ -249,6 +251,8 @@ def FeatureCLFLUSHOPT : SubtargetFeature<"clflushopt", "HasCLFLUSHOPT", "true",
                                       "Flush A Cache Line Optimized">;
 def FeatureCLWB    : SubtargetFeature<"clwb", "HasCLWB", "true",
                                       "Cache Line Write Back">;
+def FeatureWBNOINVD    : SubtargetFeature<"wbnoinvd", "HasWBNOINVD", "true",
+                                      "Write Back No Invalidate">;
 def FeatureRDPID : SubtargetFeature<"rdpid", "HasRDPID", "true",
                                     "Support RDPID instructions">;
 // On some processors, instructions that implicitly take two memory operands are
@@ -421,8 +425,10 @@ def ProcIntelSKX  : SubtargetFeature<"skx", "X86ProcFamily",
                     "IntelSKX", "Intel Skylake Server processors">;
 def ProcIntelCNL  : SubtargetFeature<"cannonlake", "X86ProcFamily",
                     "IntelCannonlake", "Intel Cannonlake processors">;
-def ProcIntelICL  : SubtargetFeature<"icelake", "X86ProcFamily",
-                    "IntelIcelake", "Intel Icelake processors">;
+def ProcIntelICL  : SubtargetFeature<"icelake-client", "X86ProcFamily",
+                    "IntelIcelakeClient", "Intel Icelake processors">;
+def ProcIntelICX  : SubtargetFeature<"icelake-server", "X86ProcFamily",
+                    "IntelIcelakeServer", "Intel Icelake Server processors">;
 
 class Proc<string Name, list<SubtargetFeature> Features>
  : ProcessorModel<Name, GenericModel, Features>;
@@ -713,7 +719,6 @@ def SKLFeatures : ProcessorFeatures<BDWFeatures.Value, [
   FeatureRTM,
   FeatureXSAVEC,
   FeatureXSAVES,
-  FeatureSGX,
   FeatureCLFLUSHOPT,
   FeatureFastVectorFSQRT
 ]>;
@@ -722,7 +727,8 @@ class SkylakeClientProc<string Name> : ProcModel<Name, SkylakeClientModel,
                                                  SKLFeatures.Value, [
   ProcIntelSKL,
   FeatureHasFastGather,
-  FeaturePOPCNTFalseDeps
+  FeaturePOPCNTFalseDeps,
+  FeatureSGX
 ]>;
 def : SkylakeClientProc<"skylake">;
 
@@ -790,7 +796,8 @@ def CNLFeatures : ProcessorFeatures<SKLFeatures.Value, [
   FeaturePKU,
   FeatureVBMI,
   FeatureIFMA,
-  FeatureSHA
+  FeatureSHA,
+  FeatureSGX
 ]>;
 
 class CannonlakeProc<string Name> : ProcModel<Name, SkylakeServerModel,
@@ -812,12 +819,20 @@ def ICLFeatures : ProcessorFeatures<CNLFeatures.Value, [
   FeatureRDPID
 ]>;
 
-class IcelakeProc<string Name> : ProcModel<Name, SkylakeServerModel,
-                                           ICLFeatures.Value, [
+class IcelakeClientProc<string Name> : ProcModel<Name, SkylakeServerModel,
+                                                 ICLFeatures.Value, [
   ProcIntelICL,
   FeatureHasFastGather
 ]>;
-def : IcelakeProc<"icelake">;
+def : IcelakeClientProc<"icelake-client">;
+
+class IcelakeServerProc<string Name> : ProcModel<Name, SkylakeServerModel,
+                                                 ICLFeatures.Value, [
+  ProcIntelICX,
+  FeatureWBNOINVD,
+  FeatureHasFastGather
+]>;
+def : IcelakeServerProc<"icelake-server">;
 
 // AMD CPUs.
 
@@ -1132,3 +1147,9 @@ def X86 : Target {
   let AssemblyWriters = [ATTAsmWriter, IntelAsmWriter];
   let AllowRegisterRenaming = 1;
 }
+
+//===----------------------------------------------------------------------===//
+// Pfm Counters
+//===----------------------------------------------------------------------===//
+
+include "X86PfmCounters.td"

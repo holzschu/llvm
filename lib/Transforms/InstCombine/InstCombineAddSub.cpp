@@ -511,7 +511,8 @@ Value *FAddCombine::performFactorization(Instruction *I) {
 }
 
 Value *FAddCombine::simplify(Instruction *I) {
-  assert(I->isFast() && "Expected 'fast' instruction");
+  assert(I->hasAllowReassoc() && I->hasNoSignedZeros() &&
+         "Expected 'reassoc'+'nsz' instruction");
 
   // Currently we are not able to handle vector type.
   if (I->getType()->isVectorTy())
@@ -1378,7 +1379,7 @@ Instruction *InstCombiner::visitFAdd(BinaryOperator &I) {
   if (Value *V = SimplifySelectsFeedingBinaryOp(I, LHS, RHS))
     return replaceInstUsesWith(I, V);
 
-  if (I.isFast()) {
+  if (I.hasAllowReassoc() && I.hasNoSignedZeros()) {
     if (Value *V = FAddCombine(Builder).simplify(&I))
       return replaceInstUsesWith(I, V);
   }
@@ -1731,23 +1732,23 @@ Instruction *InstCombiner::visitFSub(BinaryOperator &I) {
   if (match(Op1, m_FNeg(m_Value(Y))))
     return BinaryOperator::CreateFAddFMF(Op0, Y, &I);
 
-  if (FPTruncInst *FPTI = dyn_cast<FPTruncInst>(Op1)) {
-    if (Value *V = dyn_castFNegVal(FPTI->getOperand(0))) {
-      Value *NewTrunc = Builder.CreateFPTrunc(V, I.getType());
-      return BinaryOperator::CreateFAddFMF(Op0, NewTrunc, &I);
-    }
-  } else if (FPExtInst *FPEI = dyn_cast<FPExtInst>(Op1)) {
-    if (Value *V = dyn_castFNegVal(FPEI->getOperand(0))) {
-      Value *NewExt = Builder.CreateFPExt(V, I.getType());
-      return BinaryOperator::CreateFAddFMF(Op0, NewExt, &I);
-    }
+  // Similar to above, but look through a cast of the negated value:
+  // X - (fptrunc(-Y)) --> X + fptrunc(Y)
+  if (match(Op1, m_OneUse(m_FPTrunc(m_FNeg(m_Value(Y)))))) {
+    Value *TruncY = Builder.CreateFPTrunc(Y, I.getType());
+    return BinaryOperator::CreateFAddFMF(Op0, TruncY, &I);
+  }
+  // X - (fpext(-Y)) --> X + fpext(Y)
+  if (match(Op1, m_OneUse(m_FPExt(m_FNeg(m_Value(Y)))))) {
+    Value *ExtY = Builder.CreateFPExt(Y, I.getType());
+    return BinaryOperator::CreateFAddFMF(Op0, ExtY, &I);
   }
 
   // Handle specials cases for FSub with selects feeding the operation
   if (Value *V = SimplifySelectsFeedingBinaryOp(I, Op0, Op1))
     return replaceInstUsesWith(I, V);
 
-  if (I.isFast()) {
+  if (I.hasAllowReassoc() && I.hasNoSignedZeros()) {
     if (Value *V = FAddCombine(Builder).simplify(&I))
       return replaceInstUsesWith(I, V);
   }
