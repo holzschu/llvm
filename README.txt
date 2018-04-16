@@ -64,14 +64,16 @@ X By default, lli calls the JIT compiler. That does not work outside of Xcode, a
 
 X replace progname() with argv[0] (progname is "OpenTerm", argv[0] is "clang")
    - Done. Now we need "ld" for some programs.
-- Execute() (lib/Support/Unix/Program.inc) calls posix_spawn:
+X Execute() (lib/Support/Unix/Program.inc) calls posix_spawn:
      - I can't create a fake posix_spawn, because file actions are a secret API.
-     - so I undefined HAVE_POSIX_SPAWN and we go through fork + exec 
+     X so I undefined HAVE_POSIX_SPAWN and we go through fork + exec 
 - check that memory is freed when LLVM exits, that flags are reset
 - create dynamic libraries instead of executables
 - create frameworks with the dynamic libraries
 
-- add libFFI to the interpreter, for aux libraries
+- add libFFI to the interpreter, for aux libraries (compiling)
+- we can't generate llvm IR while linking, but we can link several IR files with llvm-link
+- so question is: how to call system functions / aux libraries? With FFI? 
 
 Analysis information:
 ---------------------
@@ -85,6 +87,8 @@ Analysis information:
 Also: apparently, Driver is not deleted when clang exits. 
    Doesn't break down things, but not reinitialized. llvm::sys::fs::getMainExecutable(Argv0, P)
 
+Compile auxiliary files with:
+~/src/Xcode_iPad/llvm/build_osx/bin/clang -emit-llvm-bc -arch arm64 -target arm64-apple-darwin17.5.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS11.3.sdk -I ../.. -F ../../build/Debug-iphoneos/ -framework ios_system mkdir.c
    
 
 LLVM iOS version wish list:
