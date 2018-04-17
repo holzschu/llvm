@@ -472,7 +472,13 @@ static GenericValue lle_X_fprintf(FunctionType *FT,
   NewArgs.insert(NewArgs.end(), Args.begin()+1, Args.end());
   GenericValue GV = lle_X_sprintf(FT, NewArgs);
 
-  fputs(Buffer, (FILE *) GVTOP(Args[0]));
+  FILE* outputStream = (FILE *) GVTOP(Args[0]);
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+  if (outputStream == stderr) outputStream = thread_stderr;
+  if (outputStream == stdout) outputStream = thread_stdout;
+#endif
+
+  fputs(Buffer, outputStream);
   return GV;
 }
 

@@ -132,10 +132,11 @@ static void *DoSearch(const char* SymbolName) {
   // as a macro before using EXPLICIT_SYMBOL.
   {
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-	if (!strcmp(SymbolName, "stdin")) return &thread_stdin;
-	if (!strcmp(SymbolName, "stdout")) return &thread_stdout;
-	if (!strcmp(SymbolName, "stderr")) return &thread_stderr;
-#endif // (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+	// These are also defined in the libraries, but we want these
+    if (!strcmp(SymbolName, "stdin")) return &thread_stdin;
+    if (!strcmp(SymbolName, "stdout")) return &thread_stdout;
+    if (!strcmp(SymbolName, "stderr")) return &thread_stderr;
+#endif  	  
 #ifndef stdin
     EXPLICIT_SYMBOL(stdin);
 #endif
