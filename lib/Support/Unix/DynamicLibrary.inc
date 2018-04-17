@@ -47,7 +47,20 @@ void DynamicLibrary::HandleSet::DLClose(void *Handle) {
 }
 
 void *DynamicLibrary::HandleSet::DLSym(void *Handle, const char *Symbol) {
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+	const char* symbolName = Symbol;
+	// Works, but why? deMangleName?
+	void* returnPtr = ::dlsym(Handle, symbolName);
+	if (returnPtr) return returnPtr;
+	if (symbolName[0] == '\x01') symbolName += 1;
+	returnPtr = ::dlsym(Handle, symbolName);
+	if (returnPtr) return returnPtr;
+	if (symbolName[0] == '_') symbolName += 1;
+	returnPtr = ::dlsym(Handle, symbolName);
+	return returnPtr;
+#else
   return ::dlsym(Handle, Symbol);
+#endif
 }
 
 #else // !HAVE_DLOPEN
@@ -118,6 +131,11 @@ static void *DoSearch(const char* SymbolName) {
   // For everything else, we want to check to make sure the symbol isn't defined
   // as a macro before using EXPLICIT_SYMBOL.
   {
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+	if (!strcmp(SymbolName, "stdin")) return &thread_stdin;
+	if (!strcmp(SymbolName, "stdout")) return &thread_stdout;
+	if (!strcmp(SymbolName, "stderr")) return &thread_stderr;
+#endif // (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 #ifndef stdin
     EXPLICIT_SYMBOL(stdin);
 #endif
