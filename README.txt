@@ -71,9 +71,16 @@ X Execute() (lib/Support/Unix/Program.inc) calls posix_spawn:
 - create dynamic libraries instead of executables
 - create frameworks with the dynamic libraries
 
-- add libFFI to the interpreter, for aux libraries (compiling)
+X add libFFI to the interpreter, for aux functions:
+   - function name in IR not exactly function name in library. 
+   - in sys::DynamicLibrary::SearchForAddressOfSymbol()
+   - we try 3 times: one with the name, one with removing the '\x01' in front, one with removing the '_' in front. 
+   - it works, but why did we have to to that?
+   - map std* to thread_std* in DynamicLibrary.inc, map thread_std* to the external values.
+
 - we can't generate llvm IR while linking, but we can link several IR files with llvm-link
-- so question is: how to call system functions / aux libraries? With FFI? 
+- how to add new libraries to IR file? How to load them? 
+- where to place include files for on-system compilation? 
 
 Analysis information:
 ---------------------
@@ -87,20 +94,23 @@ Analysis information:
 Also: apparently, Driver is not deleted when clang exits. 
    Doesn't break down things, but not reinitialized. llvm::sys::fs::getMainExecutable(Argv0, P)
 
-Compile auxiliary files with:
-~/src/Xcode_iPad/llvm/build_osx/bin/clang -emit-llvm-bc -arch arm64 -target arm64-apple-darwin17.5.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS11.3.sdk -I ../.. -F ../../build/Debug-iphoneos/ -framework ios_system mkdir.c
+Compile files with:
+~/src/Xcode_iPad/llvm/build_osx/bin/clang -S -emit-llvm -arch arm64 -target arm64-apple-darwin17.5.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS11.3.sdk -I ../.. mkdir.c
    
+Extract bitcode from compiled apps with bitcode_retriever: https://github.com/AlexDenisov/bitcode_retriever
+It will extract one bc file for each C file in the original program. The ll file (extracted with llvm-dis) is identical to the file generated with -emit-llvm. 
 
 LLVM iOS version wish list:
 ===========================
 
 X run lli on a llvm intermediate representation, on an iOS device.
-- ...with output on the application screen.
+X ...with output on the application screen.
 X generate llvm intermediate representation locally on iOS device
 X ...and run it using lli
-- ...without the need to specify "clang -cc1"
-- add libFFI to lli, to load dynamic libraries
-- install headers on iOS device, for compilation
+X ...without the need to specify "clang -cc1"
+X add libFFI to lli, to load dynamic libraries
+X install headers on iOS device, for compilation
+- load more dynamic libraries, as needed.
 
 X run lli on binary intermediate representation
 - use lli to run a "serious" application (multiple source files, command line
