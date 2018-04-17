@@ -23,6 +23,13 @@
 #include <cstring>
 #include <vector>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#endif
+#endif
+
 using namespace llvm;
 using namespace llvm::sys;
 
@@ -135,6 +142,7 @@ char DynamicLibrary::Invalid;
 DynamicLibrary::SearchOrdering DynamicLibrary::SearchOrder =
     DynamicLibrary::SO_Linker;
 
+
 namespace llvm {
 void *SearchForAddressOfSpecialSymbol(const char *SymbolName) {
   return DoSearch(SymbolName); // DynamicLibrary.inc
@@ -180,6 +188,12 @@ void *DynamicLibrary::getAddressOfSymbol(const char *SymbolName) {
 void *DynamicLibrary::SearchForAddressOfSymbol(const char *SymbolName) {
   {
     SmartScopedLock<true> Lock(*SymbolsMutex);
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+	// These are also defined in the libraries, but we want these
+    if (!strcmp(SymbolName, "thread_stdin")) return &thread_stdin;
+    if (!strcmp(SymbolName, "thread_stdout")) return &thread_stdout;
+    if (!strcmp(SymbolName, "thread_stderr")) return &thread_stderr;
+#endif // (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 
     // First check symbols added via AddSymbol().
     if (ExplicitSymbols.isConstructed()) {
@@ -195,7 +209,6 @@ void *DynamicLibrary::SearchForAddressOfSymbol(const char *SymbolName) {
         return Ptr;
     }
   }
-
   return llvm::SearchForAddressOfSpecialSymbol(SymbolName);
 }
 
