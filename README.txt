@@ -30,18 +30,15 @@ cores you can give to the compiler). For this reason, even the scripts are
 not fully guaranteed to work. 
 
 The steps for compilation are:
-- get clang as a submodule: 
-git submodule update --init --recursive
-
+- get clang and lld as submodules: git submodule update --init --recursive
 - get libcxx and libcxxabi as packages
-- compile LLVM, clang, libcxx and libcxxabi for OSX
+- compile LLVM, clang, lld, libcxx and libcxxabi for OSX
 - move libcxx and libcxxabi out of the way
+- get libffi and compile it
 - compile LLVM and clang for iOS (that's the long step)
 
 "bootstrap.sh" in this directory takes care of all these steps. Remember, 
-you have time for a long walk in the woods while it compiles. "build_ios.sh"
-does only the "compile LLVM and clang for iOS" part. This is the part I expect
-to be doing multiple times.
+you have time for a long walk in the woods while it compiles. 
 
 Once you have compiled everything, add clang and lli to the list of embedded 
 binaries, along with all the required dynamic libraries (a lot of them). 
@@ -69,7 +66,7 @@ X replace progname() with argv[0] (progname is "OpenTerm", argv[0] is "clang")
 X Execute() (lib/Support/Unix/Program.inc) calls posix_spawn:
      - I can't create a fake posix_spawn, because file actions are a secret API.
      X so I undefined HAVE_POSIX_SPAWN and we go through fork + exec 
-- check that memory is freed when LLVM exits, that flags are reset
+- check that memory is freed when LLVM exits, that all flags are reset
 - create dynamic libraries instead of executables
 - create frameworks with the dynamic libraries
 
@@ -81,8 +78,10 @@ X add libFFI to the interpreter, for aux functions:
    - map std* to thread_std* in DynamicLibrary.inc, map thread_std* to the external values.
 
 - we can't generate llvm IR while linking, but we can link several IR files with llvm-link
-- how to add new libraries to IR file? How to load them? 
+- how to add new libraries to IR file? How to load them? "nm" works on embedded binaries.
 - where to place include files for on-system compilation? 
+
+- stability issues when using nm <library> | grep " T ".  Crashes occasionally. Cause unknown.
 
 Analysis information:
 ---------------------
