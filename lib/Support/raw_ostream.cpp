@@ -600,15 +600,23 @@ void raw_fd_ostream::write_impl(const char *Ptr, size_t Size) {
   if (::_isatty(FD) && !RunningWindows8OrGreater())
     MaxWriteSize = 32767;
 #endif
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+  // When using redirection, ios_system has issues with large writes
+  // Using trial and error to find a reasonable size: SIZE_MAX >> 1 is too much.
+  // 1024 is enough. TODO: try larger values
+  MaxWriteSize = 1024;
+#endif
 
   do {
     size_t ChunkSize = std::min(Size, MaxWriteSize);
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 	ssize_t ret; 
-	if (FD == STDOUT_FILENO) 
+	if (FD == STDOUT_FILENO) {
 		ret = ::write(fileno(thread_stdout), Ptr, ChunkSize); 
-	else if  (FD == STDERR_FILENO) 
+	}
+	else if  (FD == STDERR_FILENO) {
 		ret = ::write(fileno(thread_stderr), Ptr, ChunkSize); 
+	}
 	else ret = ::write(FD, Ptr, ChunkSize);
 #else
     ssize_t ret = ::write(FD, Ptr, ChunkSize);
