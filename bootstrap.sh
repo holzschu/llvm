@@ -84,7 +84,11 @@ if [ ! -d $FFI_SRCDIR ]; then
 	xcodebuild -project libffi.xcodeproj -target libffi-iOS -sdk iphoneos -arch arm64 -configuration Debug -quiet
 	popd
 fi
-
+# compile ios_system where we want to find it:
+echo "Compiling ios_system:" 
+pushd $IOS_SYSTEM
+xcodebuild -project ios_system.xcodeproj -alltargets -sdk iphoneos -configuration Debug -quiet
+popd
 
 # TODO: some combination of build variables might allow us to build these too. 
 # Right now, they fail. Maybe CFLAGS with: -D__need_size_t -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS 

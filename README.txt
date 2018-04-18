@@ -81,7 +81,7 @@ X add libFFI to the interpreter, for aux functions:
 - how to add new libraries to IR file? How to load them? "nm" works on embedded binaries.
 - where to place include files for on-system compilation? 
 
-- stability issues when using nm <library> | grep " T ".  Crashes occasionally. Cause unknown.
+- stability issues when using nm <library> | grep " T ".  Crashes occasionally with a SIGPIPE. Could be caused by stderr being unbuffered, while stdout is buffered. Tries to write to stdout, with Unbuffered == true. Means stdout has been closed. 
 
 Analysis information:
 ---------------------
