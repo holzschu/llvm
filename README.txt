@@ -63,7 +63,7 @@ X By default, lli calls the JIT compiler. That does not work outside of Xcode, a
    - in the JIT compiler (sideloading only)
 
 X replace progname() with argv[0] (progname is "OpenTerm", argv[0] is "clang")
-   - Done. Now we need "ld" for some programs.
+
 X Execute() (lib/Support/Unix/Program.inc) calls posix_spawn:
      - I can't create a fake posix_spawn, because file actions are a secret API.
      X so I undefined HAVE_POSIX_SPAWN and we go through fork + exec 
