@@ -47,6 +47,8 @@ Once you have compiled everything, add clang and lli to the list of embedded
 binaries, along with all the required dynamic libraries (a lot of them). 
 See `project.pbxproj` in this directory for an example. 
 
+Commands in `project.pbxproj`: clang, lli, llvm-link, llvm-nm, llvm-dis 
+
 I welcome all help on this project, including on this README file. 
 
 LLVM iOS version TODO list:

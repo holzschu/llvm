@@ -56,6 +56,9 @@
 		225F92292076502700632A88 /* libLLVMDebugInfoMSF.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F92282076500700632A88 /* libLLVMDebugInfoMSF.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		225F922C2076505100632A88 /* libLLVMMCDisassembler.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F922A2076504E00632A88 /* libLLVMMCDisassembler.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		225F9230207653DC00632A88 /* clang-7 in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F922F207653D900632A88 /* clang-7 */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		22A36F06208775D8008B8F92 /* llvm-nm in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A36F05208775D3008B8F92 /* llvm-nm */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		22A36F0820877D3C008B8F92 /* llvm-dis in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A36F0720877D2C008B8F92 /* llvm-dis */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		22A36F0A20877DE0008B8F92 /* llvm-link in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A36F0920877DD7008B8F92 /* llvm-link */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		22A808CB20664BF0001AB98D /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 22A808C920664BEF001AB98D /* commandDictionary.plist */; };
 		22A808CC20664BF0001AB98D /* extraCommandsDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = 22A808CA20664BF0001AB98D /* extraCommandsDictionary.plist */; };
 		22B41D29206AE89B00FC2BF0 /* libbibtex.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B41D28206AE85000FC2BF0 /* libbibtex.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -184,6 +187,9 @@
 				22287E89206983A30031C57D /* curl_ios.framework in Embed Frameworks */,
 				22287E70206983480031C57D /* libssh2.framework in Embed Frameworks */,
 				22287E71206983480031C57D /* openssl.framework in Embed Frameworks */,
+				22A36F0A20877DE0008B8F92 /* llvm-link in Embed Frameworks */,
+				22A36F0820877D3C008B8F92 /* llvm-dis in Embed Frameworks */,
+				22A36F06208775D8008B8F92 /* llvm-nm in Embed Frameworks */,
 				225F9230207653DC00632A88 /* clang-7 in Embed Frameworks */,
 				22FAA28A208099AB0028ED31 /* libclangToolingCore.dylib in Embed Frameworks */,
 				22FAA28B208099AB0028ED31 /* libclangToolingRefactor.dylib in Embed Frameworks */,
@@ -344,6 +350,9 @@
 		225F9266207659E900632A88 /* libclangStaticAnalyzerCheckers.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangStaticAnalyzerCheckers.dylib; path = ../llvm/build_ios/lib/libclangStaticAnalyzerCheckers.dylib; sourceTree = "<group>"; };
 		225F926820765A0800632A88 /* libclangASTMatchers.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangASTMatchers.dylib; path = ../llvm/build_ios/lib/libclangASTMatchers.dylib; sourceTree = "<group>"; };
 		225F926A20765A5A00632A88 /* libclangStaticAnalyzerCore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangStaticAnalyzerCore.dylib; path = ../llvm/build_ios/lib/libclangStaticAnalyzerCore.dylib; sourceTree = "<group>"; };
+		22A36F05208775D3008B8F92 /* llvm-nm */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "llvm-nm"; path = "../llvm/build_ios/bin/llvm-nm"; sourceTree = "<group>"; };
+		22A36F0720877D2C008B8F92 /* llvm-dis */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "llvm-dis"; path = "../llvm/build_ios/bin/llvm-dis"; sourceTree = "<group>"; };
+		22A36F0920877DD7008B8F92 /* llvm-link */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "llvm-link"; path = "../llvm/build_ios/bin/llvm-link"; sourceTree = "<group>"; };
 		22A808C920664BEF001AB98D /* commandDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = commandDictionary.plist; path = Resources/commandDictionary.plist; sourceTree = "<group>"; };
 		22A808CA20664BF0001AB98D /* extraCommandsDictionary.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = extraCommandsDictionary.plist; path = Resources/extraCommandsDictionary.plist; sourceTree = "<group>"; };
 		22A9494D2067FE65003A0666 /* openssl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = openssl.framework; sourceTree = "<group>"; };
@@ -531,6 +540,16 @@
 			name = clang;
 			sourceTree = "<group>";
 		};
+		22A36F04208775A4008B8F92 /* Other llvm commands */ = {
+			isa = PBXGroup;
+			children = (
+				22A36F0920877DD7008B8F92 /* llvm-link */,
+				22A36F0720877D2C008B8F92 /* llvm-dis */,
+				22A36F05208775D3008B8F92 /* llvm-nm */,
+			);
+			name = "Other llvm commands";
+			sourceTree = "<group>";
+		};
 		22A949502067FE75003A0666 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -697,6 +716,7 @@
 		BE3808491FD9BFB600393EB8 = {
 			isa = PBXGroup;
 			children = (
+				22A36F04208775A4008B8F92 /* Other llvm commands */,
 				225F922E2076538000632A88 /* clang */,
 				225F91D52076497700632A88 /* lli */,
 				22B41D37206AE9A700FC2BF0 /* lua_ios.framework */,
