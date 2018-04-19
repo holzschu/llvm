@@ -78,10 +78,10 @@ X add libFFI to the interpreter, for aux functions:
    - map std* to thread_std* in DynamicLibrary.inc, map thread_std* to the external values.
 
 - we can't generate llvm IR while linking, but we can link several IR files with llvm-link
-- how to add new libraries to IR file? How to load them? "nm" works on embedded binaries.
+- how to add new libraries to IR file? How to load them? "nm" works on embedded binaries, so we could extract the symbols from libraries. It won't work on system libraries, or will it?
 - where to place include files for on-system compilation? 
 
-- stability issues when using nm <library> | grep " T ".  Crashes occasionally with a SIGPIPE. Could be caused by stderr being unbuffered, while stdout is buffered. Tries to write to stdout, with Unbuffered == true. Means stdout has been closed. 
+X stability issues when using nm <library> + output redirection. Crashes occasionally with a SIGPIPE. Got more stable by reducing buffer size in raw_ostream.cpp from SIZE_MAX >> 1 to 1024. Maybe we can increase the buffer size a bit. 
 
 Analysis information:
 ---------------------
