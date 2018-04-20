@@ -56,6 +56,8 @@ public:
     IntelAtom,
     IntelSLM,
     IntelGLM,
+    IntelGLP,
+    IntelTRM,
     IntelHaswell,
     IntelBroadwell,
     IntelSkylake,
@@ -368,6 +370,9 @@ protected:
   /// Processor support RDPID instruction
   bool HasRDPID;
 
+  /// Processor supports WaitPKG instructions
+  bool HasWAITPKG;
+
   /// Use a retpoline thunk rather than indirect calls to block speculative
   /// execution.
   bool UseRetpoline;
@@ -626,6 +631,7 @@ public:
   bool hasCLWB() const { return HasCLWB; }
   bool hasWBNOINVD() const { return HasWBNOINVD; }
   bool hasRDPID() const { return HasRDPID; }
+  bool hasWAITPKG() const { return HasWAITPKG; }
   bool useRetpoline() const { return UseRetpoline; }
   bool useRetpolineExternalThunk() const { return UseRetpolineExternalThunk; }
 
@@ -660,7 +666,11 @@ public:
   /// TODO: to be removed later and replaced with suitable properties
   bool isAtom() const { return X86ProcFamily == IntelAtom; }
   bool isSLM() const { return X86ProcFamily == IntelSLM; }
-  bool isGLM() const { return X86ProcFamily == IntelGLM; }
+  bool isGLM() const {
+    return X86ProcFamily == IntelGLM ||
+           X86ProcFamily == IntelGLP ||
+           X86ProcFamily == IntelTRM;
+  }
   bool useSoftFloat() const { return UseSoftFloat; }
 
   /// Use mfence if we have SSE2 or we're on x86-64 (even if we asked for

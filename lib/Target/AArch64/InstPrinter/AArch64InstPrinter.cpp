@@ -969,12 +969,9 @@ void AArch64InstPrinter::printArithExtend(const MCInst *MI, unsigned OpNum,
     O << " #" << ShiftVal;
 }
 
-void AArch64InstPrinter::printMemExtend(const MCInst *MI, unsigned OpNum,
-                                        raw_ostream &O, char SrcRegKind,
-                                        unsigned Width) {
-  unsigned SignExtend = MI->getOperand(OpNum).getImm();
-  unsigned DoShift = MI->getOperand(OpNum + 1).getImm();
-
+static void printMemExtendImpl(bool SignExtend, bool DoShift,
+                               unsigned Width, char SrcRegKind,
+                               raw_ostream &O) {
   // sxtw, sxtx, uxtw or lsl (== uxtx)
   bool IsLSL = !SignExtend && SrcRegKind == 'x';
   if (IsLSL)
@@ -984,6 +981,28 @@ void AArch64InstPrinter::printMemExtend(const MCInst *MI, unsigned OpNum,
 
   if (DoShift || IsLSL)
     O << " #" << Log2_32(Width / 8);
+}
+
+void AArch64InstPrinter::printMemExtend(const MCInst *MI, unsigned OpNum,
+                                        raw_ostream &O, char SrcRegKind,
+                                        unsigned Width) {
+  bool SignExtend = MI->getOperand(OpNum).getImm();
+  bool DoShift = MI->getOperand(OpNum + 1).getImm();
+  printMemExtendImpl(SignExtend, DoShift, Width, SrcRegKind, O);
+}
+
+template <bool SignExtend, int ExtWidth, char SrcRegKind>
+void AArch64InstPrinter::printRegWithShiftExtend(const MCInst *MI,
+                                                 unsigned OpNum,
+                                                 const MCSubtargetInfo &STI,
+                                                 raw_ostream &O) {
+  printOperand(MI, OpNum, STI, O);
+
+  bool DoShift = ExtWidth != 8;
+  if (SignExtend || DoShift || SrcRegKind == 'w') {
+    O << ", ";
+    printMemExtendImpl(SignExtend, DoShift, ExtWidth, SrcRegKind, O);
+  }
 }
 
 void AArch64InstPrinter::printCondCode(const MCInst *MI, unsigned OpNum,
@@ -1180,12 +1199,15 @@ void AArch64InstPrinter::printVectorList(const MCInst *MI, unsigned OpNum,
   // list).
   unsigned NumRegs = 1;
   if (MRI.getRegClass(AArch64::DDRegClassID).contains(Reg) ||
+      MRI.getRegClass(AArch64::ZPR2RegClassID).contains(Reg) ||
       MRI.getRegClass(AArch64::QQRegClassID).contains(Reg))
     NumRegs = 2;
   else if (MRI.getRegClass(AArch64::DDDRegClassID).contains(Reg) ||
+           MRI.getRegClass(AArch64::ZPR3RegClassID).contains(Reg) ||
            MRI.getRegClass(AArch64::QQQRegClassID).contains(Reg))
     NumRegs = 3;
   else if (MRI.getRegClass(AArch64::DDDDRegClassID).contains(Reg) ||
+           MRI.getRegClass(AArch64::ZPR4RegClassID).contains(Reg) ||
            MRI.getRegClass(AArch64::QQQQRegClassID).contains(Reg))
     NumRegs = 4;
 

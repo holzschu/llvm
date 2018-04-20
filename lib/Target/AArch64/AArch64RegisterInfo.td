@@ -171,6 +171,7 @@ def GPR64sponly : RegisterClass<"AArch64", [i64], 64, (add SP)>;
 def GPR64spPlus0Operand : AsmOperandClass {
   let Name = "GPR64sp0";
   let RenderMethod = "addRegOperands";
+  let PredicateMethod = "isGPR64<AArch64::GPR64spRegClassID>";
   let ParserMethod = "tryParseGPR64sp0Operand";
 }
 
@@ -841,6 +842,24 @@ def ZPR128  : ZPRRegOp<"q", ZPRAsmOp128, ZPR>;
 
 let Namespace = "AArch64" in {
   def zsub0 : SubRegIndex<128, -1>;
+  def zsub1 : SubRegIndex<128, -1>;
+  def zsub2 : SubRegIndex<128, -1>;
+  def zsub3 : SubRegIndex<128, -1>;
+}
+
+// Pairs, triples, and quads of SVE vector registers.
+def ZSeqPairs   : RegisterTuples<[zsub0, zsub1], [(rotl ZPR, 0), (rotl ZPR, 1)]>;
+def ZSeqTriples : RegisterTuples<[zsub0, zsub1, zsub2], [(rotl ZPR, 0), (rotl ZPR, 1), (rotl ZPR, 2)]>;
+def ZSeqQuads   : RegisterTuples<[zsub0, zsub1, zsub2, zsub3], [(rotl ZPR, 0), (rotl ZPR, 1), (rotl ZPR, 2), (rotl ZPR, 3)]>;
+
+def ZPR2   : RegisterClass<"AArch64", [untyped], 128, (add ZSeqPairs)>  {
+  let Size = 256;
+}
+def ZPR3  : RegisterClass<"AArch64", [untyped], 128, (add ZSeqTriples)> {
+  let Size = 384;
+}
+def ZPR4 : RegisterClass<"AArch64", [untyped], 128, (add ZSeqQuads)> {
+  let Size = 512;
 }
 
 class ZPRVectorList<int ElementWidth, int NumRegs> : AsmOperandClass {
@@ -865,4 +884,73 @@ def Z_s  : RegisterOperand<ZPR,  "printTypedVectorList<0,'s'>"> {
 
 def Z_d  : RegisterOperand<ZPR,  "printTypedVectorList<0,'d'>"> {
   let ParserMatchClass = ZPRVectorList<64, 1>;
+}
+
+def ZZ_b  : RegisterOperand<ZPR2, "printTypedVectorList<0,'b'>"> {
+  let ParserMatchClass = ZPRVectorList<8, 2>;
+}
+
+def ZZ_h  : RegisterOperand<ZPR2, "printTypedVectorList<0,'h'>"> {
+  let ParserMatchClass = ZPRVectorList<16, 2>;
+}
+
+def ZZ_s  : RegisterOperand<ZPR2, "printTypedVectorList<0,'s'>"> {
+  let ParserMatchClass = ZPRVectorList<32, 2>;
+}
+
+def ZZ_d  : RegisterOperand<ZPR2, "printTypedVectorList<0,'d'>"> {
+  let ParserMatchClass = ZPRVectorList<64, 2>;
+}
+
+def ZZZ_b  : RegisterOperand<ZPR3, "printTypedVectorList<0,'b'>"> {
+  let ParserMatchClass = ZPRVectorList<8, 3>;
+}
+
+def ZZZ_h  : RegisterOperand<ZPR3, "printTypedVectorList<0,'h'>"> {
+  let ParserMatchClass = ZPRVectorList<16, 3>;
+}
+
+def ZZZ_s  : RegisterOperand<ZPR3, "printTypedVectorList<0,'s'>"> {
+  let ParserMatchClass = ZPRVectorList<32, 3>;
+}
+
+def ZZZ_d  : RegisterOperand<ZPR3, "printTypedVectorList<0,'d'>"> {
+  let ParserMatchClass = ZPRVectorList<64, 3>;
+}
+
+def ZZZZ_b : RegisterOperand<ZPR4, "printTypedVectorList<0,'b'>"> {
+  let ParserMatchClass = ZPRVectorList<8, 4>;
+}
+
+def ZZZZ_h : RegisterOperand<ZPR4, "printTypedVectorList<0,'h'>"> {
+  let ParserMatchClass = ZPRVectorList<16, 4>;
+}
+
+def ZZZZ_s : RegisterOperand<ZPR4, "printTypedVectorList<0,'s'>"> {
+  let ParserMatchClass = ZPRVectorList<32, 4>;
+}
+
+def ZZZZ_d : RegisterOperand<ZPR4, "printTypedVectorList<0,'d'>"> {
+  let ParserMatchClass = ZPRVectorList<64, 4>;
+}
+
+class GPR64ShiftExtendAsmOperand <string AsmOperandName, int Scale, string RegClass> : AsmOperandClass {
+  let Name = AsmOperandName # Scale;
+  let PredicateMethod = "isGPR64WithShiftExtend<AArch64::"#RegClass#"RegClassID, " # Scale # ">";
+  let DiagnosticType = "Invalid" # AsmOperandName # Scale;
+  let RenderMethod = "addRegOperands";
+  let ParserMethod = "tryParseGPROperand<true>";
+}
+
+class GPR64ExtendRegisterOperand<string Name, int Scale, RegisterClass RegClass> : RegisterOperand<RegClass>{
+  let ParserMatchClass = !cast<AsmOperandClass>(Name);
+  let PrintMethod = "printRegWithShiftExtend<false, " # Scale # ", 'x'>";
+}
+
+foreach Scale = [8, 16, 32, 64] in {
+  def GPR64shiftedAsmOpnd # Scale : GPR64ShiftExtendAsmOperand<"GPR64shifted", Scale, "GPR64">;
+  def GPR64shifted # Scale : GPR64ExtendRegisterOperand<"GPR64shiftedAsmOpnd" # Scale, Scale, GPR64>;
+
+  def GPR64NoXZRshiftedAsmOpnd # Scale : GPR64ShiftExtendAsmOperand<"GPR64NoXZRshifted", Scale, "GPR64common">;
+  def GPR64NoXZRshifted # Scale : GPR64ExtendRegisterOperand<"GPR64NoXZRshiftedAsmOpnd" # Scale, Scale, GPR64common>;
 }

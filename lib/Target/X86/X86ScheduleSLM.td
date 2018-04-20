@@ -93,7 +93,7 @@ defm : SLMWriteResPair<WriteShift, [SLM_IEC_RSV0],  1>;
 defm : SLMWriteResPair<WriteJump,  [SLM_IEC_RSV1],  1>;
 defm : SLMWriteResPair<WriteCRC32, [SLM_IEC_RSV1],  3>;
 
-defm : SLMWriteResPair<WriteCMOV,  [SLM_IEC_RSV01], 1>;
+defm : SLMWriteResPair<WriteCMOV,  [SLM_IEC_RSV01], 2, [2]>;
 def  : WriteRes<WriteSETCC, [SLM_IEC_RSV01]>;
 def  : WriteRes<WriteSETCCStore, [SLM_IEC_RSV01, SLM_MEC_RSV]> {
   // FIXME Latency and NumMicrOps?
@@ -113,8 +113,8 @@ defm : SLMWriteResPair<WritePOPCNT,  [SLM_IEC_RSV0], 3>;
 
 // BMI1 BEXTR, BMI2 BZHI
 // NOTE: These don't exist on Silvermont. Ports are guesses.
-defm : SBWriteResPair<WriteBEXTR, [SLM_IEC_RSV0], 1>;
-defm : SBWriteResPair<WriteBZHI, [SLM_IEC_RSV0], 1>;
+defm : SLMWriteResPair<WriteBEXTR, [SLM_IEC_RSV0], 1>;
+defm : SLMWriteResPair<WriteBZHI, [SLM_IEC_RSV0], 1>;
 
 // This is quite rough, latency depends on the dividend.
 defm : SLMWriteResPair<WriteIDiv, [SLM_IEC_RSV01, SLMDivider], 25, [1,25], 1, 4>;
@@ -125,6 +125,8 @@ def  : WriteRes<WriteFLoad,        [SLM_MEC_RSV]> { let Latency = 3; }
 def  : WriteRes<WriteFMove,        [SLM_FPC_RSV01]>;
 
 defm : SLMWriteResPair<WriteFAdd,   [SLM_FPC_RSV1], 3>;
+defm : SLMWriteResPair<WriteFCmp,   [SLM_FPC_RSV1], 3>;
+defm : SLMWriteResPair<WriteFCom,   [SLM_FPC_RSV1], 3>;
 defm : SLMWriteResPair<WriteFMul,   [SLM_FPC_RSV0, SLMFPMultiplier], 5, [1,2]>;
 defm : SLMWriteResPair<WriteFDiv,   [SLM_FPC_RSV0, SLMFPDivider], 34, [1,34]>;
 defm : SLMWriteResPair<WriteFRcp,   [SLM_FPC_RSV0], 5>;
@@ -153,6 +155,7 @@ defm : SLMWriteResPair<WriteShuffle,  [SLM_FPC_RSV0],  1>;
 defm : SLMWriteResPair<WriteVarShuffle,  [SLM_FPC_RSV0],  1>;
 defm : SLMWriteResPair<WriteBlend,  [SLM_FPC_RSV0],  1>;
 defm : SLMWriteResPair<WriteMPSAD,  [SLM_FPC_RSV0],  7>;
+defm : SLMWriteResPair<WritePSADBW, [SLM_FPC_RSV0],  4>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Horizontal add/sub  instructions.
