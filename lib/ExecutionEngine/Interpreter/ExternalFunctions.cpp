@@ -331,9 +331,13 @@ static GenericValue lle_X_exit(FunctionType *FT, ArrayRef<GenericValue> Args) {
 
 // void abort(void)
 static GenericValue lle_X_abort(FunctionType *FT, ArrayRef<GenericValue> Args) {
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+	report_fatal_error("Interpreted program raised SIGABRT");
+#else
   //FIXME: should we report or raise here?
   //report_fatal_error("Interpreted program raised SIGABRT");
   raise (SIGABRT);
+#endif
   return GenericValue();
 }
 

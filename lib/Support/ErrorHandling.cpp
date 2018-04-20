@@ -41,6 +41,7 @@
 #include <TargetConditionals.h>
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 #include "ios_error.h"
+#define abort() ios_exit(1)
 #endif
 #endif
 
@@ -121,7 +122,11 @@ void llvm::report_fatal_error(const Twine &Reason, bool GenCrashDiag) {
     raw_svector_ostream OS(Buffer);
     OS << "LLVM ERROR: " << Reason << "\n";
     StringRef MessageStr = OS.str();
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+    ssize_t written = ::write(fileno(thread_stderr), MessageStr.data(), MessageStr.size());
+#else    
     ssize_t written = ::write(2, MessageStr.data(), MessageStr.size());
+#endif
     (void)written; // If something went wrong, we deliberately just give up.
   }
 
@@ -176,7 +181,11 @@ void llvm::report_bad_alloc_error(const char *Reason, bool GenCrashDiag) {
   // Don't call the normal error handler. It may allocate memory. Directly write
   // an OOM to stderr and abort.
   char OOMMessage[] = "LLVM ERROR: out of memory\n";
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+    ssize_t written = ::write(fileno(thread_stderr), OOMMessage, strlen(OOMMessage));
+#else      
   ssize_t written = ::write(2, OOMMessage, strlen(OOMMessage));
+#endif
   (void)written;
   abort();
 #endif

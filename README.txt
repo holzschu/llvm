@@ -62,6 +62,8 @@ X By default, lli calls the JIT compiler. That does not work outside of Xcode, a
    - in the JIT compiler (sideloading only)
 
 X replace progname() with argv[0] (progname is "OpenTerm", argv[0] is "clang")
+- report_fatal_error() does not output to the screen (thread_stderr) but to the console. Must fix.
+- abort() crashese the entire program. Must fix.
 
 X Execute() (lib/Support/Unix/Program.inc) calls posix_spawn:
      - I can't create a fake posix_spawn, because file actions are a secret API.
