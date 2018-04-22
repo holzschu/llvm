@@ -69,7 +69,37 @@
 #undef exit
 #define exit(a) { llvm_shutdown(); ios_exit(a); }
 extern "C" {
-void my_exit(int a) { llvm_shutdown(); ios_exit(a); }
+void llvm_ios_exit(int a) { llvm_shutdown(); ios_exit(a); }
+void llvm_ios_abort(int a) { report_fatal_error("LLVM JIT compiled program raised SIGABRT"); }
+int llvm_ios_putchar(char c) { return fputc(c, thread_stdout); }
+int llvm_ios_getchar(void) { return fgetc(thread_stdin); }
+wint_t llvm_ios_getwchar(void) { return fgetwc(thread_stdin); }
+int llvm_ios_iswprint(wint_t a) { return 1; }
+int llvm_ios_printf (const char *format, ...) {
+	va_list arg;
+	int done;
+
+	va_start (arg, format);
+	done = vfprintf (thread_stdout, format, arg);
+	va_end (arg);
+
+	return done;
+}
+int llvm_ios_scanf (const char *format, ...) {
+    int             count;
+    va_list ap;
+    
+    fflush(thread_stdout);
+    va_start (ap, format);
+    count = vfscanf (thread_stdin, format, ap);
+    va_end (ap);
+    return (count);
+}
+ssize_t llvm_ios_write(int fildes, const void *buf, size_t nbyte) {
+	if (fildes == STDOUT_FILENO) return write(fileno(thread_stdout), buf, nbyte); 
+	if (fildes == STDERR_FILENO) return write(fileno(thread_stderr), buf, nbyte); 
+	return write(fildes, buf, nbyte); 
+}
 }
 #endif
 #endif
@@ -433,6 +463,39 @@ int main(int argc, char **argv, char * const *envp) {
     Options.FloatABIType = FloatABIForCalls;
 
   builder.setTargetOptions(Options);
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+	  // For ios_system, add symbols that override the existing ones:
+	  // This needs to be done *before* the engine creation:
+	  // This way, we act on both interpreter and JIT:
+	  sys::DynamicLibrary::AddSymbol("stdin", &thread_stdin);
+	  sys::DynamicLibrary::AddSymbol("stdout", &thread_stdout);
+	  sys::DynamicLibrary::AddSymbol("stderr", &thread_stderr);
+	  sys::DynamicLibrary::AddSymbol("__stdinp", &thread_stdin);
+	  sys::DynamicLibrary::AddSymbol("__stdoutp", &thread_stdout);
+	  sys::DynamicLibrary::AddSymbol("__stderrp", &thread_stderr);
+	  sys::DynamicLibrary::AddSymbol("thread_stdin", &thread_stdin);
+	  sys::DynamicLibrary::AddSymbol("thread_stdout", &thread_stdout);
+	  sys::DynamicLibrary::AddSymbol("thread_stderr", &thread_stderr);
+	  // External functions defined in ios_system:
+	  sys::DynamicLibrary::AddSymbol("system", (void*)&ios_system);
+	  sys::DynamicLibrary::AddSymbol("popen", (void*)&ios_popen);
+	  sys::DynamicLibrary::AddSymbol("pclose", (void*)&fclose);
+	  sys::DynamicLibrary::AddSymbol("isatty", (void*)&ios_isatty);
+	  sys::DynamicLibrary::AddSymbol("dup2", (void*)&ios_dup2);
+	  sys::DynamicLibrary::AddSymbol("execv", (void*)&ios_execv);
+	  sys::DynamicLibrary::AddSymbol("execve", (void*)&ios_execve);
+	  // External functions defined locally:
+	  sys::DynamicLibrary::AddSymbol("exit", (void*)&llvm_ios_exit);
+	  sys::DynamicLibrary::AddSymbol("abort", (void*)&llvm_ios_abort);
+	  sys::DynamicLibrary::AddSymbol("putchar", (void*)&llvm_ios_putchar);
+	  sys::DynamicLibrary::AddSymbol("getchar", (void*)&llvm_ios_getchar);
+	  sys::DynamicLibrary::AddSymbol("getwchar", (void*)&llvm_ios_getwchar);
+	  sys::DynamicLibrary::AddSymbol("iswprint", (void*)&llvm_ios_iswprint);
+	  // scanf, printf, write: redirect to right stream
+	  sys::DynamicLibrary::AddSymbol("printf", (void*)&llvm_ios_printf);
+	  sys::DynamicLibrary::AddSymbol("scanf", (void*)&llvm_ios_scanf);
+	  sys::DynamicLibrary::AddSymbol("write", (void*)&llvm_ios_write);
+#endif  
 
   std::unique_ptr<ExecutionEngine> EE(builder.create());
   if (!EE) {
@@ -573,7 +636,7 @@ int main(int argc, char **argv, char * const *envp) {
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 	  // on iOS, normally, ForceInterpreter = true, but if your run the JIT you need this:
 	  if (!ForceInterpreter) {
-		  Exit = Mod->getOrInsertFunction("my_exit", Type::getVoidTy(Context),
+		  Exit = Mod->getOrInsertFunction("llvm_ios_exit", Type::getVoidTy(Context),
                                                       Type::getInt32Ty(Context));
 	  } else 
 #endif

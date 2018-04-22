@@ -51,12 +51,19 @@ void *DynamicLibrary::HandleSet::DLSym(void *Handle, const char *Symbol) {
 	const char* symbolName = Symbol;
 	// Works, but why? deMangleName?
 	void* returnPtr = ::dlsym(Handle, symbolName);
+	// fprintf(thread_stderr, "Trying %s, got %x \n", symbolName, returnPtr); fflush(thread_stderr);  
 	if (returnPtr) return returnPtr;
-	if (symbolName[0] == '\x01') symbolName += 1;
-	returnPtr = ::dlsym(Handle, symbolName);
+	if (symbolName[0] == '\x01') {
+		symbolName += 1;
+		returnPtr = ::dlsym(Handle, symbolName);
+		// fprintf(thread_stderr, "Trying %s, got %x \n", symbolName, returnPtr); fflush(thread_stderr); 
+	}
 	if (returnPtr) return returnPtr;
-	if (symbolName[0] == '_') symbolName += 1;
-	returnPtr = ::dlsym(Handle, symbolName);
+	if (symbolName[0] == '_') {
+		symbolName += 1;
+		returnPtr = ::dlsym(Handle, symbolName);
+		// fprintf(thread_stderr, "Trying %s, got %x \n", symbolName, returnPtr);  fflush(thread_stderr);  
+	}
 	return returnPtr;
 #else
   return ::dlsym(Handle, Symbol);
@@ -131,12 +138,6 @@ static void *DoSearch(const char* SymbolName) {
   // For everything else, we want to check to make sure the symbol isn't defined
   // as a macro before using EXPLICIT_SYMBOL.
   {
-#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-	// These are also defined in the libraries, but we want these
-    if (!strcmp(SymbolName, "stdin")) return &thread_stdin;
-    if (!strcmp(SymbolName, "stdout")) return &thread_stdout;
-    if (!strcmp(SymbolName, "stderr")) return &thread_stderr;
-#endif  	  
 #ifndef stdin
     EXPLICIT_SYMBOL(stdin);
 #endif

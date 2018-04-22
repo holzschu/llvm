@@ -188,20 +188,6 @@ void *DynamicLibrary::getAddressOfSymbol(const char *SymbolName) {
 void *DynamicLibrary::SearchForAddressOfSymbol(const char *SymbolName) {
   {
     SmartScopedLock<true> Lock(*SymbolsMutex);
-#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-	// These are also defined in the libraries, but we want these
-    if (!strcmp(SymbolName, "thread_stdin")) return &thread_stdin;
-    if (!strcmp(SymbolName, "thread_stdout")) return &thread_stdout;
-    if (!strcmp(SymbolName, "thread_stderr")) return &thread_stderr;
-    // Apple headers (stdio.h) redefines stdin to __stdinp
-    if (!strcmp(SymbolName, "__stdinp")) return &thread_stdin;
-    if (!strcmp(SymbolName, "__stdoutp")) return &thread_stdout;
-    if (!strcmp(SymbolName, "__stderrp")) return &thread_stderr;
-    // These are useful when compiling with generic headers:
-    if (!strcmp(SymbolName, "stdin")) return &thread_stdin;
-    if (!strcmp(SymbolName, "stdout")) return &thread_stdout;
-    if (!strcmp(SymbolName, "stderr")) return &thread_stderr;
-#endif // (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 
     // First check symbols added via AddSymbol().
     if (ExplicitSymbols.isConstructed()) {

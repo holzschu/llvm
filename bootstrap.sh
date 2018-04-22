@@ -31,7 +31,7 @@ esac
 done
 
 
-# get clang and lld
+# get clang 
 git submodule update --init --recursive
 
 # Get libcxx and libcxxabi

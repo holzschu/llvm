@@ -2128,7 +2128,7 @@ void Interpreter::run() {
     // Track the number of dynamic instructions executed.
     ++NumDynamicInsts;
 
-    DEBUG(dbgs() << "About to interpret: " << I);
+    DEBUG(dbgs() << "About to interpret: " << I << "\n");
     visit(I);   // Dispatch to one of the visit* methods...
   }
 }

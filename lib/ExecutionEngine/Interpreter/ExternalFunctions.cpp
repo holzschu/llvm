@@ -60,6 +60,7 @@
 #include <TargetConditionals.h>
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 #include "ios_error.h"
+#include <fcntl.h>
 #endif
 #endif
 
@@ -118,6 +119,12 @@ static ExFunc lookupFunction(const Function *F) {
   ExFunc FnPtr = (*FuncNames)[ExtName];
   if (!FnPtr)
     FnPtr = (*FuncNames)[("lle_X_" + F->getName()).str()];
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+  if (!FnPtr && (F->getName().str().at(0) == '\x01')) {
+	std::string funcName = F->getName().substr(1,  F->getName().size() - 1);; 
+    FnPtr = (*FuncNames)[("lle_X_" + funcName)];  
+  }
+#endif
   if (!FnPtr)  // Try calling a generic function... if it exists...
     FnPtr = (ExFunc)(intptr_t)sys::DynamicLibrary::SearchForAddressOfSymbol(
         ("lle_X_" + F->getName()).str());
@@ -332,8 +339,8 @@ static GenericValue lle_X_exit(FunctionType *FT, ArrayRef<GenericValue> Args) {
 // void abort(void)
 static GenericValue lle_X_abort(FunctionType *FT, ArrayRef<GenericValue> Args) {
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-	report_fatal_error("Interpreted program raised SIGABRT");
-#else
+	report_fatal_error("LLVM interpreter raised SIGABRT");
+#else 
   //FIXME: should we report or raise here?
   //report_fatal_error("Interpreted program raised SIGABRT");
   raise (SIGABRT);
@@ -461,6 +468,7 @@ static GenericValue lle_X_scanf(FunctionType *FT, ArrayRef<GenericValue> args) {
 
   GenericValue GV;
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+  fflush(thread_stdout); 
   GV.IntVal = APInt(32, fscanf(thread_stdin, Args[0], Args[1], Args[2], Args[3], Args[4],
                   Args[5], Args[6], Args[7], Args[8], Args[9]));
 #else
@@ -510,102 +518,31 @@ static GenericValue lle_X_memcpy(FunctionType *FT,
 }
 
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-// Functions from ios_system, simulating system API
-// The goal is to be able to run clang + lli on 
-// unmodified source files
-static GenericValue lle_X_system(FunctionType *FT,
-                                 ArrayRef<GenericValue> Args) {
-  GenericValue GV;
-  GV.IntVal = ios_system((char*) GVTOP(Args[0]));
-  return GV;
-}
 
-static GenericValue lle_X_popen(FunctionType *FT,
+// Required because it's a vararg function
+static GenericValue lle_X_open(FunctionType *FT,
                                  ArrayRef<GenericValue> Args) {
+  int oflag = (int)Args[1].IntVal.getSExtValue();
+  int returnValue;
+  
+  if (Args.size() == 2) {
+	  returnValue = ::open((char*)GVTOP(Args[0]), oflag);
+  } else {
+	  int mode = (int)Args[2].IntVal.getSExtValue();
+	  returnValue = ::open((char*)GVTOP(Args[0]), oflag, mode);
+	  if (Args.size() > 3) errs() << "called open(" << (char*)GVTOP(Args[0]) << ", ...) with " << Args.size() << " arguments.\n"; 
+  }
   GenericValue GV;
-  GV.PointerVal = PointerTy(ios_popen((char*)GVTOP(Args[0]), (char*)GVTOP(Args[1])));
+  GV.IntVal = APInt(32, returnValue);
   return GV;
 }
-
-static GenericValue lle_X_pclose(FunctionType *FT,
-                                 ArrayRef<GenericValue> Args) {
-  GenericValue GV;
-  GV.IntVal = fclose((FILE *)GVTOP(Args[0]));
-  return GV;
-}
-
-static GenericValue lle_X_isatty(FunctionType *FT,
-                                 ArrayRef<GenericValue> Args) {
-  GenericValue GV;
-  int fd = (int)Args[0].IntVal.getSExtValue();
-  GV.IntVal = ios_isatty(fd);
-  return GV;
-}
-
-static GenericValue lle_X_dup2(FunctionType *FT,
-                                 ArrayRef<GenericValue> Args) {
-  GenericValue GV;
-  int fd1 = (int)Args[0].IntVal.getSExtValue();
-  int fd2 = (int)Args[1].IntVal.getSExtValue();
-  GV.IntVal = ios_dup2(fd1, fd2);
-  return GV;
-}
-
-// We provide execv and execve, but remember that it's not "drop-in"
-// replacements. You need to take care of fork, and the child program 
-// won't exit.
-static GenericValue lle_X_execv(FunctionType *FT,
-                                 ArrayRef<GenericValue> Args) {
-  GenericValue GV;
-  GV.IntVal = ios_execv((char*) GVTOP(Args[0]), (char**) GVTOP(Args[1]));
-  return GV;
-}
-
-static GenericValue lle_X_execve(FunctionType *FT,
-                                 ArrayRef<GenericValue> Args) {
-  GenericValue GV;
-  GV.IntVal = ios_execve((char*)GVTOP(Args[0]), (char**)GVTOP(Args[1]), (char**)GVTOP(Args[2]));
-  return GV;
-}
-
-static GenericValue lle_X_putchar(FunctionType *FT,
-                                 ArrayRef<GenericValue> Args) {
-  GenericValue GV;
-  char c = (char)Args[0].IntVal.getZExtValue();
-  GV.IntVal = fputc(c, thread_stdout); 
-  return GV;
-}
-
-static GenericValue lle_X_getchar(FunctionType *FT,
-                                 ArrayRef<GenericValue> Args) {
-  GenericValue GV;
-  GV.IntVal = fgetc(thread_stdin); 
-  return GV;
-}
-
-static GenericValue lle_X_getwchar(FunctionType *FT,
-                                 ArrayRef<GenericValue> Args) {
-  GenericValue GV;
-  GV.IntVal = fgetwc(thread_stdin); 
-  return GV;
-}
-
-// iswprint should depend on the given locale, but setlocale() fails
-// on a sandboxed app. This is a working hack.
-static GenericValue lle_X_iswprint(FunctionType *FT,
-                                 ArrayRef<GenericValue> Args) {
-  GenericValue GV;
-  GV.IntVal = 1; 
-  return GV;
-}
-#endif
+#endif //  (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 
 void Interpreter::initializeExternalFunctions() {
   sys::ScopedLock Writer(*FunctionsLock);
   (*FuncNames)["lle_X_atexit"]       = lle_X_atexit;
   (*FuncNames)["lle_X_exit"]         = lle_X_exit;
   (*FuncNames)["lle_X_abort"]        = lle_X_abort;
-
   (*FuncNames)["lle_X_printf"]       = lle_X_printf;
   (*FuncNames)["lle_X_sprintf"]      = lle_X_sprintf;
   (*FuncNames)["lle_X_sscanf"]       = lle_X_sscanf;
@@ -614,16 +551,8 @@ void Interpreter::initializeExternalFunctions() {
   (*FuncNames)["lle_X_memset"]       = lle_X_memset;
   (*FuncNames)["lle_X_memcpy"]       = lle_X_memcpy;
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-  (*FuncNames)["lle_X_system"]       = lle_X_system;
-  (*FuncNames)["lle_X_popen"]        = lle_X_popen;
-  (*FuncNames)["lle_X_pclose"]       = lle_X_pclose;
-  (*FuncNames)["lle_X_isatty"]       = lle_X_isatty;
-  (*FuncNames)["lle_X_dup2"]         = lle_X_dup2;
-  (*FuncNames)["lle_X_execv"]        = lle_X_execv;
-  (*FuncNames)["lle_X_execve"]       = lle_X_execve;
-  (*FuncNames)["lle_X_putchar"]      = lle_X_putchar;
-  (*FuncNames)["lle_X_getchar"]      = lle_X_getchar;
-  (*FuncNames)["lle_X_getwchar"]     = lle_X_getwchar;
-  (*FuncNames)["lle_X_iswprint"]     = lle_X_iswprint;
+  // Variadic argument functions (vararg). Could also set special case in DynamicLibraries.inc
+  (*FuncNames)["lle_X_open"]     = lle_X_open;
+  (*FuncNames)["lle_X__open"]     = lle_X_open;
 #endif
 }
