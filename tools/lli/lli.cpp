@@ -66,6 +66,7 @@
 #include <TargetConditionals.h>
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 #include "ios_error.h"
+#include <stdio.h>
 #undef exit
 #define exit(a) { llvm_shutdown(); ios_exit(a); }
 extern "C" {
@@ -99,6 +100,28 @@ ssize_t llvm_ios_write(int fildes, const void *buf, size_t nbyte) {
 	if (fildes == STDOUT_FILENO) return write(fileno(thread_stdout), buf, nbyte); 
 	if (fildes == STDERR_FILENO) return write(fileno(thread_stderr), buf, nbyte); 
 	return write(fildes, buf, nbyte); 
+}
+int llvm_ios_puts(const char *s) {
+	// puts adds a newline at the end.
+	int returnValue = fputs(s, thread_stdout);
+	fputc('\n', thread_stdout); 
+	return returnValue;
+}
+int llvm_ios_fputs(const char* s, FILE *stream) {
+	if (fileno(stream) == STDOUT_FILENO) return fputs(s, thread_stdout); 
+	if (fileno(stream) == STDERR_FILENO) return fputs(s, thread_stderr); 
+	return fputs(s, stream);
+}
+int llvm_ios_fputc(int c, FILE *stream) {
+	fprintf(thread_stderr, "Entering fputc, stream fileno = %d \n", fileno(stream)); 
+	if (fileno(stream) == STDOUT_FILENO) return fputc(c, thread_stdout); 
+	if (fileno(stream) == STDERR_FILENO) return fputc(c, thread_stderr); 
+	return fputc(c, stream);
+}
+int llvm_ios_putw(int w, FILE *stream) {
+	if (fileno(stream) == STDOUT_FILENO) return putw(w, thread_stdout); 
+	if (fileno(stream) == STDERR_FILENO) return putw(w, thread_stderr); 
+	return putw(w, stream);
 }
 }
 #endif
@@ -495,6 +518,11 @@ int main(int argc, char **argv, char * const *envp) {
 	  sys::DynamicLibrary::AddSymbol("printf", (void*)&llvm_ios_printf);
 	  sys::DynamicLibrary::AddSymbol("scanf", (void*)&llvm_ios_scanf);
 	  sys::DynamicLibrary::AddSymbol("write", (void*)&llvm_ios_write);
+	  sys::DynamicLibrary::AddSymbol("puts", (void*)&llvm_ios_puts);
+	  sys::DynamicLibrary::AddSymbol("fputs", (void*)&llvm_ios_fputs);
+	  sys::DynamicLibrary::AddSymbol("fputc", (void*)&llvm_ios_fputc);
+	  sys::DynamicLibrary::AddSymbol("putw", (void*)&llvm_ios_putw);
+	  // TODO: err, errx, warnx, warn (because they call exit)
 #endif  
 
   std::unique_ptr<ExecutionEngine> EE(builder.create());

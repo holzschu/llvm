@@ -195,6 +195,22 @@ void *DynamicLibrary::SearchForAddressOfSymbol(const char *SymbolName) {
 
       if (i != ExplicitSymbols->end())
         return i->second;
+      // We did not find it. But that may be because of the "^A" or "_" in front:
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+	const char* symbolName = SymbolName;
+	if (symbolName[0] == '\x01') {
+		symbolName += 1;
+		i = ExplicitSymbols->find(symbolName);
+		if (i != ExplicitSymbols->end())
+			return i->second;
+	}
+	if (symbolName[0] == '_') {
+		symbolName += 1;
+		i = ExplicitSymbols->find(symbolName);
+		if (i != ExplicitSymbols->end())
+			return i->second;
+	}
+#endif
     }
 
     // Now search the libraries.
