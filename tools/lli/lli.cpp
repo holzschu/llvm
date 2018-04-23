@@ -70,6 +70,7 @@
 #undef exit
 #define exit(a) { llvm_shutdown(); ios_exit(a); }
 extern "C" {
+const char* llvm_ios_progname;
 void llvm_ios_exit(int a) { llvm_shutdown(); ios_exit(a); }
 void llvm_ios_abort(int a) { report_fatal_error("LLVM JIT compiled program raised SIGABRT"); }
 int llvm_ios_putchar(char c) { return fputc(c, thread_stdout); }
@@ -122,6 +123,64 @@ int llvm_ios_putw(int w, FILE *stream) {
 	if (fileno(stream) == STDOUT_FILENO) return putw(w, thread_stdout); 
 	if (fileno(stream) == STDERR_FILENO) return putw(w, thread_stderr); 
 	return putw(w, stream);
+}
+pid_t llvm_ios_fork(void) { return 0; } // Always go through the child branch
+pid_t llvm_ios_waitpid(pid_t pid, int *stat_loc, int options) {
+	pthread_join(ios_getLastThreadId(), NULL); // best we can do
+	if (stat_loc) *stat_loc = W_EXITCODE(ios_getCommandStatus(), 0); 
+	return 0; 
+}
+// 
+void llvm_ios_vwarn(const char *fmt, va_list args)
+{
+	fputs(llvm_ios_progname, thread_stderr);
+	if (fmt != NULL)
+	{
+		fputs(": ", thread_stderr);
+		vfprintf(thread_stderr, fmt, args);
+	}
+	fputs(": ", thread_stderr);
+	fputs(strerror(errno), thread_stderr);
+	putc('\n', thread_stderr);
+}
+
+void llvm_ios_vwarnx(const char *fmt, va_list args)
+{
+	fputs(llvm_ios_progname, thread_stderr);
+	fputs(": ", thread_stderr);
+	if (fmt != NULL)
+		vfprintf(thread_stderr, fmt, args);
+	putc('\n', thread_stderr);
+}
+// void err(int eval, const char *fmt, ...);
+void llvm_ios_err(int eval, const char *fmt, ...) {
+	va_list argptr;
+	va_start(argptr, fmt);
+	llvm_ios_vwarn(fmt, argptr);
+	va_end(argptr);
+	llvm_ios_exit(eval);
+}
+//	 void errx(int eval, const char *fmt, ...);
+void llvm_ios_errx(int eval, const char *fmt, ...) {
+	va_list argptr;
+	va_start(argptr, fmt);
+	llvm_ios_vwarnx(fmt, argptr);
+	va_end(argptr);
+	llvm_ios_exit(eval);
+}
+//   void warn(const char *fmt, ...);
+void llvm_ios_warn(const char *fmt, ...) {
+	va_list argptr;
+	va_start(argptr, fmt);
+	llvm_ios_vwarn(fmt, argptr);
+	va_end(argptr);
+}
+//   void warnx(const char *fmt, ...);
+void llvm_ios_warnx(const char *fmt, ...) {
+	va_list argptr;
+	va_start(argptr, fmt);
+	llvm_ios_vwarnx(fmt, argptr);
+	va_end(argptr);
 }
 }
 #endif
@@ -506,9 +565,11 @@ int main(int argc, char **argv, char * const *envp) {
 	  sys::DynamicLibrary::AddSymbol("isatty", (void*)&ios_isatty);
 	  sys::DynamicLibrary::AddSymbol("dup2", (void*)&ios_dup2);
 	  sys::DynamicLibrary::AddSymbol("execv", (void*)&ios_execv);
+	  sys::DynamicLibrary::AddSymbol("execvp", (void*)&ios_execv);
 	  sys::DynamicLibrary::AddSymbol("execve", (void*)&ios_execve);
 	  // External functions defined locally:
 	  sys::DynamicLibrary::AddSymbol("exit", (void*)&llvm_ios_exit);
+	  sys::DynamicLibrary::AddSymbol("_exit", (void*)&llvm_ios_exit);
 	  sys::DynamicLibrary::AddSymbol("abort", (void*)&llvm_ios_abort);
 	  sys::DynamicLibrary::AddSymbol("putchar", (void*)&llvm_ios_putchar);
 	  sys::DynamicLibrary::AddSymbol("getchar", (void*)&llvm_ios_getchar);
@@ -522,7 +583,17 @@ int main(int argc, char **argv, char * const *envp) {
 	  sys::DynamicLibrary::AddSymbol("fputs", (void*)&llvm_ios_fputs);
 	  sys::DynamicLibrary::AddSymbol("fputc", (void*)&llvm_ios_fputc);
 	  sys::DynamicLibrary::AddSymbol("putw", (void*)&llvm_ios_putw);
-	  // TODO: err, errx, warnx, warn (because they call exit)
+	  // fork, waitpid: minimal service here:
+	  sys::DynamicLibrary::AddSymbol("fork", (void*)&llvm_ios_fork);
+	  sys::DynamicLibrary::AddSymbol("waitpid", (void*)&llvm_ios_waitpid);
+	  // err, errx, warnx, warn (because they call exit)
+	  llvm_ios_progname = argv[0]; 
+	  sys::DynamicLibrary::AddSymbol("err", (void*)&llvm_ios_err);
+	  sys::DynamicLibrary::AddSymbol("errx", (void*)&llvm_ios_errx);
+	  sys::DynamicLibrary::AddSymbol("warn", (void*)&llvm_ios_warn);
+	  sys::DynamicLibrary::AddSymbol("warnx", (void*)&llvm_ios_warnx);
+	  sys::DynamicLibrary::AddSymbol("vwarn", (void*)&llvm_ios_vwarn);
+	  sys::DynamicLibrary::AddSymbol("vwarnx", (void*)&llvm_ios_vwarnx);
 #endif  
 
   std::unique_ptr<ExecutionEngine> EE(builder.create());

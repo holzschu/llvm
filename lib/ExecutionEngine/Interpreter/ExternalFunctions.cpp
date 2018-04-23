@@ -468,7 +468,8 @@ static GenericValue lle_X_scanf(FunctionType *FT, ArrayRef<GenericValue> args) {
 
   GenericValue GV;
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-  fflush(thread_stdout); 
+  outs().flush();
+  fflush(thread_stdout);
   GV.IntVal = APInt(32, fscanf(thread_stdin, Args[0], Args[1], Args[2], Args[3], Args[4],
                   Args[5], Args[6], Args[7], Args[8], Args[9]));
 #else
