@@ -10,7 +10,9 @@
 // This file provides the UNIX specific implementation of DynamicLibrary.
 //
 //===----------------------------------------------------------------------===//
-
+// #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+// #include "llvm/Support/raw_ostream.h"
+// #endif
 #if defined(HAVE_DLFCN_H) && defined(HAVE_DLOPEN)
 #include <dlfcn.h>
 
@@ -51,18 +53,18 @@ void *DynamicLibrary::HandleSet::DLSym(void *Handle, const char *Symbol) {
 	const char* symbolName = Symbol;
 	// Works, but why? deMangleName?
 	void* returnPtr = ::dlsym(Handle, symbolName);
-	// fprintf(thread_stderr, "Trying %s, got %x \n", symbolName, returnPtr); fflush(thread_stderr);  
+	// outs() << "Trying " << symbolName << ", got " << returnPtr << "\n"; outs().flush(); fflush(thread_stdout);  
 	if (returnPtr) return returnPtr;
 	if (symbolName[0] == '\x01') {
 		symbolName += 1;
 		returnPtr = ::dlsym(Handle, symbolName);
-		// fprintf(thread_stderr, "Trying %s, got %x \n", symbolName, returnPtr); fflush(thread_stderr); 
+		// outs() << "Trying " << symbolName << ", got " << returnPtr << "\n"; outs().flush(); fflush(thread_stdout);  
 	}
 	if (returnPtr) return returnPtr;
 	if (symbolName[0] == '_') {
 		symbolName += 1;
 		returnPtr = ::dlsym(Handle, symbolName);
-		// fprintf(thread_stderr, "Trying %s, got %x \n", symbolName, returnPtr);  fflush(thread_stderr);  
+		// outs() << "Trying " << symbolName << ", got " << returnPtr << "\n"; outs().flush(); fflush(thread_stdout);  
 	}
 	return returnPtr;
 #else

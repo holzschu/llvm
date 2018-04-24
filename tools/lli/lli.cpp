@@ -587,7 +587,7 @@ int main(int argc, char **argv, char * const *envp) {
 	  sys::DynamicLibrary::AddSymbol("fork", (void*)&llvm_ios_fork);
 	  sys::DynamicLibrary::AddSymbol("waitpid", (void*)&llvm_ios_waitpid);
 	  // err, errx, warnx, warn (because they call exit)
-	  llvm_ios_progname = argv[0]; 
+	  llvm_ios_progname = InputFile.c_str(); 
 	  sys::DynamicLibrary::AddSymbol("err", (void*)&llvm_ios_err);
 	  sys::DynamicLibrary::AddSymbol("errx", (void*)&llvm_ios_errx);
 	  sys::DynamicLibrary::AddSymbol("warn", (void*)&llvm_ios_warn);

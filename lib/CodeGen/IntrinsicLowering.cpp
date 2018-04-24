@@ -22,6 +22,14 @@
 #include "llvm/IR/Type.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
+
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#endif
+#endif
+
 using namespace llvm;
 
 template <class ArgIt>
@@ -349,7 +357,7 @@ void IntrinsicLowering::LowerIntrinsicCall(CallInst *CI) {
   default:
     report_fatal_error("Code generator does not support intrinsic function '"+
                       Callee->getName()+"'!");
-
+  	
   case Intrinsic::expect: {
     // Just replace __builtin_expect(exp, c) with EXP.
     Value *V = CI->getArgOperand(0);
