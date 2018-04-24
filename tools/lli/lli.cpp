@@ -114,7 +114,6 @@ int llvm_ios_fputs(const char* s, FILE *stream) {
 	return fputs(s, stream);
 }
 int llvm_ios_fputc(int c, FILE *stream) {
-	fprintf(thread_stderr, "Entering fputc, stream fileno = %d \n", fileno(stream)); 
 	if (fileno(stream) == STDOUT_FILENO) return fputc(c, thread_stdout); 
 	if (fileno(stream) == STDERR_FILENO) return fputc(c, thread_stderr); 
 	return fputc(c, stream);
