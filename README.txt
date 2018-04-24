@@ -56,13 +56,15 @@ iOS: how to compile a command?
 It's a multi-step process.
 
 1) compile each source file (*.c) using:
-clang -S -emit-llvm -I ~/lib/clang/7.0.0/include -I ~/usr/include -Wno-nullability-completeness -miphoneos-version-min=11.3 -D_FORTIFY_SOURCE=0 file.c
+clang -S -emit-llvm -I ~/lib/clang/7.0.0/include -I ~/usr/include -Wno-nullability-completeness -D_FORTIFY_SOURCE=0 file.c
 (you can place all the options into a config file, and use 'clang --config ~/clang.cfg file.c' instead)
 
 This produces a 'file.ll' file, containing LLVM bitcode for file.c
 
+(if you are compiling packages that use 'configure', you will need to create your own config.h, and add -DHAVE_CONFIG_H)
+
 2) link the files together:
-llvm-link -o=executable.bc *.ll
+llvm-link -only-needed -o=executable.bc *.ll
 
 This produces an 'executable.bc' file, containing (binary) LLVM bitcode for all the source files.
 
