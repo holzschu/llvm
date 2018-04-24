@@ -46,62 +46,45 @@ See `project.pbxproj` in this directory for an example.
 
 Commands in `project.pbxproj`: clang, lli, llvm-link, llvm-nm, llvm-dis 
 
+Once you have the binaries inside your app, you need to provide the header files. I copied the ones from the Xcode iPhone SDK into ~/usr/include, and the ones from build_ios/lib/clang/7.0.0/include/ into ~/lib/clang/7.0.0/include/ This will need some thinking.
+
 I welcome all help on this project, including on this README file. 
+
+iOS: how to compile a command?
+==============================
+
+It's a multi-step process.
+
+1) compile each source file (*.c) using:
+clang -S -emit-llvm -I ~/lib/clang/7.0.0/include -I ~/usr/include -Wno-nullability-completeness -miphoneos-version-min=11.3 -D_FORTIFY_SOURCE=0 file.c
+(you can place all the options into a config file, and use 'clang --config ~/clang.cfg file.c' instead)
+
+This produces a 'file.ll' file, containing LLVM bitcode for file.c
+
+2) link the files together:
+llvm-link -o=executable.bc *.ll
+
+This produces an 'executable.bc' file, containing (binary) LLVM bitcode for all the source files.
+
+3) execute, using the LLVM interpreter:
+
+lli executable.bc <arguments> 
+
+LLI (LLVM Interpreter) can run both a JIT compiler and an interpreter. Currently, the JIT compiler only works if the main application was started by Xcode on your Mac. So the default mode is to run  the interpreter (-force-interpreter=true). This is the opposite of the default mode for LLI. If you want to run the JIT compiler, use '-force-interpreter=false'. 
+
+The JIT compiler is at least 3 times faster than the interpreter, so it would be great to be able to run it on independent apps. 
+
 
 LLVM iOS version TODO list:
 ===========================
 
 - make it easier to add llvm binaries to existing iOS projects, with associated dylibs
-X replace all calls to exit() with calls to ios_exit()
-X By default, lli calls the JIT compiler. That does not work outside of Xcode, and also might
-  cause issues in the AppStore. 
-   X Move to ForceInterpreter = true by default on iOS
-   - Make this dependent on sideloading.
-- replace stdout, stderr, stdin with ios_system's thread_stdout, thread_stderr...
-   X in the Interpreter
-   - in the JIT compiler (sideloading only)
-
-X replace progname() with argv[0] (progname is "OpenTerm", argv[0] is "clang")
-- report_fatal_error() does not output to the screen (thread_stderr) but to the console. Must fix.
-- abort() crashese the entire program. Must fix.
-
-X Execute() (lib/Support/Unix/Program.inc) calls posix_spawn:
-     - I can't create a fake posix_spawn, because file actions are a secret API.
-     X so I undefined HAVE_POSIX_SPAWN and we go through fork + exec 
+X added external functions for exit, print, abort, system, exec... (both interpreter and JIT)
 - check that memory is freed when LLVM exits, that all flags are reset
 - create dynamic libraries instead of executables
 - create frameworks with the dynamic libraries
 
-X add libFFI to the interpreter, for aux functions:
-   - function name in IR not exactly function name in library. 
-   - in sys::DynamicLibrary::SearchForAddressOfSymbol()
-   - we try 3 times: one with the name, one with removing the '\x01' in front, one with removing the '_' in front. 
-   - it works, but why did we have to to that?
-   - map std* to thread_std* in DynamicLibrary.inc, map thread_std* to the external values.
-
-- we can't generate llvm IR while linking, but we can link several IR files with llvm-link
-- how to add new libraries to IR file? How to load them? "nm" works on embedded binaries, so we could extract the symbols from libraries. It won't work on system libraries, or will it?
-- where to place include files for on-system compilation? 
-
-X stability issues when using nm <library> + output redirection. Crashes occasionally with a SIGPIPE. Got more stable by reducing buffer size in raw_ostream.cpp from SIZE_MAX >> 1 to 1024. Maybe we can increase the buffer size a bit. 
-
-Analysis information:
----------------------
-- By default, lli calls the JIT compiler (MCJIT). The JIT compiler only works if "get-task-allow" is defined.
-- By default, this is true when running from Xcode, false as a standalone app
-- It can be forced to true by editing the entitlements file, but only for sideloading (not on the AppStore)
-- So we do "-force-interpreter=true" as a default setting on iOS
-- Later, we might do the JIT branch. The interest is limited, though.
-
-
-Also: apparently, Driver is not deleted when clang exits. 
-   Doesn't break down things, but not reinitialized. llvm::sys::fs::getMainExecutable(Argv0, P)
-
-Compile files with:
-~/src/Xcode_iPad/llvm/build_osx/bin/clang -S -emit-llvm -arch arm64 -target arm64-apple-darwin17.5.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS11.3.sdk -I ../.. mkdir.c
-   
-Extract bitcode from compiled apps with bitcode_retriever: https://github.com/AlexDenisov/bitcode_retriever
-It will extract one bc file for each C file in the original program. The ll file (extracted with llvm-dis) is identical to the file generated with -emit-llvm. 
+- GNU diff fails with "Unknown constant pointer type". 
 
 LLVM iOS version wish list:
 ===========================
@@ -116,8 +99,8 @@ X install headers on iOS device, for compilation
 - load more dynamic libraries, as needed.
 
 X run lli on binary intermediate representation
-- use lli to run a "serious" application (multiple source files, command line
+X use lli to run a "serious" application (multiple source files, command line
   arguments)
 
-- compile libcxx and libcxxabi for iOS as well.
+- compile libcxx and libcxxabi for iOS as well --> required?
 
