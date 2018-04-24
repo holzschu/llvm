@@ -74,6 +74,20 @@ LLI (LLVM Interpreter) can run both a JIT compiler and an interpreter. Currently
 
 The JIT compiler is at least 3 times faster than the interpreter, so it would be great to be able to run it on independent apps. 
 
+If it doesn't work:
+-------------------
+
+This is a very experimental work. The interpreter, often, does not work. Here are a few of the issues encountered, and how I solved them:
+
+- "Code generator does not support intrinsic function 'llvm.objectsize.i64.pi08'": compile with -D_FORTIFY_SOURCE=0 
+- crash when running 'bsearch': compile with bsearch.c https://opensource.apple.com/source/xnu/xnu-1228/libsa/bsearch.c
+- crash when running 'qsort': compile with qsort.c https://opensource.apple.com/source/xnu/xnu-344/bsd/kern/qsort.c
+
+External functions are called using libFFI, and libFFI has problems with pointer manipulation (that's what happens with bsearch and qsort). 
+
+- "Unable to allocate memory for common symbols": (more likely with the JIT) sorry, no ideas.
+- "Unknown constant pointer type!": beats me. 
+
 
 LLVM iOS version TODO list:
 ===========================
@@ -81,10 +95,9 @@ LLVM iOS version TODO list:
 - make it easier to add llvm binaries to existing iOS projects, with associated dylibs
 X added external functions for exit, print, abort, system, exec... (both interpreter and JIT)
 - check that memory is freed when LLVM exits, that all flags are reset
+- create a "fake libc" for functions that don't work with FFI (qsort, bsearch,...)
 - create dynamic libraries instead of executables
 - create frameworks with the dynamic libraries
-
-- GNU diff fails with "Unknown constant pointer type". 
 
 LLVM iOS version wish list:
 ===========================
