@@ -84,6 +84,11 @@ def : WriteRes<WriteLoad,  [SLM_MEC_RSV]> { let Latency = 3; }
 def : WriteRes<WriteMove,  [SLM_IEC_RSV01]>;
 def : WriteRes<WriteZero,  []>;
 
+// Load/store MXCSR.
+// FIXME: These are probably wrong. They are copy pasted from WriteStore/Load.
+def : WriteRes<WriteSTMXCSR, [SLM_IEC_RSV01, SLM_MEC_RSV]>;
+def : WriteRes<WriteLDMXCSR,  [SLM_MEC_RSV]> { let Latency = 3; }
+
 // Treat misc copies as a move.
 def : InstRW<[WriteMove], (instrs COPY)>;
 
@@ -140,6 +145,7 @@ defm : SLMWriteResPair<WriteFLogic, [SLM_FPC_RSV01], 1>;
 defm : SLMWriteResPair<WriteFShuffle, [SLM_FPC_RSV0],  1>;
 defm : SLMWriteResPair<WriteFVarShuffle, [SLM_FPC_RSV0],  1>;
 defm : SLMWriteResPair<WriteFBlend,  [SLM_FPC_RSV0],  1>;
+def  : WriteRes<WriteCvtF2FSt, [SLM_FPC_RSV01, SLM_MEC_RSV]>;
 
 // Vector integer operations.
 def  : WriteRes<WriteVecStore,       [SLM_FPC_RSV01, SLM_MEC_RSV]>;
@@ -158,6 +164,17 @@ defm : SLMWriteResPair<WriteVarShuffle,  [SLM_FPC_RSV0],  1>;
 defm : SLMWriteResPair<WriteBlend,  [SLM_FPC_RSV0],  1>;
 defm : SLMWriteResPair<WriteMPSAD,  [SLM_FPC_RSV0],  7>;
 defm : SLMWriteResPair<WritePSADBW, [SLM_FPC_RSV0],  4>;
+defm : SLMWriteResPair<WritePHMINPOS,  [SLM_FPC_RSV0],   4>;
+
+// Vector insert/extract operations.
+defm : SLMWriteResPair<WriteVecInsert, [SLM_FPC_RSV0],  1>;
+
+def  : WriteRes<WriteVecExtract, [SLM_FPC_RSV0]>;
+def  : WriteRes<WriteVecExtractSt, [SLM_FPC_RSV0, SLM_MEC_RSV]> {
+  let Latency = 4;
+  let NumMicroOps = 2;
+  let ResourceCycles = [1, 2];
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Horizontal add/sub  instructions.
@@ -267,6 +284,8 @@ defm : SLMWriteResPair<WriteShuffle256, [SLM_FPC_RSV0],  1>;
 defm : SLMWriteResPair<WriteVarShuffle256, [SLM_FPC_RSV0],  1>;
 defm : SLMWriteResPair<WriteVarVecShift, [SLM_FPC_RSV0],  1>;
 defm : SLMWriteResPair<WriteFMA, [SLM_FPC_RSV0],  1>;
+defm : SLMWriteResPair<WriteFMAS, [SLM_FPC_RSV0],  1>;
+defm : SLMWriteResPair<WriteFMAY, [SLM_FPC_RSV0],  1>;
 
 // Instruction overrides
 

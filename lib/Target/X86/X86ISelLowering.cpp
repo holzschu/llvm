@@ -216,6 +216,8 @@ X86TargetLowering::X86TargetLowering(const X86TargetMachine &TM,
     // We have an algorithm for SSE2, and we turn this into a 64-bit
     // FILD or VCVTUSI2SS/SD for other targets.
     setOperationAction(ISD::UINT_TO_FP     , MVT::i32  , Custom);
+  } else {
+    setOperationAction(ISD::UINT_TO_FP     , MVT::i32  , Expand);
   }
 
   // Promote i1/i8 SINT_TO_FP to larger SINT_TO_FP's, as X86 doesn't have
@@ -235,7 +237,7 @@ X86TargetLowering::X86TargetLowering(const X86TargetMachine &TM,
     }
   } else {
     setOperationAction(ISD::SINT_TO_FP     , MVT::i16  , Promote);
-    setOperationAction(ISD::SINT_TO_FP     , MVT::i32  , Promote);
+    setOperationAction(ISD::SINT_TO_FP     , MVT::i32  , Expand);
   }
 
   // Promote i1/i8 FP_TO_SINT to larger FP_TO_SINTS's, as X86 doesn't have
@@ -33223,8 +33225,13 @@ static SDValue combineMul(SDNode *N, SelectionDAG &DAG,
   if (!C)
     return SDValue();
   uint64_t MulAmt = C->getZExtValue();
-  if (isPowerOf2_64(MulAmt) || MulAmt == 3 || MulAmt == 5 || MulAmt == 9)
+  if (isPowerOf2_64(MulAmt))
     return SDValue();
+
+  SDLoc DL(N);
+  if (MulAmt == 3 || MulAmt == 5 || MulAmt == 9)
+    return DAG.getNode(X86ISD::MUL_IMM, DL, VT, N->getOperand(0),
+                       N->getOperand(1));
 
   uint64_t MulAmt1 = 0;
   uint64_t MulAmt2 = 0;
@@ -33239,7 +33246,6 @@ static SDValue combineMul(SDNode *N, SelectionDAG &DAG,
     MulAmt2 = MulAmt / 3;
   }
 
-  SDLoc DL(N);
   SDValue NewMul;
   if (MulAmt2 &&
       (isPowerOf2_64(MulAmt2) || MulAmt2 == 3 || MulAmt2 == 5 || MulAmt2 == 9)){
@@ -36102,6 +36108,59 @@ static SDValue detectAddSubSatPattern(SDValue In, EVT VT, SelectionDAG &DAG,
                           AddSubSatBuilder);
 }
 
+// Try to form a MULHU or MULHS node by looking for
+// (trunc (srl (mul ext, ext), 16))
+// TODO: This is X86 specific because we want to be able to handle wide types
+// before type legalization. But we can only do it if the vector will be
+// legalized via widening/splitting. Type legalization can't handle promotion
+// of a MULHU/MULHS. There isn't a way to convey this to the generic DAG
+// combiner.
+static SDValue combinePMULH(SDValue Src, EVT VT, const SDLoc &DL,
+                            SelectionDAG &DAG, const X86Subtarget &Subtarget) {
+  // First instruction should be a right shift of a multiply.
+  if (Src.getOpcode() != ISD::SRL ||
+      Src.getOperand(0).getOpcode() != ISD::MUL)
+    return SDValue();
+
+  if (!Subtarget.hasSSE2())
+    return SDValue();
+
+  // Only handle vXi16 types that are at least 128-bits.
+  if (!VT.isVector() || VT.getVectorElementType() != MVT::i16 ||
+      VT.getVectorNumElements() < 8)
+    return SDValue();
+
+  // Input type should be vXi32.
+  EVT InVT = Src.getValueType();
+  if (InVT.getVectorElementType() != MVT::i32)
+    return SDValue();
+
+  // Need a shift by 16.
+  APInt ShiftAmt;
+  if (!ISD::isConstantSplatVector(Src.getOperand(1).getNode(), ShiftAmt) ||
+      ShiftAmt != 16)
+    return SDValue();
+
+  SDValue LHS = Src.getOperand(0).getOperand(0);
+  SDValue RHS = Src.getOperand(0).getOperand(1);
+
+  unsigned ExtOpc = LHS.getOpcode();
+  if ((ExtOpc != ISD::SIGN_EXTEND && ExtOpc != ISD::ZERO_EXTEND) ||
+      RHS.getOpcode() != ExtOpc)
+    return SDValue();
+
+  // Peek through the extends.
+  LHS = LHS.getOperand(0);
+  RHS = RHS.getOperand(0);
+
+  // Ensure the input types match.
+  if (LHS.getValueType() != VT || RHS.getValueType() != VT)
+    return SDValue();
+
+  unsigned Opc = ExtOpc == ISD::SIGN_EXTEND ? ISD::MULHS : ISD::MULHU;
+  return DAG.getNode(Opc, DL, VT, LHS, RHS);
+}
+
 static SDValue combineTruncate(SDNode *N, SelectionDAG &DAG,
                                const X86Subtarget &Subtarget) {
   EVT VT = N->getValueType(0);
@@ -36123,6 +36182,10 @@ static SDValue combineTruncate(SDNode *N, SelectionDAG &DAG,
   // Try to combine truncation with signed/unsigned saturation.
   if (SDValue Val = combineTruncateWithSat(Src, VT, DL, DAG, Subtarget))
     return Val;
+
+  // Try to combine PMULHUW/PMULHW for vXi16.
+  if (SDValue V = combinePMULH(Src, VT, DL, DAG, Subtarget))
+    return V;
 
   // The bitcast source is a direct mmx result.
   // Detect bitcasts between i32 to x86mmx

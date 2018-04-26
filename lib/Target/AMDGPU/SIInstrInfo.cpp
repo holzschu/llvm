@@ -827,10 +827,6 @@ void SIInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
   MachineFrameInfo &FrameInfo = MF->getFrameInfo();
   DebugLoc DL = MBB.findDebugLoc(MI);
 
-  assert(SrcReg != MFI->getStackPtrOffsetReg() &&
-         SrcReg != MFI->getFrameOffsetReg() &&
-         SrcReg != MFI->getScratchWaveOffsetReg());
-
   unsigned Size = FrameInfo.getObjectSize(FrameIndex);
   unsigned Align = FrameInfo.getObjectAlignment(FrameIndex);
   MachinePointerInfo PtrInfo
@@ -864,7 +860,7 @@ void SIInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
     // needing them, and need to ensure that the reserved registers are
     // correctly handled.
 
-    FrameInfo.setStackID(FrameIndex, 1);
+    FrameInfo.setStackID(FrameIndex, SIStackID::SGPR_SPILL);
     if (ST.hasScalarStores()) {
       // m0 is used for offset to scalar stores if used to spill.
       Spill.addReg(AMDGPU::M0, RegState::ImplicitDefine | RegState::Dead);
@@ -960,7 +956,7 @@ void SIInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
       MRI.constrainRegClass(DestReg, &AMDGPU::SReg_32_XM0RegClass);
     }
 
-    FrameInfo.setStackID(FrameIndex, 1);
+    FrameInfo.setStackID(FrameIndex, SIStackID::SGPR_SPILL);
     MachineInstrBuilder Spill = BuildMI(MBB, MI, DL, OpDesc, DestReg)
       .addFrameIndex(FrameIndex) // addr
       .addMemOperand(MMO)
@@ -2729,6 +2725,7 @@ bool SIInstrInfo::verifyInstruction(const MachineInstr &MI,
     const int OpIndices[] = { Src0Idx, Src1Idx, Src2Idx };
 
     unsigned ConstantBusCount = 0;
+    unsigned LiteralCount = 0;
 
     if (AMDGPU::getNamedOperandIdx(Opcode, AMDGPU::OpName::imm) != -1)
       ++ConstantBusCount;
@@ -2748,11 +2745,17 @@ bool SIInstrInfo::verifyInstruction(const MachineInstr &MI,
           SGPRUsed = MO.getReg();
         } else {
           ++ConstantBusCount;
+          ++LiteralCount;
         }
       }
     }
     if (ConstantBusCount > 1) {
       ErrInfo = "VOP* instruction uses the constant bus more than once";
+      return false;
+    }
+
+    if (isVOP3(MI) && LiteralCount) {
+      ErrInfo = "VOP3 instruction uses literal";
       return false;
     }
   }
