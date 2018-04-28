@@ -537,6 +537,63 @@ static GenericValue lle_X_open(FunctionType *FT,
   GV.IntVal = APInt(32, returnValue);
   return GV;
 }
+
+// 
+const char* llvm_ios_progname; 
+//   void warn(const char *fmt, ...);
+static GenericValue lle_X_warn(FunctionType *FT, ArrayRef<GenericValue> Args) {
+	fputs(llvm_ios_progname, thread_stderr);
+	const char *fmt = (const char *)GVTOP(Args[0]);
+	if (fmt != NULL)
+	{
+		fputs(": ", thread_stderr);
+		char Buffer[10000];
+		std::vector<GenericValue> NewArgs;
+		NewArgs.push_back(PTOGV((void*)&Buffer[0]));
+		NewArgs.insert(NewArgs.end(), Args.begin(), Args.end());
+		GenericValue GV = lle_X_sprintf(FT, NewArgs);
+		fputs(Buffer, thread_stderr); 
+	}
+	fputs(": ", thread_stderr);
+	fputs(strerror(errno), thread_stderr);
+	putc('\n', thread_stderr);
+	return GenericValue();
+}
+//   void warnx(const char *fmt, ...);
+static GenericValue lle_X_warnx(FunctionType *FT, ArrayRef<GenericValue> Args) {
+	fputs(llvm_ios_progname, thread_stderr);
+	const char *fmt = (const char *)GVTOP(Args[0]);
+	if (fmt != NULL)
+	{
+		fputs(": ", thread_stderr);
+		char Buffer[10000];
+		std::vector<GenericValue> NewArgs;
+		NewArgs.push_back(PTOGV((void*)&Buffer[0]));
+		NewArgs.insert(NewArgs.end(), Args.begin(), Args.end());
+		GenericValue GV = lle_X_sprintf(FT, NewArgs);
+		fputs(Buffer, thread_stderr); 
+	}
+	putc('\n', thread_stderr);
+	return GenericValue();
+}
+// void err(int eval, const char *fmt, ...);
+static GenericValue lle_X_err(FunctionType *FT, ArrayRef<GenericValue> Args) {
+	std::vector<GenericValue> NewArgs = Args;
+	NewArgs.erase(NewArgs.begin());
+	lle_X_warn(FT, NewArgs); 
+	TheInterpreter->exitCalled(Args[0]);
+	return GenericValue();
+}
+//	 void errx(int eval, const char *fmt, ...);
+static GenericValue lle_X_errx(FunctionType *FT, ArrayRef<GenericValue> Args) {
+	std::vector<GenericValue> NewArgs = Args;
+	NewArgs.erase(NewArgs.begin());
+	lle_X_warnx(FT, NewArgs); 
+	TheInterpreter->exitCalled(Args[0]);
+	return GenericValue();
+}
+
+
 #endif //  (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 
 void Interpreter::initializeExternalFunctions() {
@@ -552,8 +609,12 @@ void Interpreter::initializeExternalFunctions() {
   (*FuncNames)["lle_X_memset"]       = lle_X_memset;
   (*FuncNames)["lle_X_memcpy"]       = lle_X_memcpy;
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-  // Variadic argument functions (vararg). Could also set special case in DynamicLibraries.inc
+  // Variadic argument functions (vararg). 
   (*FuncNames)["lle_X_open"]     = lle_X_open;
   (*FuncNames)["lle_X__open"]     = lle_X_open;
+  (*FuncNames)["lle_X_err"]     = lle_X_err;
+  (*FuncNames)["lle_X_errx"]     = lle_X_errx;
+  (*FuncNames)["lle_X_warn"]     = lle_X_warn;
+  (*FuncNames)["lle_X_warnx"]     = lle_X_warnx;
 #endif
 }
