@@ -11,13 +11,6 @@
 // that are not yet supported remain commented out.
 //===----------------------------------------------------------------------===//
 
-def has16BankLDS : Predicate<"Subtarget->getLDSBankCount() == 16">;
-def has32BankLDS : Predicate<"Subtarget->getLDSBankCount() == 32">;
-def HasVGPRIndexMode : Predicate<"Subtarget->hasVGPRIndexMode()">,
-                      AssemblerPredicate<"FeatureVGPRIndexMode">;
-def HasMovrel : Predicate<"Subtarget->hasMovrel()">,
-                AssemblerPredicate<"FeatureMovrel">;
-
 class GCNPat<dag pattern, dag result> : AMDGPUPat<pattern, result> {
   let SubtargetPredicate = isGCN;
 }
@@ -570,11 +563,6 @@ def : GCNPat<
 def : GCNPat<
   (AMDGPUelse i64:$src, bb:$target),
   (SI_ELSE $src, $target, 0)
->;
-
-def : GCNPat <
-  (int_AMDGPU_kilp),
-  (SI_KILL_I1_PSEUDO (i1 0), 0)
 >;
 
 def : Pat <

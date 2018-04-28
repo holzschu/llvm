@@ -295,6 +295,10 @@ namespace llvm {
 
     CodeViewContext &getCVContext();
 
+    /// Clear the current cv_loc, if there is one. Avoids lazily creating a
+    /// CodeViewContext if none is needed.
+    void clearCVLocSeen();
+
     void setAllowTemporaryLabels(bool Value) { AllowTemporaryLabels = Value; }
     void setUseNamesOnTempLabels(bool Value) { UseNamesOnTempLabels = Value; }
 
@@ -338,7 +342,7 @@ namespace llvm {
     /// Gets a symbol that will be defined to the final stack offset of a local
     /// variable after codegen.
     ///
-    /// \param Idx - The index of a local variable passed to @llvm.localescape.
+    /// \param Idx - The index of a local variable passed to \@llvm.localescape.
     MCSymbol *getOrCreateFrameAllocSymbol(StringRef FuncName, unsigned Idx);
 
     MCSymbol *getOrCreateParentFrameOffsetSymbol(StringRef FuncName);

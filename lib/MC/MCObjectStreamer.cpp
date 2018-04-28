@@ -27,10 +27,10 @@ MCObjectStreamer::MCObjectStreamer(MCContext &Context,
                                    std::unique_ptr<MCAsmBackend> TAB,
                                    raw_pwrite_stream &OS,
                                    std::unique_ptr<MCCodeEmitter> Emitter)
-    : MCStreamer(Context), ObjectWriter(TAB->createObjectWriter(OS)),
-      TAB(std::move(TAB)), Emitter(std::move(Emitter)),
-      Assembler(llvm::make_unique<MCAssembler>(Context, *this->TAB,
-                                               *this->Emitter, *ObjectWriter)),
+    : MCStreamer(Context),
+      Assembler(llvm::make_unique<MCAssembler>(Context, std::move(TAB),
+                                               std::move(Emitter),
+                                               TAB->createObjectWriter(OS))),
       EmitEHFrame(true), EmitDebugFrame(false) {}
 
 MCObjectStreamer::~MCObjectStreamer() {}
@@ -247,6 +247,7 @@ bool MCObjectStreamer::changeSectionImpl(MCSection *Section,
                                          const MCExpr *Subsection) {
   assert(Section && "Cannot switch to a null section!");
   flushPendingLabels(nullptr);
+  getContext().clearCVLocSeen();
   getContext().clearDwarfLocSeen();
 
   bool Created = getAssembler().registerSection(*Section);

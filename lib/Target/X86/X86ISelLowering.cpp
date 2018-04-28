@@ -216,6 +216,8 @@ X86TargetLowering::X86TargetLowering(const X86TargetMachine &TM,
     // We have an algorithm for SSE2, and we turn this into a 64-bit
     // FILD or VCVTUSI2SS/SD for other targets.
     setOperationAction(ISD::UINT_TO_FP     , MVT::i32  , Custom);
+  } else {
+    setOperationAction(ISD::UINT_TO_FP     , MVT::i32  , Expand);
   }
 
   // Promote i1/i8 SINT_TO_FP to larger SINT_TO_FP's, as X86 doesn't have
@@ -235,7 +237,7 @@ X86TargetLowering::X86TargetLowering(const X86TargetMachine &TM,
     }
   } else {
     setOperationAction(ISD::SINT_TO_FP     , MVT::i16  , Promote);
-    setOperationAction(ISD::SINT_TO_FP     , MVT::i32  , Promote);
+    setOperationAction(ISD::SINT_TO_FP     , MVT::i32  , Expand);
   }
 
   // Promote i1/i8 FP_TO_SINT to larger FP_TO_SINTS's, as X86 doesn't have
@@ -20945,50 +20947,50 @@ SDValue X86TargetLowering::LowerINTRINSIC_WO_CHAIN(SDValue Op,
     switch (IntNo) {
     default: llvm_unreachable("Impossible intrinsic");  // Can't reach here.
     case Intrinsic::x86_sse42_pcmpistria128:
-      Opcode = X86ISD::PCMPISTRI;
+      Opcode = X86ISD::PCMPISTR;
       X86CC = X86::COND_A;
       break;
     case Intrinsic::x86_sse42_pcmpestria128:
-      Opcode = X86ISD::PCMPESTRI;
+      Opcode = X86ISD::PCMPESTR;
       X86CC = X86::COND_A;
       break;
     case Intrinsic::x86_sse42_pcmpistric128:
-      Opcode = X86ISD::PCMPISTRI;
+      Opcode = X86ISD::PCMPISTR;
       X86CC = X86::COND_B;
       break;
     case Intrinsic::x86_sse42_pcmpestric128:
-      Opcode = X86ISD::PCMPESTRI;
+      Opcode = X86ISD::PCMPESTR;
       X86CC = X86::COND_B;
       break;
     case Intrinsic::x86_sse42_pcmpistrio128:
-      Opcode = X86ISD::PCMPISTRI;
+      Opcode = X86ISD::PCMPISTR;
       X86CC = X86::COND_O;
       break;
     case Intrinsic::x86_sse42_pcmpestrio128:
-      Opcode = X86ISD::PCMPESTRI;
+      Opcode = X86ISD::PCMPESTR;
       X86CC = X86::COND_O;
       break;
     case Intrinsic::x86_sse42_pcmpistris128:
-      Opcode = X86ISD::PCMPISTRI;
+      Opcode = X86ISD::PCMPISTR;
       X86CC = X86::COND_S;
       break;
     case Intrinsic::x86_sse42_pcmpestris128:
-      Opcode = X86ISD::PCMPESTRI;
+      Opcode = X86ISD::PCMPESTR;
       X86CC = X86::COND_S;
       break;
     case Intrinsic::x86_sse42_pcmpistriz128:
-      Opcode = X86ISD::PCMPISTRI;
+      Opcode = X86ISD::PCMPISTR;
       X86CC = X86::COND_E;
       break;
     case Intrinsic::x86_sse42_pcmpestriz128:
-      Opcode = X86ISD::PCMPESTRI;
+      Opcode = X86ISD::PCMPESTR;
       X86CC = X86::COND_E;
       break;
     }
     SmallVector<SDValue, 5> NewOps(Op->op_begin()+1, Op->op_end());
-    SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::i32);
-    SDValue PCMP = DAG.getNode(Opcode, dl, VTs, NewOps);
-    SDValue SetCC = getSETCC(X86CC, SDValue(PCMP.getNode(), 1), dl, DAG);
+    SDVTList VTs = DAG.getVTList(MVT::i32, MVT::v16i8, MVT::i32);
+    SDValue PCMP = DAG.getNode(Opcode, dl, VTs, NewOps).getValue(2);
+    SDValue SetCC = getSETCC(X86CC, PCMP, dl, DAG);
     return DAG.getNode(ISD::ZERO_EXTEND, dl, MVT::i32, SetCC);
   }
 
@@ -20996,13 +20998,26 @@ SDValue X86TargetLowering::LowerINTRINSIC_WO_CHAIN(SDValue Op,
   case Intrinsic::x86_sse42_pcmpestri128: {
     unsigned Opcode;
     if (IntNo == Intrinsic::x86_sse42_pcmpistri128)
-      Opcode = X86ISD::PCMPISTRI;
+      Opcode = X86ISD::PCMPISTR;
     else
-      Opcode = X86ISD::PCMPESTRI;
+      Opcode = X86ISD::PCMPESTR;
 
     SmallVector<SDValue, 5> NewOps(Op->op_begin()+1, Op->op_end());
-    SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::i32);
+    SDVTList VTs = DAG.getVTList(MVT::i32, MVT::v16i8, MVT::i32);
     return DAG.getNode(Opcode, dl, VTs, NewOps);
+  }
+
+  case Intrinsic::x86_sse42_pcmpistrm128:
+  case Intrinsic::x86_sse42_pcmpestrm128: {
+    unsigned Opcode;
+    if (IntNo == Intrinsic::x86_sse42_pcmpistrm128)
+      Opcode = X86ISD::PCMPISTR;
+    else
+      Opcode = X86ISD::PCMPESTR;
+
+    SmallVector<SDValue, 5> NewOps(Op->op_begin()+1, Op->op_end());
+    SDVTList VTs = DAG.getVTList(MVT::i32, MVT::v16i8, MVT::i32);
+    return DAG.getNode(Opcode, dl, VTs, NewOps).getValue(1);
   }
 
   case Intrinsic::eh_sjlj_lsda: {
@@ -25792,8 +25807,8 @@ const char *X86TargetLowering::getTargetNodeName(unsigned Opcode) const {
   case X86ISD::VGETMANT_RND:       return "X86ISD::VGETMANT_RND";
   case X86ISD::VGETMANTS:          return "X86ISD::VGETMANTS";
   case X86ISD::VGETMANTS_RND:      return "X86ISD::VGETMANTS_RND";
-  case X86ISD::PCMPESTRI:          return "X86ISD::PCMPESTRI";
-  case X86ISD::PCMPISTRI:          return "X86ISD::PCMPISTRI";
+  case X86ISD::PCMPESTR:           return "X86ISD::PCMPESTR";
+  case X86ISD::PCMPISTR:           return "X86ISD::PCMPISTR";
   case X86ISD::XTEST:              return "X86ISD::XTEST";
   case X86ISD::COMPRESS:           return "X86ISD::COMPRESS";
   case X86ISD::EXPAND:             return "X86ISD::EXPAND";
@@ -26175,79 +26190,6 @@ static MachineBasicBlock *emitXBegin(MachineInstr &MI, MachineBasicBlock *MBB,
 
   MI.eraseFromParent();
   return sinkMBB;
-}
-
-// FIXME: When we get size specific XMM0 registers, i.e. XMM0_V16I8
-// or XMM0_V32I8 in AVX all of this code can be replaced with that
-// in the .td file.
-static MachineBasicBlock *emitPCMPSTRM(MachineInstr &MI, MachineBasicBlock *BB,
-                                       const TargetInstrInfo *TII) {
-  unsigned Opc;
-  switch (MI.getOpcode()) {
-  default: llvm_unreachable("illegal opcode!");
-  case X86::PCMPISTRM128REG:  Opc = X86::PCMPISTRM128rr;  break;
-  case X86::VPCMPISTRM128REG: Opc = X86::VPCMPISTRM128rr; break;
-  case X86::PCMPISTRM128MEM:  Opc = X86::PCMPISTRM128rm;  break;
-  case X86::VPCMPISTRM128MEM: Opc = X86::VPCMPISTRM128rm; break;
-  case X86::PCMPESTRM128REG:  Opc = X86::PCMPESTRM128rr;  break;
-  case X86::VPCMPESTRM128REG: Opc = X86::VPCMPESTRM128rr; break;
-  case X86::PCMPESTRM128MEM:  Opc = X86::PCMPESTRM128rm;  break;
-  case X86::VPCMPESTRM128MEM: Opc = X86::VPCMPESTRM128rm; break;
-  }
-
-  DebugLoc dl = MI.getDebugLoc();
-  MachineInstrBuilder MIB = BuildMI(*BB, MI, dl, TII->get(Opc));
-
-  unsigned NumArgs = MI.getNumOperands();
-  for (unsigned i = 1; i < NumArgs; ++i) {
-    MachineOperand &Op = MI.getOperand(i);
-    if (!(Op.isReg() && Op.isImplicit()))
-      MIB.add(Op);
-  }
-  if (MI.hasOneMemOperand())
-    MIB->setMemRefs(MI.memoperands_begin(), MI.memoperands_end());
-
-  BuildMI(*BB, MI, dl, TII->get(TargetOpcode::COPY), MI.getOperand(0).getReg())
-      .addReg(X86::XMM0);
-
-  MI.eraseFromParent();
-  return BB;
-}
-
-// FIXME: Custom handling because TableGen doesn't support multiple implicit
-// defs in an instruction pattern
-static MachineBasicBlock *emitPCMPSTRI(MachineInstr &MI, MachineBasicBlock *BB,
-                                       const TargetInstrInfo *TII) {
-  unsigned Opc;
-  switch (MI.getOpcode()) {
-  default: llvm_unreachable("illegal opcode!");
-  case X86::PCMPISTRIREG:  Opc = X86::PCMPISTRIrr;  break;
-  case X86::VPCMPISTRIREG: Opc = X86::VPCMPISTRIrr; break;
-  case X86::PCMPISTRIMEM:  Opc = X86::PCMPISTRIrm;  break;
-  case X86::VPCMPISTRIMEM: Opc = X86::VPCMPISTRIrm; break;
-  case X86::PCMPESTRIREG:  Opc = X86::PCMPESTRIrr;  break;
-  case X86::VPCMPESTRIREG: Opc = X86::VPCMPESTRIrr; break;
-  case X86::PCMPESTRIMEM:  Opc = X86::PCMPESTRIrm;  break;
-  case X86::VPCMPESTRIMEM: Opc = X86::VPCMPESTRIrm; break;
-  }
-
-  DebugLoc dl = MI.getDebugLoc();
-  MachineInstrBuilder MIB = BuildMI(*BB, MI, dl, TII->get(Opc));
-
-  unsigned NumArgs = MI.getNumOperands(); // remove the results
-  for (unsigned i = 1; i < NumArgs; ++i) {
-    MachineOperand &Op = MI.getOperand(i);
-    if (!(Op.isReg() && Op.isImplicit()))
-      MIB.add(Op);
-  }
-  if (MI.hasOneMemOperand())
-    MIB->setMemRefs(MI.memoperands_begin(), MI.memoperands_end());
-
-  BuildMI(*BB, MI, dl, TII->get(TargetOpcode::COPY), MI.getOperand(0).getReg())
-      .addReg(X86::ECX);
-
-  MI.eraseFromParent();
-  return BB;
 }
 
 static MachineBasicBlock *emitWRPKRU(MachineInstr &MI, MachineBasicBlock *BB,
@@ -28165,32 +28107,6 @@ X86TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
     MI.eraseFromParent(); // The pseudo instruction is gone now.
     return BB;
   }
-    // String/text processing lowering.
-  case X86::PCMPISTRM128REG:
-  case X86::VPCMPISTRM128REG:
-  case X86::PCMPISTRM128MEM:
-  case X86::VPCMPISTRM128MEM:
-  case X86::PCMPESTRM128REG:
-  case X86::VPCMPESTRM128REG:
-  case X86::PCMPESTRM128MEM:
-  case X86::VPCMPESTRM128MEM:
-    assert(Subtarget.hasSSE42() &&
-           "Target must have SSE4.2 or AVX features enabled");
-    return emitPCMPSTRM(MI, BB, Subtarget.getInstrInfo());
-
-  // String/text processing lowering.
-  case X86::PCMPISTRIREG:
-  case X86::VPCMPISTRIREG:
-  case X86::PCMPISTRIMEM:
-  case X86::VPCMPISTRIMEM:
-  case X86::PCMPESTRIREG:
-  case X86::VPCMPESTRIREG:
-  case X86::PCMPESTRIMEM:
-  case X86::VPCMPESTRIMEM:
-    assert(Subtarget.hasSSE42() &&
-           "Target must have SSE4.2 or AVX features enabled");
-    return emitPCMPSTRI(MI, BB, Subtarget.getInstrInfo());
-
   // Thread synchronization.
   case X86::MONITOR:
     return emitMonitor(MI, BB, Subtarget, X86::MONITORrrr);
@@ -33223,8 +33139,13 @@ static SDValue combineMul(SDNode *N, SelectionDAG &DAG,
   if (!C)
     return SDValue();
   uint64_t MulAmt = C->getZExtValue();
-  if (isPowerOf2_64(MulAmt) || MulAmt == 3 || MulAmt == 5 || MulAmt == 9)
+  if (isPowerOf2_64(MulAmt))
     return SDValue();
+
+  SDLoc DL(N);
+  if (MulAmt == 3 || MulAmt == 5 || MulAmt == 9)
+    return DAG.getNode(X86ISD::MUL_IMM, DL, VT, N->getOperand(0),
+                       N->getOperand(1));
 
   uint64_t MulAmt1 = 0;
   uint64_t MulAmt2 = 0;
@@ -33239,7 +33160,6 @@ static SDValue combineMul(SDNode *N, SelectionDAG &DAG,
     MulAmt2 = MulAmt / 3;
   }
 
-  SDLoc DL(N);
   SDValue NewMul;
   if (MulAmt2 &&
       (isPowerOf2_64(MulAmt2) || MulAmt2 == 3 || MulAmt2 == 5 || MulAmt2 == 9)){
@@ -36017,89 +35937,57 @@ static SDValue combineVectorSignBitsTruncation(SDNode *N, const SDLoc &DL,
   return SDValue();
 }
 
-/// This function detects the addition or substraction with saturation pattern
-/// between 2 unsigned i8/i16 vectors and replace this operation with the
-/// efficient X86ISD::ADDUS/X86ISD::ADDS/X86ISD::SUBUS/x86ISD::SUBS instruction.
-static SDValue detectAddSubSatPattern(SDValue In, EVT VT, SelectionDAG &DAG,
-                                      const X86Subtarget &Subtarget,
-                                      const SDLoc &DL) {
-  if (!VT.isVector() || !VT.isSimple())
-    return SDValue();
-  EVT InVT = In.getValueType();
-  unsigned NumElems = VT.getVectorNumElements();
-
-  EVT ScalarVT = VT.getVectorElementType();
-  if ((ScalarVT != MVT::i8 && ScalarVT != MVT::i16) ||
-      InVT.getSizeInBits() % 128 != 0 || !isPowerOf2_32(NumElems))
-    return SDValue();
-
-  // InScalarVT is the intermediate type in AddSubSat pattern
-  // and it should be greater than the original input type (i8/i16).
-  EVT InScalarVT = InVT.getVectorElementType();
-  if (InScalarVT.getSizeInBits() <= ScalarVT.getSizeInBits())
+// Try to form a MULHU or MULHS node by looking for
+// (trunc (srl (mul ext, ext), 16))
+// TODO: This is X86 specific because we want to be able to handle wide types
+// before type legalization. But we can only do it if the vector will be
+// legalized via widening/splitting. Type legalization can't handle promotion
+// of a MULHU/MULHS. There isn't a way to convey this to the generic DAG
+// combiner.
+static SDValue combinePMULH(SDValue Src, EVT VT, const SDLoc &DL,
+                            SelectionDAG &DAG, const X86Subtarget &Subtarget) {
+  // First instruction should be a right shift of a multiply.
+  if (Src.getOpcode() != ISD::SRL ||
+      Src.getOperand(0).getOpcode() != ISD::MUL)
     return SDValue();
 
   if (!Subtarget.hasSSE2())
     return SDValue();
 
-  // Detect the following pattern:
-  // %2 = zext <16 x i8> %0 to <16 x i16>
-  // %3 = zext <16 x i8> %1 to <16 x i16>
-  // %4 = add nuw nsw <16 x i16> %3, %2
-  // %5 = icmp ult <16 x i16> %4, <16 x i16> (vector of max InScalarVT values)
-  // %6 = select <16 x i1> %5, <16 x i16> (vector of max InScalarVT values)
-  // %7 = trunc <16 x i16> %6 to <16 x i8>
-
-  // Detect a Sat Pattern
-  bool Signed = true;
-  SDValue Sat = detectSSatPattern(In, VT, false);
-  if (!Sat) {
-    Sat = detectUSatPattern(In, VT);
-    Signed = false;
-  }
-  if (!Sat)
-    return SDValue();
-  if (Sat.getOpcode() != ISD::ADD && Sat.getOpcode() != ISD::SUB)
+  // Only handle vXi16 types that are at least 128-bits.
+  if (!VT.isVector() || VT.getVectorElementType() != MVT::i16 ||
+      VT.getVectorNumElements() < 8)
     return SDValue();
 
-  unsigned Opcode = Sat.getOpcode() == ISD::ADD ? Signed ? X86ISD::ADDS
-                                                         : X86ISD::ADDUS
-                                                : Signed ? X86ISD::SUBS
-                                                         : X86ISD::SUBUS;
-
-  // Get addition elements.
-  SDValue LHS = Sat.getOperand(0);
-  SDValue RHS = Sat.getOperand(1);
-
-  // Check if LHS and RHS are results of type promotion or
-  // one of them is and the other one is constant.
-  unsigned ExtendOpcode = Signed ? ISD::SIGN_EXTEND :
-                                   ISD::ZERO_EXTEND;
-  unsigned LHSOpcode = LHS.getOpcode();
-  unsigned RHSOpcode = RHS.getOpcode();
-
-  if (LHSOpcode == ExtendOpcode && RHSOpcode == ExtendOpcode) {
-    LHS = LHS.getOperand(0);
-    RHS = RHS.getOperand(0);
-  } else if (LHSOpcode == ExtendOpcode &&
-             ISD::isBuildVectorOfConstantSDNodes(RHS.getNode())) {
-    LHS = LHS.getOperand(0);
-    RHS = DAG.getNode(ISD::TRUNCATE, DL, VT, RHS);
-  } else if (RHSOpcode == ExtendOpcode &&
-           ISD::isBuildVectorOfConstantSDNodes(LHS.getNode())) {
-    RHS = RHS.getOperand(0);
-    LHS = DAG.getNode(ISD::TRUNCATE, DL, VT, LHS);
-  } else
+  // Input type should be vXi32.
+  EVT InVT = Src.getValueType();
+  if (InVT.getVectorElementType() != MVT::i32)
     return SDValue();
-  
-  // The pattern is detected, emit ADDS/ADDUS/SUBS/SUBUS instruction.
-  auto AddSubSatBuilder = [Opcode](SelectionDAG &DAG, const SDLoc &DL,
-                                   ArrayRef<SDValue> Ops) {
-    EVT VT = Ops[0].getValueType();
-    return DAG.getNode(Opcode, DL, VT, Ops);
-  };
-  return SplitOpsAndApply(DAG, Subtarget, DL, VT, { LHS, RHS },
-                          AddSubSatBuilder);
+
+  // Need a shift by 16.
+  APInt ShiftAmt;
+  if (!ISD::isConstantSplatVector(Src.getOperand(1).getNode(), ShiftAmt) ||
+      ShiftAmt != 16)
+    return SDValue();
+
+  SDValue LHS = Src.getOperand(0).getOperand(0);
+  SDValue RHS = Src.getOperand(0).getOperand(1);
+
+  unsigned ExtOpc = LHS.getOpcode();
+  if ((ExtOpc != ISD::SIGN_EXTEND && ExtOpc != ISD::ZERO_EXTEND) ||
+      RHS.getOpcode() != ExtOpc)
+    return SDValue();
+
+  // Peek through the extends.
+  LHS = LHS.getOperand(0);
+  RHS = RHS.getOperand(0);
+
+  // Ensure the input types match.
+  if (LHS.getValueType() != VT || RHS.getValueType() != VT)
+    return SDValue();
+
+  unsigned Opc = ExtOpc == ISD::SIGN_EXTEND ? ISD::MULHS : ISD::MULHU;
+  return DAG.getNode(Opc, DL, VT, LHS, RHS);
 }
 
 static SDValue combineTruncate(SDNode *N, SelectionDAG &DAG,
@@ -36116,13 +36004,13 @@ static SDValue combineTruncate(SDNode *N, SelectionDAG &DAG,
   if (SDValue Avg = detectAVGPattern(Src, VT, DAG, Subtarget, DL))
     return Avg;
 
-  // Try to detect addition or substraction with saturation.
-  if (SDValue AddSubSat = detectAddSubSatPattern(Src, VT, DAG, Subtarget, DL))
-    return AddSubSat;
-
   // Try to combine truncation with signed/unsigned saturation.
   if (SDValue Val = combineTruncateWithSat(Src, VT, DL, DAG, Subtarget))
     return Val;
+
+  // Try to combine PMULHUW/PMULHW for vXi16.
+  if (SDValue V = combinePMULH(Src, VT, DL, DAG, Subtarget))
+    return V;
 
   // The bitcast source is a direct mmx result.
   // Detect bitcasts between i32 to x86mmx

@@ -132,18 +132,6 @@ inline match_combine_and<LTy, RTy> m_CombineAnd(const LTy &L, const RTy &R) {
   return match_combine_and<LTy, RTy>(L, R);
 }
 
-struct match_zero {
-  template <typename ITy> bool match(ITy *V) {
-    if (const auto *C = dyn_cast<Constant>(V))
-      return C->isNullValue();
-    return false;
-  }
-};
-
-/// Match an arbitrary zero/null constant. This includes
-/// zero_initializer for vectors and ConstantPointerNull for pointers.
-inline match_zero m_Zero() { return match_zero(); }
-
 struct apint_match {
   const APInt *&Res;
 
@@ -365,6 +353,27 @@ inline cst_pred_ty<is_one> m_One() {
   return cst_pred_ty<is_one>();
 }
 
+struct is_zero_int {
+  bool isValue(const APInt &C) { return C.isNullValue(); }
+};
+/// Match an integer 0 or a vector with all elements equal to 0.
+/// For vectors, this includes constants with undefined elements.
+inline cst_pred_ty<is_zero_int> m_ZeroInt() {
+  return cst_pred_ty<is_zero_int>();
+}
+
+struct is_zero {
+  template <typename ITy> bool match(ITy *V) {
+    auto *C = dyn_cast<Constant>(V);
+    return C && (C->isNullValue() || cst_pred_ty<is_zero_int>().match(C));
+  }
+};
+/// Match any null constant or a vector with all elements equal to 0.
+/// For vectors, this includes constants with undefined elements.
+inline is_zero m_Zero() {
+  return is_zero();
+}
+
 struct is_power2 {
   bool isValue(const APInt &C) { return C.isPowerOf2(); }
 };
@@ -480,6 +489,22 @@ struct specificval_ty {
 /// Match if we have a specific specified value.
 inline specificval_ty m_Specific(const Value *V) { return V; }
 
+/// Stores a reference to the Value *, not the Value * itself,
+/// thus can be used in commutative matchers.
+template <typename Class> struct deferredval_ty {
+  Class *const &Val;
+
+  deferredval_ty(Class *const &V) : Val(V) {}
+
+  template <typename ITy> bool match(ITy *const V) { return V == Val; }
+};
+
+/// A commutative-friendly version of m_Specific().
+inline deferredval_ty<Value> m_Deferred(Value *const &V) { return V; }
+inline deferredval_ty<const Value> m_Deferred(const Value *const &V) {
+  return V;
+}
+
 /// Match a specified floating point value or vector of all elements of
 /// that value.
 struct specific_fpval {
@@ -553,13 +578,15 @@ struct AnyBinaryOp_match {
   LHS_t L;
   RHS_t R;
 
+  // The evaluation order is always stable, regardless of Commutability.
+  // The LHS is always matched first.
   AnyBinaryOp_match(const LHS_t &LHS, const RHS_t &RHS) : L(LHS), R(RHS) {}
 
   template <typename OpTy> bool match(OpTy *V) {
     if (auto *I = dyn_cast<BinaryOperator>(V))
       return (L.match(I->getOperand(0)) && R.match(I->getOperand(1))) ||
-             (Commutable && R.match(I->getOperand(0)) &&
-              L.match(I->getOperand(1)));
+             (Commutable && L.match(I->getOperand(1)) &&
+              R.match(I->getOperand(0)));
     return false;
   }
 };
@@ -579,20 +606,22 @@ struct BinaryOp_match {
   LHS_t L;
   RHS_t R;
 
+  // The evaluation order is always stable, regardless of Commutability.
+  // The LHS is always matched first.
   BinaryOp_match(const LHS_t &LHS, const RHS_t &RHS) : L(LHS), R(RHS) {}
 
   template <typename OpTy> bool match(OpTy *V) {
     if (V->getValueID() == Value::InstructionVal + Opcode) {
       auto *I = cast<BinaryOperator>(V);
       return (L.match(I->getOperand(0)) && R.match(I->getOperand(1))) ||
-             (Commutable && R.match(I->getOperand(0)) &&
-              L.match(I->getOperand(1)));
+             (Commutable && L.match(I->getOperand(1)) &&
+              R.match(I->getOperand(0)));
     }
     if (auto *CE = dyn_cast<ConstantExpr>(V))
       return CE->getOpcode() == Opcode &&
              ((L.match(CE->getOperand(0)) && R.match(CE->getOperand(1))) ||
-              (Commutable && R.match(CE->getOperand(0)) &&
-               L.match(CE->getOperand(1))));
+              (Commutable && L.match(CE->getOperand(1)) &&
+               R.match(CE->getOperand(0))));
     return false;
   }
 };
@@ -917,14 +946,16 @@ struct CmpClass_match {
   LHS_t L;
   RHS_t R;
 
+  // The evaluation order is always stable, regardless of Commutability.
+  // The LHS is always matched first.
   CmpClass_match(PredicateTy &Pred, const LHS_t &LHS, const RHS_t &RHS)
       : Predicate(Pred), L(LHS), R(RHS) {}
 
   template <typename OpTy> bool match(OpTy *V) {
     if (auto *I = dyn_cast<Class>(V))
       if ((L.match(I->getOperand(0)) && R.match(I->getOperand(1))) ||
-          (Commutable && R.match(I->getOperand(0)) &&
-           L.match(I->getOperand(1)))) {
+          (Commutable && L.match(I->getOperand(1)) &&
+           R.match(I->getOperand(0)))) {
         Predicate = I->getPredicate();
         return true;
       }
@@ -1242,6 +1273,8 @@ struct MaxMin_match {
   LHS_t L;
   RHS_t R;
 
+  // The evaluation order is always stable, regardless of Commutability.
+  // The LHS is always matched first.
   MaxMin_match(const LHS_t &LHS, const RHS_t &RHS) : L(LHS), R(RHS) {}
 
   template <typename OpTy> bool match(OpTy *V) {
@@ -1268,7 +1301,7 @@ struct MaxMin_match {
       return false;
     // It does!  Bind the operands.
     return (L.match(LHS) && R.match(RHS)) ||
-           (Commutable && R.match(LHS) && L.match(RHS));
+           (Commutable && L.match(RHS) && R.match(LHS));
   }
 };
 

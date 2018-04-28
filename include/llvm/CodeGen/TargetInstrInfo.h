@@ -18,6 +18,7 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseMapInfo.h"
 #include "llvm/ADT/None.h"
+#include "llvm/CodeGen/LiveRegUnits.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineCombinerPattern.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -225,6 +226,17 @@ public:
     return 0;
   }
 
+  /// Optional extension of isLoadFromStackSlot that returns the number of
+  /// bytes loaded from the stack. This must be implemented if a backend
+  /// supports partial stack slot spills/loads to further disambiguate
+  /// what the load does.
+  virtual unsigned isLoadFromStackSlot(const MachineInstr &MI,
+                                       int &FrameIndex,
+                                       unsigned &MemBytes) const {
+    MemBytes = 0;
+    return isLoadFromStackSlot(MI, FrameIndex);
+  }
+
   /// Check for post-frame ptr elimination stack locations as well.
   /// This uses a heuristic so it isn't reliable for correctness.
   virtual unsigned isLoadFromStackSlotPostFE(const MachineInstr &MI,
@@ -250,6 +262,17 @@ public:
   virtual unsigned isStoreToStackSlot(const MachineInstr &MI,
                                       int &FrameIndex) const {
     return 0;
+  }
+
+  /// Optional extension of isStoreToStackSlot that returns the number of
+  /// bytes stored to the stack. This must be implemented if a backend
+  /// supports partial stack slot spills/loads to further disambiguate
+  /// what the store does.
+  virtual unsigned isStoreToStackSlot(const MachineInstr &MI,
+                                      int &FrameIndex,
+                                      unsigned &MemBytes) const {
+    MemBytes = 0;
+    return isStoreToStackSlot(MI, FrameIndex);
   }
 
   /// Check for post-frame ptr elimination stack locations as well.
@@ -956,11 +979,6 @@ public:
   /// Return true if the given SDNode can be copied during scheduling
   /// even if it has glue.
   virtual bool canCopyGluedNodeDuringSchedule(SDNode *N) const { return false; }
-
-  /// Remember what registers the specified instruction uses and modifies.
-  virtual void trackRegDefsUses(const MachineInstr &MI, BitVector &ModifiedRegs,
-                                BitVector &UsedRegs,
-                                const TargetRegisterInfo *TRI) const;
 
 protected:
   /// Target-dependent implementation for foldMemoryOperand.
