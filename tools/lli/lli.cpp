@@ -71,7 +71,7 @@
 #undef exit
 #define exit(a) { llvm_shutdown(); ios_exit(a); }
 extern "C" {
-const char* llvm_ios_progname;
+extern const char* llvm_ios_progname;
 void llvm_ios_exit(int a) { llvm_shutdown(); ios_exit(a); }
 void llvm_ios_abort(int a) { report_fatal_error("LLVM JIT compiled program raised SIGABRT"); }
 int llvm_ios_putchar(char c) { return fputc(c, thread_stdout); }
