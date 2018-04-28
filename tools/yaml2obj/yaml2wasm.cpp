@@ -27,7 +27,8 @@ public:
   int writeWasm(raw_ostream &OS);
 
 private:
-  int writeRelocSection(raw_ostream &OS, WasmYAML::Section &Sec);
+  int writeRelocSection(raw_ostream &OS, WasmYAML::Section &Sec,
+                        uint32_t SectionIndex);
 
   int writeSectionContent(raw_ostream &OS, WasmYAML::CustomSection &Section);
   int writeSectionContent(raw_ostream &OS, WasmYAML::TypeSection &Section);
@@ -133,6 +134,7 @@ public:
 
 int WasmWriter::writeSectionContent(raw_ostream &OS, WasmYAML::LinkingSection &Section) {
   writeStringRef(Section.Name, OS);
+  encodeULEB128(Section.Version, OS);
 
   SubSectionWriter SubSection(OS);
 
@@ -162,6 +164,9 @@ int WasmWriter::writeSectionContent(raw_ostream &OS, WasmYAML::LinkingSection &S
           encodeULEB128(Info.DataRef.Offset, SubSection.GetStream());
           encodeULEB128(Info.DataRef.Size, SubSection.GetStream());
         }
+        break;
+      case wasm::WASM_SYMBOL_TYPE_SECTION:
+        encodeULEB128(Info.ElementIndex, SubSection.GetStream());
         break;
       default:
         llvm_unreachable("unexpected kind");
@@ -420,23 +425,31 @@ int WasmWriter::writeSectionContent(raw_ostream &OS,
   return 0;
 }
 
-int WasmWriter::writeRelocSection(raw_ostream &OS,
-                                  WasmYAML::Section &Sec) {
-  StringRef Name;
+int WasmWriter::writeRelocSection(raw_ostream &OS, WasmYAML::Section &Sec,
+                                  uint32_t SectionIndex) {
   switch (Sec.Type) {
     case wasm::WASM_SEC_CODE:
-      Name = "reloc.CODE";
+      writeStringRef("reloc.CODE", OS);
       break;
     case wasm::WASM_SEC_DATA:
-      Name = "reloc.DATA";
+      writeStringRef("reloc.DATA", OS);
       break;
+    case wasm::WASM_SEC_CUSTOM: {
+      auto CustomSection = dyn_cast<WasmYAML::CustomSection>(&Sec);
+      if (!CustomSection->Name.startswith(".debug_")) {
+        llvm_unreachable("not yet implemented (only for debug sections)");
+        return 1;
+      }
+
+      writeStringRef(("reloc." + CustomSection->Name).str(), OS);
+      break;
+    }
     default:
       llvm_unreachable("not yet implemented");
       return 1;
   }
 
-  writeStringRef(Name, OS);
-  writeUint8(OS, Sec.Type);
+  encodeULEB128(SectionIndex, OS);
   encodeULEB128(Sec.Relocations.size(), OS);
 
   for (auto Reloc: Sec.Relocations) {
@@ -447,6 +460,8 @@ int WasmWriter::writeRelocSection(raw_ostream &OS,
       case wasm::R_WEBASSEMBLY_MEMORY_ADDR_LEB:
       case wasm::R_WEBASSEMBLY_MEMORY_ADDR_SLEB:
       case wasm::R_WEBASSEMBLY_MEMORY_ADDR_I32:
+      case wasm::R_WEBASSEMBLY_FUNCTION_OFFSET_I32:
+      case wasm::R_WEBASSEMBLY_SECTION_OFFSET_I32:
         encodeULEB128(Reloc.Addend, OS);
     }
   }
@@ -522,14 +537,17 @@ int WasmWriter::writeWasm(raw_ostream &OS) {
   }
 
   // write reloc sections for any section that have relocations
+  uint32_t SectionIndex = 0;
   for (const std::unique_ptr<WasmYAML::Section> &Sec : Obj.Sections) {
-    if (Sec->Relocations.empty())
+    if (Sec->Relocations.empty()) {
+      SectionIndex++;
       continue;
+    }
 
     writeUint8(OS, wasm::WASM_SEC_CUSTOM);
     std::string OutString;
     raw_string_ostream StringStream(OutString);
-    writeRelocSection(StringStream, *Sec);
+    writeRelocSection(StringStream, *Sec, SectionIndex++);
     StringStream.flush();
 
     encodeULEB128(OutString.size(), OS);
