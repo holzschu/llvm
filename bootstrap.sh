@@ -62,6 +62,7 @@ if [ ! -d $OSX_BUILDDIR ]; then
 fi
 pushd $OSX_BUILDDIR
 cmake -G Ninja \
+-DLLVM_TARGETS_TO_BUILD="AArch64;X86" \
 -DBUILD_SHARED_LIBS=ON \
 ..
 ninja
