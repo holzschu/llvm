@@ -60,10 +60,13 @@ fi
 if [ ! -d $OSX_BUILDDIR ]; then
   mkdir $OSX_BUILDDIR
 fi
+# testing DLLVM_LINK_LLVM_DYLIB (= single big shared lib) instead of BUILD_SHARED_LIBS (= multiple shared libs)
+# check it works, easier to make a framework with
 pushd $OSX_BUILDDIR
 cmake -G Ninja \
 -DLLVM_TARGETS_TO_BUILD="AArch64;X86" \
--DBUILD_SHARED_LIBS=ON \
+-DLLVM_LINK_LLVM_DYLIB=ON \
+-DCMAKE_BUILD_TYPE=Release \
 ..
 ninja
 popd
@@ -105,7 +108,9 @@ if [ ! -d $IOS_BUILDDIR ]; then
   mkdir $IOS_BUILDDIR
 fi
 pushd $IOS_BUILDDIR
-cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DLLVM_TARGET_ARCH=AArch64 \
+cmake -G Ninja \
+-DLLVM_LINK_LLVM_DYLIB=ON \
+-DLLVM_TARGET_ARCH=AArch64 \
 -DLLVM_TARGETS_TO_BUILD="AArch64" \
 -DLLVM_DEFAULT_TARGET_TRIPLE=arm64-apple-darwin17.5.0 \
 -DLLVM_ENABLE_THREADS=OFF \
