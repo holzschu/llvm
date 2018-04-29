@@ -18,44 +18,11 @@
 		22287E87206983A30031C57D /* awk.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22287E81206983810031C57D /* awk.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22287E88206983A30031C57D /* ssh_cmd.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22287E82206983810031C57D /* ssh_cmd.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22287E89206983A30031C57D /* curl_ios.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22287E83206983810031C57D /* curl_ios.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2245BDE1209649C600D4DCC0 /* libclang.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2245BDDF209646B500D4DCC0 /* libclang.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		2245BDE2209649C600D4DCC0 /* libLLVM.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2245BDE0209646C700D4DCC0 /* libLLVM.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		225F91D7207649AF00632A88 /* lli in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91D62076497F00632A88 /* lli */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91DC20764AC700632A88 /* libLLVMCodeGen.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91DB20764ABC00632A88 /* libLLVMCodeGen.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91DF20764AEC00632A88 /* libLLVMExecutionEngine.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91DD20764AE400632A88 /* libLLVMExecutionEngine.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91E120764B2500632A88 /* libLLVMIRReader.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91E020764B1B00632A88 /* libLLVMIRReader.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91E320764B5000632A88 /* libLLVMInterpreter.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91E220764B4300632A88 /* libLLVMInterpreter.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91E520764B7A00632A88 /* libLLVMMC.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91E420764B7100632A88 /* libLLVMMC.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91E720764B9F00632A88 /* libLLVMMCJIT.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91E620764B9500632A88 /* libLLVMMCJIT.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91E920764BBF00632A88 /* libLLVMObject.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91E820764BBB00632A88 /* libLLVMObject.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91EB20764BDE00632A88 /* libLLVMOrcJIT.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91EA20764BDB00632A88 /* libLLVMOrcJIT.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91ED20764C0400632A88 /* libLLVMRuntimeDyld.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91EC20764BFB00632A88 /* libLLVMRuntimeDyld.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91EF20764C2200632A88 /* libLLVMSelectionDAG.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91EE20764C1E00632A88 /* libLLVMSelectionDAG.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91F120764C4000632A88 /* libLLVMSupport.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91F020764C3D00632A88 /* libLLVMSupport.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91F320764C6300632A88 /* libLLVMTarget.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91F220764C6000632A88 /* libLLVMTarget.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91F520764C7F00632A88 /* libLLVMTransformUtils.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91F420764C7C00632A88 /* libLLVMTransformUtils.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91F720764CA200632A88 /* libLLVMAArch64CodeGen.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91F620764CA000632A88 /* libLLVMAArch64CodeGen.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91F920764CC300632A88 /* libLLVMAArch64AsmParser.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91F820764CC000632A88 /* libLLVMAArch64AsmParser.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91FB20764CDF00632A88 /* libLLVMAArch64AsmPrinter.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91FA20764CDC00632A88 /* libLLVMAArch64AsmPrinter.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F91FD20764CFC00632A88 /* libLLVMAArch64Desc.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F91FC20764CF900632A88 /* libLLVMAArch64Desc.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F920120764D3A00632A88 /* libLLVMAArch64Disassembler.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F920020764D3400632A88 /* libLLVMAArch64Disassembler.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F920820764DB600632A88 /* libLLVMAArch64Utils.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F920720764DA700632A88 /* libLLVMAArch64Utils.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F920920764DB600632A88 /* libLLVMAArch64Info.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F920620764D9900632A88 /* libLLVMAArch64Info.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F920B20764DDD00632A88 /* libLLVMCore.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F920A20764DD800632A88 /* libLLVMCore.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F920D20764DFE00632A88 /* libLLVMAnalysis.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F920C20764DFA00632A88 /* libLLVMAnalysis.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F920F20764E2100632A88 /* libLLVMBitReader.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F920E20764E1D00632A88 /* libLLVMBitReader.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F921220764E3F00632A88 /* libLLVMBitWriter.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F921020764E3B00632A88 /* libLLVMBitWriter.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F921420764E7700632A88 /* libLLVMProfileData.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F921320764E7400632A88 /* libLLVMProfileData.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F921620764E9700632A88 /* libLLVMScalarOpts.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F921520764E9400632A88 /* libLLVMScalarOpts.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F921820764EBD00632A88 /* libLLVMBinaryFormat.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F921720764EB900632A88 /* libLLVMBinaryFormat.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F921B20764EFC00632A88 /* libLLVMDemangle.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F921A20764EF800632A88 /* libLLVMDemangle.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F921D20764F2900632A88 /* libLLVMMCParser.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F921C20764F1C00632A88 /* libLLVMMCParser.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F921F20764F5900632A88 /* libLLVMInstCombine.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F921E20764F5600632A88 /* libLLVMInstCombine.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F922120764F7F00632A88 /* libLLVMAsmParser.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F922020764F7D00632A88 /* libLLVMAsmParser.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F922320764F9F00632A88 /* libLLVMAsmPrinter.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F922220764F9C00632A88 /* libLLVMAsmPrinter.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F922520764FD200632A88 /* libLLVMGlobalISel.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F922420764FCF00632A88 /* libLLVMGlobalISel.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F922720764FEF00632A88 /* libLLVMDebugInfoCodeView.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F922620764FEC00632A88 /* libLLVMDebugInfoCodeView.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F92292076502700632A88 /* libLLVMDebugInfoMSF.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F92282076500700632A88 /* libLLVMDebugInfoMSF.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		225F922C2076505100632A88 /* libLLVMMCDisassembler.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F922A2076504E00632A88 /* libLLVMMCDisassembler.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		225F9230207653DC00632A88 /* clang-7 in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F922F207653D900632A88 /* clang-7 */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		2260102A2092238E008F3B4A /* opt in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2260102920922385008F3B4A /* opt */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		22A36F06208775D8008B8F92 /* llvm-nm in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A36F05208775D3008B8F92 /* llvm-nm */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		22A36F0820877D3C008B8F92 /* llvm-dis in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A36F0720877D2C008B8F92 /* llvm-dis */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		22A36F0A20877DE0008B8F92 /* llvm-link in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A36F0920877DD7008B8F92 /* llvm-link */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -70,41 +37,6 @@
 		22B41D36206AE8F100FC2BF0 /* libtexlua52.5.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B41D35206AE8C500FC2BF0 /* libtexlua52.5.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		22B41D39206AE9A800FC2BF0 /* lua_ios.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B41D37206AE9A700FC2BF0 /* lua_ios.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22B41D3A206AE9A800FC2BF0 /* Python_ios.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22B41D38206AE9A800FC2BF0 /* Python_ios.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		22FAA261208096DD0028ED31 /* libLLVMAggressiveInstCombine.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22FAA260208096D10028ED31 /* libLLVMAggressiveInstCombine.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA263208097860028ED31 /* libLLVMipo.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22FAA2622080977E0028ED31 /* libLLVMipo.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA265208097C50028ED31 /* libLLVMInstrumentation.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22FAA264208097C30028ED31 /* libLLVMInstrumentation.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA267208097F70028ED31 /* libLLVMObjCARCOpts.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22FAA266208097F50028ED31 /* libLLVMObjCARCOpts.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA268208098600028ED31 /* libLLVMOption.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F9237207654DF00632A88 /* libLLVMOption.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA269208098790028ED31 /* libLLVMVectorize.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F923A2076552600632A88 /* libLLVMVectorize.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA26A208098920028ED31 /* libclangStaticAnalyzerCore.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F926A20765A5A00632A88 /* libclangStaticAnalyzerCore.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA26B208098920028ED31 /* libclangASTMatchers.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F926820765A0800632A88 /* libclangASTMatchers.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA26C208098920028ED31 /* libclangStaticAnalyzerCheckers.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F9266207659E900632A88 /* libclangStaticAnalyzerCheckers.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA26D208098920028ED31 /* libclangRewrite.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F9264207659C400632A88 /* libclangRewrite.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA26E208098920028ED31 /* libclangStaticAnalyzerFrontend.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F92622076599E00632A88 /* libclangStaticAnalyzerFrontend.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA26F208098920028ED31 /* libclangARCMigrate.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F92602076596900632A88 /* libclangARCMigrate.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA270208098920028ED31 /* libclangRewriteFrontend.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F925E2076593F00632A88 /* libclangRewriteFrontend.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA271208098920028ED31 /* libclangSerialization.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F925C2076592300632A88 /* libclangSerialization.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA272208098920028ED31 /* libclangSema.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F925A207658FD00632A88 /* libclangSema.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA273208098920028ED31 /* libclangParse.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F9258207658D900632A88 /* libclangParse.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA274208098920028ED31 /* libclangEdit.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F9256207658BA00632A88 /* libclangEdit.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA275208098920028ED31 /* libLLVMPasses.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F92542076589500632A88 /* libLLVMPasses.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA276208098920028ED31 /* libLLVMLTO.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F92522076575700632A88 /* libLLVMLTO.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA277208098920028ED31 /* libLLVMCoverage.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F92502076573900632A88 /* libLLVMCoverage.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA278208098920028ED31 /* libLLVMCoroutines.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F924E2076571B00632A88 /* libLLVMCoroutines.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA279208098920028ED31 /* libclangLex.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F924C207656E600632A88 /* libclangLex.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA27A208098920028ED31 /* libclangAnalysis.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F924A2076564400632A88 /* libclangAnalysis.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA27B208098920028ED31 /* libclangAST.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F92482076562600632A88 /* libclangAST.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA27C208098920028ED31 /* libLLVMLinker.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F9246207655FC00632A88 /* libLLVMLinker.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA27D208098920028ED31 /* libclangFrontendTool.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F9244207655D000632A88 /* libclangFrontendTool.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA27E208098920028ED31 /* libclangFrontend.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F9242207655B100632A88 /* libclangFrontend.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA27F208098920028ED31 /* libclangDriver.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F92402076559100632A88 /* libclangDriver.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA280208098920028ED31 /* libclangCodeGen.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F923E2076556B00632A88 /* libclangCodeGen.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA281208098920028ED31 /* libclangBasic.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 225F923C2076554A00632A88 /* libclangBasic.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA283208098FA0028ED31 /* libclangCrossTU.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22FAA282208098EE0028ED31 /* libclangCrossTU.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA285208099340028ED31 /* libclangIndex.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22FAA284208099320028ED31 /* libclangIndex.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA287208099660028ED31 /* libclangFormat.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22FAA286208099630028ED31 /* libclangFormat.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA28A208099AB0028ED31 /* libclangToolingCore.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22FAA288208099A10028ED31 /* libclangToolingCore.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		22FAA28B208099AB0028ED31 /* libclangToolingRefactor.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22FAA289208099A20028ED31 /* libclangToolingRefactor.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		28CDA426202444CC0055206D /* BookmarkViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28CDA425202444CC0055206D /* BookmarkViewController.swift */; };
 		28CDA4292024B3510055206D /* BookmarkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28CDA4282024B3510055206D /* BookmarkManager.swift */; };
 		3C1A47B02031357500D7CC5C /* ios_system.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BE3768EE1FEC4DCE00D5A2D1 /* ios_system.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -116,7 +48,6 @@
 		3C905FCA20265BC60084BA63 /* StoreReviewPrompter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C905FC920265BC60084BA63 /* StoreReviewPrompter.swift */; };
 		3CA320FD201FE73900974B5F /* TerminalTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA320FC201FE73900974B5F /* TerminalTextView.swift */; };
 		3CA320FF201FE8E100974B5F /* ScriptsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA320FE201FE8E100974B5F /* ScriptsViewController.swift */; };
-		3CA32102201FF6B100974B5F /* Script.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA32101201FF6B100974B5F /* Script.swift */; };
 		3CA32105201FFC1300974B5F /* ScriptEditViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA32104201FFC1300974B5F /* ScriptEditViewController.swift */; };
 		3CA3210920211D5600974B5F /* ScriptExecutorCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA3210820211D5600974B5F /* ScriptExecutorCommand.swift */; };
 		3CA3210B20212D4200974B5F /* CommandExecutionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA3210A20212D4200974B5F /* CommandExecutionContext.swift */; };
@@ -126,20 +57,43 @@
 		3CE57681202A52ED00760E43 /* TerminalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3808571FD9BFB600393EB8 /* TerminalViewController.swift */; };
 		3CE5769E202A7EC500760E43 /* Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE5769D202A7EC500760E43 /* Parser.swift */; };
 		3CE576A0202A874C00760E43 /* OutputSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE5769F202A874C00760E43 /* OutputSanitizer.swift */; };
+		BE0146EB2083B2F90072AAB5 /* ManualWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0146EA2083B2F90072AAB5 /* ManualWebViewController.swift */; };
+		BE0146ED2083BA000072AAB5 /* cub-guide.htmlcontainer in Resources */ = {isa = PBXBuildFile; fileRef = BE0146EC2083BA000072AAB5 /* cub-guide.htmlcontainer */; };
+		BE102815207A372C005E965F /* String+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE102814207A372C005E965F /* String+C.swift */; };
+		BE1643D22077E9D4002939B7 /* PridelandDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1643D12077E9D4002939B7 /* PridelandDocument.swift */; };
+		BE1643D42077F857002939B7 /* DirectoryObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1643D32077F857002939B7 /* DirectoryObserver.swift */; };
+		BE1643D62077FFC0002939B7 /* UICollectionView+Update.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1643D52077FFC0002939B7 /* UICollectionView+Update.swift */; };
 		BE165408201909040067EC92 /* xCallBackUrl.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE165407201909030067EC92 /* xCallBackUrl.swift */; };
 		BE189036206FF36500EE6739 /* Logo.txt in Resources */ = {isa = PBXBuildFile; fileRef = BE189035206FF36500EE6739 /* Logo.txt */; };
 		BE18903B20700EFA00EE6739 /* Author.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE18903A20700EFA00EE6739 /* Author.swift */; };
+		BE1D5F9D204C66F1008A1C36 /* Cub+Runner.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1D5F9C204C66F1008A1C36 /* Cub+Runner.swift */; };
 		BE244DC8201FBB6000A7EA4E /* cacert.pem in Resources */ = {isa = PBXBuildFile; fileRef = BE244DC7201FBB6000A7EA4E /* cacert.pem */; };
+		BE2AA98B208E692600B85CFE /* Sleep.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE2AA98A208E692600B85CFE /* Sleep.swift */; };
 		BE3808561FD9BFB600393EB8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3808551FD9BFB600393EB8 /* AppDelegate.swift */; };
 		BE38085B1FD9BFB600393EB8 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BE3808591FD9BFB600393EB8 /* Main.storyboard */; };
 		BE38085D1FD9BFB600393EB8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BE38085C1FD9BFB600393EB8 /* Assets.xcassets */; };
 		BE3808601FD9BFB600393EB8 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BE38085E1FD9BFB600393EB8 /* LaunchScreen.storyboard */; };
+		BE3A62DD208B3B570014A498 /* CubDocumentationBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3A62DC208B3B570014A498 /* CubDocumentationBundle.swift */; };
+		BE3A62DF208B3BB70014A498 /* CubDocumentationUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3A62DE208B3BB70014A498 /* CubDocumentationUpdater.swift */; };
+		BE3A62E1208B49EF0014A498 /* cub-docs.json in Resources */ = {isa = PBXBuildFile; fileRef = BE3A62E0208B49EF0014A498 /* cub-docs.json */; };
+		BE3A62E3208B4A7D0014A498 /* CubDocumentationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3A62E2208B4A7D0014A498 /* CubDocumentationViewController.swift */; };
+		BE3A62E7208B54D00014A498 /* CubDocumentationItemTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3A62E5208B54D00014A498 /* CubDocumentationItemTableViewCell.swift */; };
+		BE3A62E8208B54D00014A498 /* CubDocumentationItemTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = BE3A62E6208B54D00014A498 /* CubDocumentationItemTableViewCell.xib */; };
+		BE3A62EA208B57C80014A498 /* CubDocumentationItemViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3A62E9208B57C80014A498 /* CubDocumentationItemViewController.swift */; };
 		BE505066201E5ED900CDFC60 /* Share.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE505065201E5ED900CDFC60 /* Share.swift */; };
+		BE57BDCF207BE0CD00A60950 /* CommandManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE57BDCE207BE0CD00A60950 /* CommandManager.swift */; };
+		BE57BDD2207BF3AA00A60950 /* SystemExecutorCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE57BDD1207BF3AA00A60950 /* SystemExecutorCommand.swift */; };
+		BE57BDD4207BF3B200A60950 /* EmptyExecutorCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE57BDD3207BF3B200A60950 /* EmptyExecutorCommand.swift */; };
+		BE57BDD6207BF9D800A60950 /* Say.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE57BDD5207BF9D800A60950 /* Say.swift */; };
+		BE70DA2C204DD5D900DEFF10 /* ScriptEditViewController+AutoComplete.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE70DA2B204DD5D800DEFF10 /* ScriptEditViewController+AutoComplete.swift */; };
+		BE740C1720826648001C1F24 /* NewPridelandCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE740C1520826648001C1F24 /* NewPridelandCollectionViewCell.swift */; };
+		BE740C1820826648001C1F24 /* NewPridelandCollectionViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = BE740C1620826648001C1F24 /* NewPridelandCollectionViewCell.xib */; };
 		BE8E66FC206196A7007B14E6 /* Notification+Names.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE8E66FB206196A7007B14E6 /* Notification+Names.swift */; };
 		BE8E66FE206196B8007B14E6 /* UIDevice+Name.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE8E66FD206196B8007B14E6 /* UIDevice+Name.swift */; };
 		BE8E6700206196D5007B14E6 /* Bundle+Info.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE8E66FF206196D5007B14E6 /* Bundle+Info.swift */; };
 		BE9275062013961D00BD2761 /* UserDefaultsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE9275052013961D00BD2761 /* UserDefaultsController.swift */; };
-		BEA14A69202CEE5800AB7351 /* Cub+SavannaKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEA14A68202CEE5800AB7351 /* Cub+SavannaKit.swift */; };
+		BEA14A65202CE5B700AB7351 /* Cub+SavannaKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEA14A64202CE5B600AB7351 /* Cub+SavannaKit.swift */; };
+		BEA14A67202CE5D300AB7351 /* Cub.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEA14A66202CE5D300AB7351 /* Cub.swift */; };
 		BEA499261FD9C4D7001B9B9D /* DocumentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEA499251FD9C4D7001B9B9D /* DocumentManager.swift */; };
 		BEA4992C1FDC0918001B9B9D /* icon-320.png in Resources */ = {isa = PBXBuildFile; fileRef = BEA4992B1FDC0918001B9B9D /* icon-320.png */; };
 		BEA4992E1FDC305B001B9B9D /* KeyboardObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEA4992D1FDC305B001B9B9D /* KeyboardObserver.swift */; };
@@ -149,7 +103,16 @@
 		BEB774EF20701D8500201EBB /* authors.json in Resources */ = {isa = PBXBuildFile; fileRef = BEB774EE20701D8500201EBB /* authors.json */; };
 		BEB774F12070206E00201EBB /* Logo-small.txt in Resources */ = {isa = PBXBuildFile; fileRef = BEB774F02070206E00201EBB /* Logo-small.txt */; };
 		BEB7752220714E2C00201EBB /* UIViewController+Alerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEB7752120714E2C00201EBB /* UIViewController+Alerts.swift */; };
+		BEB7752520716B5200201EBB /* PridelandCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEB7752320716B5200201EBB /* PridelandCollectionViewCell.swift */; };
+		BEB7752620716B5200201EBB /* PridelandCollectionViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = BEB7752420716B5200201EBB /* PridelandCollectionViewCell.xib */; };
+		BEB77528207172D100201EBB /* UIColor+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEB77527207172D100201EBB /* UIColor+Hex.swift */; };
+		BEB775642073F85600201EBB /* CustomColorBarPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEB775632073F85600201EBB /* CustomColorBarPicker.swift */; };
+		BEB775662074095800201EBB /* ScriptMetadataViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEB775652074095800201EBB /* ScriptMetadataViewController.swift */; };
+		BEB7756820740DFE00201EBB /* CustomTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEB7756720740DFE00201EBB /* CustomTextView.swift */; };
+		BEBD36E720755B0400C9725C /* StoryboardFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEBD36E620755B0400C9725C /* StoryboardFactory.swift */; };
 		BEC75BFD202B716600216462 /* OpenTermTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC75BFC202B716600216462 /* OpenTermTests.swift */; };
+		BEEAD9C6207E8C8500CBC254 /* Array+Safe.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEEAD9C5207E8C8500CBC254 /* Array+Safe.swift */; };
+		BEEAD9C8207EA09700CBC254 /* Stdin+Read.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEEAD9C7207EA09700CBC254 /* Stdin+Read.swift */; };
 		BEECFF0A1FFC1DC0009608B3 /* HistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEECFF091FFC1DC0009608B3 /* HistoryViewController.swift */; };
 		BEECFF391FFEC187009608B3 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEECFF381FFEC187009608B3 /* SettingsViewController.swift */; };
 		F456629E200B9BC500C574AA /* ColorDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F456629D200B9BC500C574AA /* ColorDisplayView.swift */; };
@@ -187,82 +150,14 @@
 				22287E89206983A30031C57D /* curl_ios.framework in Embed Frameworks */,
 				22287E70206983480031C57D /* libssh2.framework in Embed Frameworks */,
 				22287E71206983480031C57D /* openssl.framework in Embed Frameworks */,
+				2260102A2092238E008F3B4A /* opt in Embed Frameworks */,
 				22A36F0A20877DE0008B8F92 /* llvm-link in Embed Frameworks */,
 				22A36F0820877D3C008B8F92 /* llvm-dis in Embed Frameworks */,
 				22A36F06208775D8008B8F92 /* llvm-nm in Embed Frameworks */,
 				225F9230207653DC00632A88 /* clang-7 in Embed Frameworks */,
-				22FAA28A208099AB0028ED31 /* libclangToolingCore.dylib in Embed Frameworks */,
-				22FAA28B208099AB0028ED31 /* libclangToolingRefactor.dylib in Embed Frameworks */,
-				22FAA287208099660028ED31 /* libclangFormat.dylib in Embed Frameworks */,
-				22FAA285208099340028ED31 /* libclangIndex.dylib in Embed Frameworks */,
-				22FAA283208098FA0028ED31 /* libclangCrossTU.dylib in Embed Frameworks */,
-				22FAA267208097F70028ED31 /* libLLVMObjCARCOpts.dylib in Embed Frameworks */,
-				22FAA265208097C50028ED31 /* libLLVMInstrumentation.dylib in Embed Frameworks */,
-				22FAA263208097860028ED31 /* libLLVMipo.dylib in Embed Frameworks */,
-				22FAA26A208098920028ED31 /* libclangStaticAnalyzerCore.dylib in Embed Frameworks */,
-				22FAA26B208098920028ED31 /* libclangASTMatchers.dylib in Embed Frameworks */,
-				22FAA26C208098920028ED31 /* libclangStaticAnalyzerCheckers.dylib in Embed Frameworks */,
-				22FAA26D208098920028ED31 /* libclangRewrite.dylib in Embed Frameworks */,
-				22FAA26E208098920028ED31 /* libclangStaticAnalyzerFrontend.dylib in Embed Frameworks */,
-				22FAA26F208098920028ED31 /* libclangARCMigrate.dylib in Embed Frameworks */,
-				22FAA270208098920028ED31 /* libclangRewriteFrontend.dylib in Embed Frameworks */,
-				22FAA271208098920028ED31 /* libclangSerialization.dylib in Embed Frameworks */,
-				22FAA272208098920028ED31 /* libclangSema.dylib in Embed Frameworks */,
-				22FAA273208098920028ED31 /* libclangParse.dylib in Embed Frameworks */,
-				22FAA274208098920028ED31 /* libclangEdit.dylib in Embed Frameworks */,
-				22FAA275208098920028ED31 /* libLLVMPasses.dylib in Embed Frameworks */,
-				22FAA276208098920028ED31 /* libLLVMLTO.dylib in Embed Frameworks */,
-				22FAA277208098920028ED31 /* libLLVMCoverage.dylib in Embed Frameworks */,
-				22FAA278208098920028ED31 /* libLLVMCoroutines.dylib in Embed Frameworks */,
-				22FAA279208098920028ED31 /* libclangLex.dylib in Embed Frameworks */,
-				22FAA27A208098920028ED31 /* libclangAnalysis.dylib in Embed Frameworks */,
-				22FAA27B208098920028ED31 /* libclangAST.dylib in Embed Frameworks */,
-				22FAA27C208098920028ED31 /* libLLVMLinker.dylib in Embed Frameworks */,
-				22FAA27D208098920028ED31 /* libclangFrontendTool.dylib in Embed Frameworks */,
-				22FAA27E208098920028ED31 /* libclangFrontend.dylib in Embed Frameworks */,
-				22FAA27F208098920028ED31 /* libclangDriver.dylib in Embed Frameworks */,
-				22FAA280208098920028ED31 /* libclangCodeGen.dylib in Embed Frameworks */,
-				22FAA281208098920028ED31 /* libclangBasic.dylib in Embed Frameworks */,
-				22FAA269208098790028ED31 /* libLLVMVectorize.dylib in Embed Frameworks */,
-				22FAA268208098600028ED31 /* libLLVMOption.dylib in Embed Frameworks */,
 				225F91D7207649AF00632A88 /* lli in Embed Frameworks */,
-				22FAA261208096DD0028ED31 /* libLLVMAggressiveInstCombine.dylib in Embed Frameworks */,
-				225F91DC20764AC700632A88 /* libLLVMCodeGen.dylib in Embed Frameworks */,
-				225F91DF20764AEC00632A88 /* libLLVMExecutionEngine.dylib in Embed Frameworks */,
-				225F91E120764B2500632A88 /* libLLVMIRReader.dylib in Embed Frameworks */,
-				225F91E320764B5000632A88 /* libLLVMInterpreter.dylib in Embed Frameworks */,
-				225F91E520764B7A00632A88 /* libLLVMMC.dylib in Embed Frameworks */,
-				225F91E720764B9F00632A88 /* libLLVMMCJIT.dylib in Embed Frameworks */,
-				225F91E920764BBF00632A88 /* libLLVMObject.dylib in Embed Frameworks */,
-				225F91EB20764BDE00632A88 /* libLLVMOrcJIT.dylib in Embed Frameworks */,
-				225F91ED20764C0400632A88 /* libLLVMRuntimeDyld.dylib in Embed Frameworks */,
-				225F91EF20764C2200632A88 /* libLLVMSelectionDAG.dylib in Embed Frameworks */,
-				225F91F120764C4000632A88 /* libLLVMSupport.dylib in Embed Frameworks */,
-				225F91F320764C6300632A88 /* libLLVMTarget.dylib in Embed Frameworks */,
-				225F91F520764C7F00632A88 /* libLLVMTransformUtils.dylib in Embed Frameworks */,
-				225F91F720764CA200632A88 /* libLLVMAArch64CodeGen.dylib in Embed Frameworks */,
-				225F91F920764CC300632A88 /* libLLVMAArch64AsmParser.dylib in Embed Frameworks */,
-				225F91FB20764CDF00632A88 /* libLLVMAArch64AsmPrinter.dylib in Embed Frameworks */,
-				225F91FD20764CFC00632A88 /* libLLVMAArch64Desc.dylib in Embed Frameworks */,
-				225F920120764D3A00632A88 /* libLLVMAArch64Disassembler.dylib in Embed Frameworks */,
-				225F920820764DB600632A88 /* libLLVMAArch64Utils.dylib in Embed Frameworks */,
-				225F920920764DB600632A88 /* libLLVMAArch64Info.dylib in Embed Frameworks */,
-				225F920B20764DDD00632A88 /* libLLVMCore.dylib in Embed Frameworks */,
-				225F920D20764DFE00632A88 /* libLLVMAnalysis.dylib in Embed Frameworks */,
-				225F920F20764E2100632A88 /* libLLVMBitReader.dylib in Embed Frameworks */,
-				225F921220764E3F00632A88 /* libLLVMBitWriter.dylib in Embed Frameworks */,
-				225F921420764E7700632A88 /* libLLVMProfileData.dylib in Embed Frameworks */,
-				225F921620764E9700632A88 /* libLLVMScalarOpts.dylib in Embed Frameworks */,
-				225F921820764EBD00632A88 /* libLLVMBinaryFormat.dylib in Embed Frameworks */,
-				225F921B20764EFC00632A88 /* libLLVMDemangle.dylib in Embed Frameworks */,
-				225F921D20764F2900632A88 /* libLLVMMCParser.dylib in Embed Frameworks */,
-				225F921F20764F5900632A88 /* libLLVMInstCombine.dylib in Embed Frameworks */,
-				225F922120764F7F00632A88 /* libLLVMAsmParser.dylib in Embed Frameworks */,
-				225F922320764F9F00632A88 /* libLLVMAsmPrinter.dylib in Embed Frameworks */,
-				225F922520764FD200632A88 /* libLLVMGlobalISel.dylib in Embed Frameworks */,
-				225F922720764FEF00632A88 /* libLLVMDebugInfoCodeView.dylib in Embed Frameworks */,
-				225F92292076502700632A88 /* libLLVMDebugInfoMSF.dylib in Embed Frameworks */,
-				225F922C2076505100632A88 /* libLLVMMCDisassembler.dylib in Embed Frameworks */,
+				2245BDE1209649C600D4DCC0 /* libclang.dylib in Embed Frameworks */,
+				2245BDE2209649C600D4DCC0 /* libLLVM.dylib in Embed Frameworks */,
 				22B41D29206AE89B00FC2BF0 /* libbibtex.dylib in Embed Frameworks */,
 				22B41D2A206AE89B00FC2BF0 /* libctags.dylib in Embed Frameworks */,
 				22B41D2B206AE89B00FC2BF0 /* libkpathsea.6.dylib in Embed Frameworks */,
@@ -286,70 +181,14 @@
 		22287E81206983810031C57D /* awk.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = awk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22287E82206983810031C57D /* ssh_cmd.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ssh_cmd.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22287E83206983810031C57D /* curl_ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = curl_ios.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		2245BDDF209646B500D4DCC0 /* libclang.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclang.dylib; path = ../llvm/build_ios/lib/libclang.dylib; sourceTree = "<group>"; };
+		2245BDE0209646C700D4DCC0 /* libLLVM.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVM.dylib; path = ../llvm/build_ios/lib/libLLVM.dylib; sourceTree = "<group>"; };
 		225F91D62076497F00632A88 /* lli */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = lli; path = ../llvm/build_ios/bin/lli; sourceTree = "<group>"; };
-		225F91DB20764ABC00632A88 /* libLLVMCodeGen.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMCodeGen.dylib; path = ../llvm/build_ios/lib/libLLVMCodeGen.dylib; sourceTree = "<group>"; };
-		225F91DD20764AE400632A88 /* libLLVMExecutionEngine.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMExecutionEngine.dylib; path = ../llvm/build_ios/lib/libLLVMExecutionEngine.dylib; sourceTree = "<group>"; };
-		225F91E020764B1B00632A88 /* libLLVMIRReader.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMIRReader.dylib; path = ../llvm/build_ios/lib/libLLVMIRReader.dylib; sourceTree = "<group>"; };
-		225F91E220764B4300632A88 /* libLLVMInterpreter.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMInterpreter.dylib; path = ../llvm/build_ios/lib/libLLVMInterpreter.dylib; sourceTree = "<group>"; };
-		225F91E420764B7100632A88 /* libLLVMMC.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMMC.dylib; path = ../llvm/build_ios/lib/libLLVMMC.dylib; sourceTree = "<group>"; };
-		225F91E620764B9500632A88 /* libLLVMMCJIT.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMMCJIT.dylib; path = ../llvm/build_ios/lib/libLLVMMCJIT.dylib; sourceTree = "<group>"; };
-		225F91E820764BBB00632A88 /* libLLVMObject.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMObject.dylib; path = ../llvm/build_ios/lib/libLLVMObject.dylib; sourceTree = "<group>"; };
-		225F91EA20764BDB00632A88 /* libLLVMOrcJIT.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMOrcJIT.dylib; path = ../llvm/build_ios/lib/libLLVMOrcJIT.dylib; sourceTree = "<group>"; };
-		225F91EC20764BFB00632A88 /* libLLVMRuntimeDyld.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMRuntimeDyld.dylib; path = ../llvm/build_ios/lib/libLLVMRuntimeDyld.dylib; sourceTree = "<group>"; };
-		225F91EE20764C1E00632A88 /* libLLVMSelectionDAG.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMSelectionDAG.dylib; path = ../llvm/build_ios/lib/libLLVMSelectionDAG.dylib; sourceTree = "<group>"; };
-		225F91F020764C3D00632A88 /* libLLVMSupport.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMSupport.dylib; path = ../llvm/build_ios/lib/libLLVMSupport.dylib; sourceTree = "<group>"; };
-		225F91F220764C6000632A88 /* libLLVMTarget.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMTarget.dylib; path = ../llvm/build_ios/lib/libLLVMTarget.dylib; sourceTree = "<group>"; };
-		225F91F420764C7C00632A88 /* libLLVMTransformUtils.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMTransformUtils.dylib; path = ../llvm/build_ios/lib/libLLVMTransformUtils.dylib; sourceTree = "<group>"; };
-		225F91F620764CA000632A88 /* libLLVMAArch64CodeGen.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMAArch64CodeGen.dylib; path = ../llvm/build_ios/lib/libLLVMAArch64CodeGen.dylib; sourceTree = "<group>"; };
-		225F91F820764CC000632A88 /* libLLVMAArch64AsmParser.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMAArch64AsmParser.dylib; path = ../llvm/build_ios/lib/libLLVMAArch64AsmParser.dylib; sourceTree = "<group>"; };
-		225F91FA20764CDC00632A88 /* libLLVMAArch64AsmPrinter.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMAArch64AsmPrinter.dylib; path = ../llvm/build_ios/lib/libLLVMAArch64AsmPrinter.dylib; sourceTree = "<group>"; };
-		225F91FC20764CF900632A88 /* libLLVMAArch64Desc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMAArch64Desc.dylib; path = ../llvm/build_ios/lib/libLLVMAArch64Desc.dylib; sourceTree = "<group>"; };
-		225F920020764D3400632A88 /* libLLVMAArch64Disassembler.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMAArch64Disassembler.dylib; path = ../llvm/build_ios/lib/libLLVMAArch64Disassembler.dylib; sourceTree = "<group>"; };
-		225F920620764D9900632A88 /* libLLVMAArch64Info.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMAArch64Info.dylib; path = ../llvm/build_ios/lib/libLLVMAArch64Info.dylib; sourceTree = "<group>"; };
-		225F920720764DA700632A88 /* libLLVMAArch64Utils.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMAArch64Utils.dylib; path = ../llvm/build_ios/lib/libLLVMAArch64Utils.dylib; sourceTree = "<group>"; };
-		225F920A20764DD800632A88 /* libLLVMCore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMCore.dylib; path = ../llvm/build_ios/lib/libLLVMCore.dylib; sourceTree = "<group>"; };
-		225F920C20764DFA00632A88 /* libLLVMAnalysis.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMAnalysis.dylib; path = ../llvm/build_ios/lib/libLLVMAnalysis.dylib; sourceTree = "<group>"; };
-		225F920E20764E1D00632A88 /* libLLVMBitReader.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMBitReader.dylib; path = ../llvm/build_ios/lib/libLLVMBitReader.dylib; sourceTree = "<group>"; };
-		225F921020764E3B00632A88 /* libLLVMBitWriter.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMBitWriter.dylib; path = ../llvm/build_ios/lib/libLLVMBitWriter.dylib; sourceTree = "<group>"; };
-		225F921320764E7400632A88 /* libLLVMProfileData.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMProfileData.dylib; path = ../llvm/build_ios/lib/libLLVMProfileData.dylib; sourceTree = "<group>"; };
-		225F921520764E9400632A88 /* libLLVMScalarOpts.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMScalarOpts.dylib; path = ../llvm/build_ios/lib/libLLVMScalarOpts.dylib; sourceTree = "<group>"; };
-		225F921720764EB900632A88 /* libLLVMBinaryFormat.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMBinaryFormat.dylib; path = ../llvm/build_ios/lib/libLLVMBinaryFormat.dylib; sourceTree = "<group>"; };
-		225F921A20764EF800632A88 /* libLLVMDemangle.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMDemangle.dylib; path = ../llvm/build_ios/lib/libLLVMDemangle.dylib; sourceTree = "<group>"; };
-		225F921C20764F1C00632A88 /* libLLVMMCParser.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMMCParser.dylib; path = ../llvm/build_ios/lib/libLLVMMCParser.dylib; sourceTree = "<group>"; };
-		225F921E20764F5600632A88 /* libLLVMInstCombine.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMInstCombine.dylib; path = ../llvm/build_ios/lib/libLLVMInstCombine.dylib; sourceTree = "<group>"; };
-		225F922020764F7D00632A88 /* libLLVMAsmParser.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMAsmParser.dylib; path = ../llvm/build_ios/lib/libLLVMAsmParser.dylib; sourceTree = "<group>"; };
-		225F922220764F9C00632A88 /* libLLVMAsmPrinter.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMAsmPrinter.dylib; path = ../llvm/build_ios/lib/libLLVMAsmPrinter.dylib; sourceTree = "<group>"; };
-		225F922420764FCF00632A88 /* libLLVMGlobalISel.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMGlobalISel.dylib; path = ../llvm/build_ios/lib/libLLVMGlobalISel.dylib; sourceTree = "<group>"; };
-		225F922620764FEC00632A88 /* libLLVMDebugInfoCodeView.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMDebugInfoCodeView.dylib; path = ../llvm/build_ios/lib/libLLVMDebugInfoCodeView.dylib; sourceTree = "<group>"; };
-		225F92282076500700632A88 /* libLLVMDebugInfoMSF.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMDebugInfoMSF.dylib; path = ../llvm/build_ios/lib/libLLVMDebugInfoMSF.dylib; sourceTree = "<group>"; };
-		225F922A2076504E00632A88 /* libLLVMMCDisassembler.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMMCDisassembler.dylib; path = ../llvm/build_ios/lib/libLLVMMCDisassembler.dylib; sourceTree = "<group>"; };
 		225F922F207653D900632A88 /* clang-7 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "clang-7"; path = "../llvm/build_ios/bin/clang-7"; sourceTree = "<group>"; };
-		225F9237207654DF00632A88 /* libLLVMOption.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMOption.dylib; path = ../llvm/build_ios/lib/libLLVMOption.dylib; sourceTree = "<group>"; };
-		225F923A2076552600632A88 /* libLLVMVectorize.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMVectorize.dylib; path = ../llvm/build_ios/lib/libLLVMVectorize.dylib; sourceTree = "<group>"; };
-		225F923C2076554A00632A88 /* libclangBasic.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangBasic.dylib; path = ../llvm/build_ios/lib/libclangBasic.dylib; sourceTree = "<group>"; };
-		225F923E2076556B00632A88 /* libclangCodeGen.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangCodeGen.dylib; path = ../llvm/build_ios/lib/libclangCodeGen.dylib; sourceTree = "<group>"; };
-		225F92402076559100632A88 /* libclangDriver.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangDriver.dylib; path = ../llvm/build_ios/lib/libclangDriver.dylib; sourceTree = "<group>"; };
-		225F9242207655B100632A88 /* libclangFrontend.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangFrontend.dylib; path = ../llvm/build_ios/lib/libclangFrontend.dylib; sourceTree = "<group>"; };
-		225F9244207655D000632A88 /* libclangFrontendTool.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangFrontendTool.dylib; path = ../llvm/build_ios/lib/libclangFrontendTool.dylib; sourceTree = "<group>"; };
-		225F9246207655FC00632A88 /* libLLVMLinker.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMLinker.dylib; path = ../llvm/build_ios/lib/libLLVMLinker.dylib; sourceTree = "<group>"; };
-		225F92482076562600632A88 /* libclangAST.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangAST.dylib; path = ../llvm/build_ios/lib/libclangAST.dylib; sourceTree = "<group>"; };
-		225F924A2076564400632A88 /* libclangAnalysis.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangAnalysis.dylib; path = ../llvm/build_ios/lib/libclangAnalysis.dylib; sourceTree = "<group>"; };
-		225F924C207656E600632A88 /* libclangLex.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangLex.dylib; path = ../llvm/build_ios/lib/libclangLex.dylib; sourceTree = "<group>"; };
-		225F924E2076571B00632A88 /* libLLVMCoroutines.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMCoroutines.dylib; path = ../llvm/build_ios/lib/libLLVMCoroutines.dylib; sourceTree = "<group>"; };
-		225F92502076573900632A88 /* libLLVMCoverage.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMCoverage.dylib; path = ../llvm/build_ios/lib/libLLVMCoverage.dylib; sourceTree = "<group>"; };
-		225F92522076575700632A88 /* libLLVMLTO.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMLTO.dylib; path = ../llvm/build_ios/lib/libLLVMLTO.dylib; sourceTree = "<group>"; };
-		225F92542076589500632A88 /* libLLVMPasses.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMPasses.dylib; path = ../llvm/build_ios/lib/libLLVMPasses.dylib; sourceTree = "<group>"; };
-		225F9256207658BA00632A88 /* libclangEdit.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangEdit.dylib; path = ../llvm/build_ios/lib/libclangEdit.dylib; sourceTree = "<group>"; };
-		225F9258207658D900632A88 /* libclangParse.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangParse.dylib; path = ../llvm/build_ios/lib/libclangParse.dylib; sourceTree = "<group>"; };
-		225F925A207658FD00632A88 /* libclangSema.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangSema.dylib; path = ../llvm/build_ios/lib/libclangSema.dylib; sourceTree = "<group>"; };
-		225F925C2076592300632A88 /* libclangSerialization.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangSerialization.dylib; path = ../llvm/build_ios/lib/libclangSerialization.dylib; sourceTree = "<group>"; };
-		225F925E2076593F00632A88 /* libclangRewriteFrontend.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangRewriteFrontend.dylib; path = ../llvm/build_ios/lib/libclangRewriteFrontend.dylib; sourceTree = "<group>"; };
-		225F92602076596900632A88 /* libclangARCMigrate.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangARCMigrate.dylib; path = ../llvm/build_ios/lib/libclangARCMigrate.dylib; sourceTree = "<group>"; };
-		225F92622076599E00632A88 /* libclangStaticAnalyzerFrontend.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangStaticAnalyzerFrontend.dylib; path = ../llvm/build_ios/lib/libclangStaticAnalyzerFrontend.dylib; sourceTree = "<group>"; };
-		225F9264207659C400632A88 /* libclangRewrite.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangRewrite.dylib; path = ../llvm/build_ios/lib/libclangRewrite.dylib; sourceTree = "<group>"; };
-		225F9266207659E900632A88 /* libclangStaticAnalyzerCheckers.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangStaticAnalyzerCheckers.dylib; path = ../llvm/build_ios/lib/libclangStaticAnalyzerCheckers.dylib; sourceTree = "<group>"; };
-		225F926820765A0800632A88 /* libclangASTMatchers.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangASTMatchers.dylib; path = ../llvm/build_ios/lib/libclangASTMatchers.dylib; sourceTree = "<group>"; };
-		225F926A20765A5A00632A88 /* libclangStaticAnalyzerCore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangStaticAnalyzerCore.dylib; path = ../llvm/build_ios/lib/libclangStaticAnalyzerCore.dylib; sourceTree = "<group>"; };
+		2260102920922385008F3B4A /* opt */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = opt; path = ../llvm/build_ios/bin/opt; sourceTree = "<group>"; };
+		228B2346208A97350009A7C3 /* libc.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libc.tbd; path = usr/lib/libc.tbd; sourceTree = SDKROOT; };
+		228B2348208A97400009A7C3 /* libSystem.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libSystem.tbd; path = usr/lib/libSystem.tbd; sourceTree = SDKROOT; };
+		228B234B208A98230009A7C3 /* libSystem.B.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libSystem.B.tbd; path = usr/lib/libSystem.B.tbd; sourceTree = SDKROOT; };
 		22A36F05208775D3008B8F92 /* llvm-nm */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "llvm-nm"; path = "../llvm/build_ios/bin/llvm-nm"; sourceTree = "<group>"; };
 		22A36F0720877D2C008B8F92 /* llvm-dis */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "llvm-dis"; path = "../llvm/build_ios/bin/llvm-dis"; sourceTree = "<group>"; };
 		22A36F0920877DD7008B8F92 /* llvm-link */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "llvm-link"; path = "../llvm/build_ios/bin/llvm-link"; sourceTree = "<group>"; };
@@ -368,15 +207,6 @@
 		22B41D35206AE8C500FC2BF0 /* libtexlua52.5.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtexlua52.5.dylib; path = ../ios_system/release/libtexlua52.5.dylib; sourceTree = "<group>"; };
 		22B41D37206AE9A700FC2BF0 /* lua_ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = lua_ios.framework; path = ../ios_system/release/lua_ios.framework; sourceTree = "<group>"; };
 		22B41D38206AE9A800FC2BF0 /* Python_ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python_ios.framework; path = ../ios_system/release/Python_ios.framework; sourceTree = "<group>"; };
-		22FAA260208096D10028ED31 /* libLLVMAggressiveInstCombine.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMAggressiveInstCombine.dylib; path = ../llvm/build_ios/lib/libLLVMAggressiveInstCombine.dylib; sourceTree = "<group>"; };
-		22FAA2622080977E0028ED31 /* libLLVMipo.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMipo.dylib; path = ../llvm/build_ios/lib/libLLVMipo.dylib; sourceTree = "<group>"; };
-		22FAA264208097C30028ED31 /* libLLVMInstrumentation.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMInstrumentation.dylib; path = ../llvm/build_ios/lib/libLLVMInstrumentation.dylib; sourceTree = "<group>"; };
-		22FAA266208097F50028ED31 /* libLLVMObjCARCOpts.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVMObjCARCOpts.dylib; path = ../llvm/build_ios/lib/libLLVMObjCARCOpts.dylib; sourceTree = "<group>"; };
-		22FAA282208098EE0028ED31 /* libclangCrossTU.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangCrossTU.dylib; path = ../llvm/build_ios/lib/libclangCrossTU.dylib; sourceTree = "<group>"; };
-		22FAA284208099320028ED31 /* libclangIndex.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangIndex.dylib; path = ../llvm/build_ios/lib/libclangIndex.dylib; sourceTree = "<group>"; };
-		22FAA286208099630028ED31 /* libclangFormat.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangFormat.dylib; path = ../llvm/build_ios/lib/libclangFormat.dylib; sourceTree = "<group>"; };
-		22FAA288208099A10028ED31 /* libclangToolingCore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangToolingCore.dylib; path = ../llvm/build_ios/lib/libclangToolingCore.dylib; sourceTree = "<group>"; };
-		22FAA289208099A20028ED31 /* libclangToolingRefactor.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclangToolingRefactor.dylib; path = ../llvm/build_ios/lib/libclangToolingRefactor.dylib; sourceTree = "<group>"; };
 		28CDA425202444CC0055206D /* BookmarkViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BookmarkViewController.swift; sourceTree = "<group>"; };
 		28CDA4282024B3510055206D /* BookmarkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkManager.swift; sourceTree = "<group>"; };
 		3C2E4373201EF67C00E4254A /* TerminalView+AutoComplete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalView+AutoComplete.swift"; sourceTree = "<group>"; };
@@ -387,7 +217,6 @@
 		3C905FC920265BC60084BA63 /* StoreReviewPrompter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreReviewPrompter.swift; sourceTree = "<group>"; };
 		3CA320FC201FE73900974B5F /* TerminalTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTextView.swift; sourceTree = "<group>"; };
 		3CA320FE201FE8E100974B5F /* ScriptsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptsViewController.swift; sourceTree = "<group>"; };
-		3CA32101201FF6B100974B5F /* Script.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Script.swift; sourceTree = "<group>"; };
 		3CA32104201FFC1300974B5F /* ScriptEditViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptEditViewController.swift; sourceTree = "<group>"; };
 		3CA3210820211D5600974B5F /* ScriptExecutorCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptExecutorCommand.swift; sourceTree = "<group>"; };
 		3CA3210A20212D4200974B5F /* CommandExecutionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandExecutionContext.swift; sourceTree = "<group>"; };
@@ -395,10 +224,18 @@
 		3CE5764720226A1500760E43 /* ANSITextState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ANSITextState.swift; sourceTree = "<group>"; };
 		3CE5769D202A7EC500760E43 /* Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parser.swift; sourceTree = "<group>"; };
 		3CE5769F202A874C00760E43 /* OutputSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputSanitizer.swift; sourceTree = "<group>"; };
+		BE0146EA2083B2F90072AAB5 /* ManualWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualWebViewController.swift; sourceTree = "<group>"; };
+		BE0146EC2083BA000072AAB5 /* cub-guide.htmlcontainer */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "cub-guide.htmlcontainer"; sourceTree = "<group>"; };
+		BE102814207A372C005E965F /* String+C.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+C.swift"; sourceTree = "<group>"; };
+		BE1643D12077E9D4002939B7 /* PridelandDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PridelandDocument.swift; sourceTree = "<group>"; };
+		BE1643D32077F857002939B7 /* DirectoryObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryObserver.swift; sourceTree = "<group>"; };
+		BE1643D52077FFC0002939B7 /* UICollectionView+Update.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UICollectionView+Update.swift"; sourceTree = "<group>"; };
 		BE165407201909030067EC92 /* xCallBackUrl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = xCallBackUrl.swift; sourceTree = "<group>"; };
 		BE189035206FF36500EE6739 /* Logo.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Logo.txt; sourceTree = "<group>"; };
 		BE18903A20700EFA00EE6739 /* Author.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Author.swift; sourceTree = "<group>"; };
+		BE1D5F9C204C66F1008A1C36 /* Cub+Runner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Cub+Runner.swift"; sourceTree = "<group>"; };
 		BE244DC7201FBB6000A7EA4E /* cacert.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cacert.pem; sourceTree = "<group>"; };
+		BE2AA98A208E692600B85CFE /* Sleep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sleep.swift; sourceTree = "<group>"; };
 		BE3768EE1FEC4DCE00D5A2D1 /* ios_system.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = ios_system.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE3808521FD9BFB600393EB8 /* OpenTerm.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenTerm.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE3808551FD9BFB600393EB8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -407,12 +244,27 @@
 		BE38085C1FD9BFB600393EB8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BE38085F1FD9BFB600393EB8 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		BE3808611FD9BFB600393EB8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BE3A62DC208B3B570014A498 /* CubDocumentationBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CubDocumentationBundle.swift; sourceTree = "<group>"; };
+		BE3A62DE208B3BB70014A498 /* CubDocumentationUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CubDocumentationUpdater.swift; sourceTree = "<group>"; };
+		BE3A62E0208B49EF0014A498 /* cub-docs.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "cub-docs.json"; sourceTree = "<group>"; };
+		BE3A62E2208B4A7D0014A498 /* CubDocumentationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CubDocumentationViewController.swift; sourceTree = "<group>"; };
+		BE3A62E5208B54D00014A498 /* CubDocumentationItemTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CubDocumentationItemTableViewCell.swift; sourceTree = "<group>"; };
+		BE3A62E6208B54D00014A498 /* CubDocumentationItemTableViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = CubDocumentationItemTableViewCell.xib; sourceTree = "<group>"; };
+		BE3A62E9208B57C80014A498 /* CubDocumentationItemViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CubDocumentationItemViewController.swift; sourceTree = "<group>"; };
 		BE505065201E5ED900CDFC60 /* Share.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Share.swift; sourceTree = "<group>"; };
+		BE57BDCE207BE0CD00A60950 /* CommandManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandManager.swift; sourceTree = "<group>"; };
+		BE57BDD1207BF3AA00A60950 /* SystemExecutorCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemExecutorCommand.swift; sourceTree = "<group>"; };
+		BE57BDD3207BF3B200A60950 /* EmptyExecutorCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyExecutorCommand.swift; sourceTree = "<group>"; };
+		BE57BDD5207BF9D800A60950 /* Say.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Say.swift; sourceTree = "<group>"; };
+		BE70DA2B204DD5D800DEFF10 /* ScriptEditViewController+AutoComplete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ScriptEditViewController+AutoComplete.swift"; sourceTree = "<group>"; };
+		BE740C1520826648001C1F24 /* NewPridelandCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPridelandCollectionViewCell.swift; sourceTree = "<group>"; };
+		BE740C1620826648001C1F24 /* NewPridelandCollectionViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NewPridelandCollectionViewCell.xib; sourceTree = "<group>"; };
 		BE8E66FB206196A7007B14E6 /* Notification+Names.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Notification+Names.swift"; sourceTree = "<group>"; };
 		BE8E66FD206196B8007B14E6 /* UIDevice+Name.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIDevice+Name.swift"; sourceTree = "<group>"; };
 		BE8E66FF206196D5007B14E6 /* Bundle+Info.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bundle+Info.swift"; sourceTree = "<group>"; };
 		BE9275052013961D00BD2761 /* UserDefaultsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsController.swift; sourceTree = "<group>"; };
-		BEA14A68202CEE5800AB7351 /* Cub+SavannaKit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Cub+SavannaKit.swift"; sourceTree = "<group>"; };
+		BEA14A64202CE5B600AB7351 /* Cub+SavannaKit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Cub+SavannaKit.swift"; sourceTree = "<group>"; };
+		BEA14A66202CE5D300AB7351 /* Cub.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Cub.swift; sourceTree = "<group>"; };
 		BEA499241FD9C46C001B9B9D /* OpenTerm.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OpenTerm.entitlements; sourceTree = "<group>"; };
 		BEA499251FD9C4D7001B9B9D /* DocumentManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentManager.swift; sourceTree = "<group>"; };
 		BEA4992B1FDC0918001B9B9D /* icon-320.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon-320.png"; sourceTree = "<group>"; };
@@ -423,9 +275,18 @@
 		BEB774EE20701D8500201EBB /* authors.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = authors.json; sourceTree = "<group>"; };
 		BEB774F02070206E00201EBB /* Logo-small.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Logo-small.txt"; sourceTree = "<group>"; };
 		BEB7752120714E2C00201EBB /* UIViewController+Alerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+Alerts.swift"; sourceTree = "<group>"; };
+		BEB7752320716B5200201EBB /* PridelandCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PridelandCollectionViewCell.swift; sourceTree = "<group>"; };
+		BEB7752420716B5200201EBB /* PridelandCollectionViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PridelandCollectionViewCell.xib; sourceTree = "<group>"; };
+		BEB77527207172D100201EBB /* UIColor+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Hex.swift"; sourceTree = "<group>"; };
+		BEB775632073F85600201EBB /* CustomColorBarPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomColorBarPicker.swift; sourceTree = "<group>"; };
+		BEB775652074095800201EBB /* ScriptMetadataViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptMetadataViewController.swift; sourceTree = "<group>"; };
+		BEB7756720740DFE00201EBB /* CustomTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTextView.swift; sourceTree = "<group>"; };
+		BEBD36E620755B0400C9725C /* StoryboardFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryboardFactory.swift; sourceTree = "<group>"; };
 		BEC75BFA202B716600216462 /* OpenTermTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenTermTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BEC75BFC202B716600216462 /* OpenTermTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenTermTests.swift; sourceTree = "<group>"; };
 		BEC75BFE202B716600216462 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BEEAD9C5207E8C8500CBC254 /* Array+Safe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Array+Safe.swift"; sourceTree = "<group>"; };
+		BEEAD9C7207EA09700CBC254 /* Stdin+Read.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stdin+Read.swift"; sourceTree = "<group>"; };
 		BEECFF091FFC1DC0009608B3 /* HistoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HistoryViewController.swift; path = OpenTerm/Controller/History/HistoryViewController.swift; sourceTree = SOURCE_ROOT; };
 		BEECFF381FFEC187009608B3 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SettingsViewController.swift; path = OpenTerm/Controller/Settings/SettingsViewController.swift; sourceTree = SOURCE_ROOT; };
 		F456629D200B9BC500C574AA /* ColorDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorDisplayView.swift; sourceTree = "<group>"; };
@@ -453,101 +314,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		225F91D52076497700632A88 /* lli */ = {
+		22A36F04208775A4008B8F92 /* llvm-clang */ = {
 			isa = PBXGroup;
 			children = (
-				22FAA260208096D10028ED31 /* libLLVMAggressiveInstCombine.dylib */,
-				225F922A2076504E00632A88 /* libLLVMMCDisassembler.dylib */,
-				225F92282076500700632A88 /* libLLVMDebugInfoMSF.dylib */,
-				225F922620764FEC00632A88 /* libLLVMDebugInfoCodeView.dylib */,
-				225F922420764FCF00632A88 /* libLLVMGlobalISel.dylib */,
-				225F922220764F9C00632A88 /* libLLVMAsmPrinter.dylib */,
-				225F922020764F7D00632A88 /* libLLVMAsmParser.dylib */,
-				225F921E20764F5600632A88 /* libLLVMInstCombine.dylib */,
-				225F921C20764F1C00632A88 /* libLLVMMCParser.dylib */,
-				225F921A20764EF800632A88 /* libLLVMDemangle.dylib */,
-				225F921720764EB900632A88 /* libLLVMBinaryFormat.dylib */,
-				225F921520764E9400632A88 /* libLLVMScalarOpts.dylib */,
-				225F921320764E7400632A88 /* libLLVMProfileData.dylib */,
-				225F921020764E3B00632A88 /* libLLVMBitWriter.dylib */,
-				225F920E20764E1D00632A88 /* libLLVMBitReader.dylib */,
-				225F920C20764DFA00632A88 /* libLLVMAnalysis.dylib */,
-				225F920A20764DD800632A88 /* libLLVMCore.dylib */,
-				225F920720764DA700632A88 /* libLLVMAArch64Utils.dylib */,
-				225F920620764D9900632A88 /* libLLVMAArch64Info.dylib */,
-				225F920020764D3400632A88 /* libLLVMAArch64Disassembler.dylib */,
-				225F91FC20764CF900632A88 /* libLLVMAArch64Desc.dylib */,
-				225F91FA20764CDC00632A88 /* libLLVMAArch64AsmPrinter.dylib */,
-				225F91F820764CC000632A88 /* libLLVMAArch64AsmParser.dylib */,
-				225F91F620764CA000632A88 /* libLLVMAArch64CodeGen.dylib */,
-				225F91F420764C7C00632A88 /* libLLVMTransformUtils.dylib */,
-				225F91F220764C6000632A88 /* libLLVMTarget.dylib */,
-				225F91F020764C3D00632A88 /* libLLVMSupport.dylib */,
-				225F91EE20764C1E00632A88 /* libLLVMSelectionDAG.dylib */,
-				225F91EC20764BFB00632A88 /* libLLVMRuntimeDyld.dylib */,
-				225F91EA20764BDB00632A88 /* libLLVMOrcJIT.dylib */,
-				225F91E820764BBB00632A88 /* libLLVMObject.dylib */,
-				225F91E620764B9500632A88 /* libLLVMMCJIT.dylib */,
-				225F91E420764B7100632A88 /* libLLVMMC.dylib */,
-				225F91DB20764ABC00632A88 /* libLLVMCodeGen.dylib */,
-				225F91E020764B1B00632A88 /* libLLVMIRReader.dylib */,
-				225F91DD20764AE400632A88 /* libLLVMExecutionEngine.dylib */,
-				225F91E220764B4300632A88 /* libLLVMInterpreter.dylib */,
-				225F91D62076497F00632A88 /* lli */,
-			);
-			name = lli;
-			sourceTree = "<group>";
-		};
-		225F922E2076538000632A88 /* clang */ = {
-			isa = PBXGroup;
-			children = (
-				225F922F207653D900632A88 /* clang-7 */,
-				22FAA288208099A10028ED31 /* libclangToolingCore.dylib */,
-				22FAA289208099A20028ED31 /* libclangToolingRefactor.dylib */,
-				22FAA286208099630028ED31 /* libclangFormat.dylib */,
-				22FAA284208099320028ED31 /* libclangIndex.dylib */,
-				22FAA282208098EE0028ED31 /* libclangCrossTU.dylib */,
-				22FAA266208097F50028ED31 /* libLLVMObjCARCOpts.dylib */,
-				22FAA264208097C30028ED31 /* libLLVMInstrumentation.dylib */,
-				22FAA2622080977E0028ED31 /* libLLVMipo.dylib */,
-				225F926A20765A5A00632A88 /* libclangStaticAnalyzerCore.dylib */,
-				225F926820765A0800632A88 /* libclangASTMatchers.dylib */,
-				225F9266207659E900632A88 /* libclangStaticAnalyzerCheckers.dylib */,
-				225F9264207659C400632A88 /* libclangRewrite.dylib */,
-				225F92622076599E00632A88 /* libclangStaticAnalyzerFrontend.dylib */,
-				225F92602076596900632A88 /* libclangARCMigrate.dylib */,
-				225F925E2076593F00632A88 /* libclangRewriteFrontend.dylib */,
-				225F925C2076592300632A88 /* libclangSerialization.dylib */,
-				225F925A207658FD00632A88 /* libclangSema.dylib */,
-				225F9258207658D900632A88 /* libclangParse.dylib */,
-				225F9256207658BA00632A88 /* libclangEdit.dylib */,
-				225F92542076589500632A88 /* libLLVMPasses.dylib */,
-				225F92522076575700632A88 /* libLLVMLTO.dylib */,
-				225F92502076573900632A88 /* libLLVMCoverage.dylib */,
-				225F924E2076571B00632A88 /* libLLVMCoroutines.dylib */,
-				225F924C207656E600632A88 /* libclangLex.dylib */,
-				225F924A2076564400632A88 /* libclangAnalysis.dylib */,
-				225F92482076562600632A88 /* libclangAST.dylib */,
-				225F9246207655FC00632A88 /* libLLVMLinker.dylib */,
-				225F9244207655D000632A88 /* libclangFrontendTool.dylib */,
-				225F9242207655B100632A88 /* libclangFrontend.dylib */,
-				225F92402076559100632A88 /* libclangDriver.dylib */,
-				225F923E2076556B00632A88 /* libclangCodeGen.dylib */,
-				225F923C2076554A00632A88 /* libclangBasic.dylib */,
-				225F923A2076552600632A88 /* libLLVMVectorize.dylib */,
-				225F9237207654DF00632A88 /* libLLVMOption.dylib */,
-			);
-			name = clang;
-			sourceTree = "<group>";
-		};
-		22A36F04208775A4008B8F92 /* Other llvm commands */ = {
-			isa = PBXGroup;
-			children = (
+				2260102920922385008F3B4A /* opt */,
 				22A36F0920877DD7008B8F92 /* llvm-link */,
 				22A36F0720877D2C008B8F92 /* llvm-dis */,
 				22A36F05208775D3008B8F92 /* llvm-nm */,
+				225F91D62076497F00632A88 /* lli */,
+				225F922F207653D900632A88 /* clang-7 */,
+				2245BDDF209646B500D4DCC0 /* libclang.dylib */,
+				2245BDE0209646C700D4DCC0 /* libLLVM.dylib */,
 			);
-			name = "Other llvm commands";
+			name = "llvm-clang";
 			sourceTree = "<group>";
 		};
 		22A949502067FE75003A0666 /* Resources */ = {
@@ -559,14 +338,6 @@
 			name = Resources;
 			sourceTree = "<group>";
 		};
-		28CDA4272024B33D0055206D /* Bookmarks */ = {
-			isa = PBXGroup;
-			children = (
-				28CDA4282024B3510055206D /* BookmarkManager.swift */,
-			);
-			path = Bookmarks;
-			sourceTree = "<group>";
-		};
 		3C15E37C2026CE4F003216CF /* Commands */ = {
 			isa = PBXGroup;
 			children = (
@@ -574,6 +345,9 @@
 				1C81BE5620225C3800D07301 /* Clipboard.swift */,
 				BE165407201909030067EC92 /* xCallBackUrl.swift */,
 				BE505065201E5ED900CDFC60 /* Share.swift */,
+				BEA14A66202CE5D300AB7351 /* Cub.swift */,
+				BE57BDD5207BF9D800A60950 /* Say.swift */,
+				BE2AA98A208E692600B85CFE /* Sleep.swift */,
 			);
 			path = Commands;
 			sourceTree = "<group>";
@@ -583,6 +357,9 @@
 			children = (
 				3C406E1920207CE7005F97C4 /* CommandExecutor.swift */,
 				3CA3210A20212D4200974B5F /* CommandExecutionContext.swift */,
+				BE57BDD1207BF3AA00A60950 /* SystemExecutorCommand.swift */,
+				BE57BDD3207BF3B200A60950 /* EmptyExecutorCommand.swift */,
+				3CA3210820211D5600974B5F /* ScriptExecutorCommand.swift */,
 			);
 			path = Execution;
 			sourceTree = "<group>";
@@ -616,9 +393,8 @@
 		3CA32100201FF6A100974B5F /* Scripting */ = {
 			isa = PBXGroup;
 			children = (
-				3CA32101201FF6B100974B5F /* Script.swift */,
-				3CA3210820211D5600974B5F /* ScriptExecutorCommand.swift */,
-				BEA14A68202CEE5800AB7351 /* Cub+SavannaKit.swift */,
+				BEA14A64202CE5B600AB7351 /* Cub+SavannaKit.swift */,
+				BE1D5F9C204C66F1008A1C36 /* Cub+Runner.swift */,
 			);
 			path = Scripting;
 			sourceTree = "<group>";
@@ -626,18 +402,16 @@
 		3CA32103201FFC0300974B5F /* Scripting */ = {
 			isa = PBXGroup;
 			children = (
+				BE3A62DB208B3B120014A498 /* Documentation */,
+				BE740C192082664E001C1F24 /* Cells */,
 				3CA320FE201FE8E100974B5F /* ScriptsViewController.swift */,
 				3CA32104201FFC1300974B5F /* ScriptEditViewController.swift */,
+				BE70DA2B204DD5D800DEFF10 /* ScriptEditViewController+AutoComplete.swift */,
+				BEB775652074095800201EBB /* ScriptMetadataViewController.swift */,
+				BE1643D12077E9D4002939B7 /* PridelandDocument.swift */,
+				BE0146EA2083B2F90072AAB5 /* ManualWebViewController.swift */,
 			);
 			path = Scripting;
-			sourceTree = "<group>";
-		};
-		3CE5764120225E1B00760E43 /* History */ = {
-			isa = PBXGroup;
-			children = (
-				3CE5764220225E1B00760E43 /* HistoryManager.swift */,
-			);
-			path = History;
 			sourceTree = "<group>";
 		};
 		3CE576442022607000760E43 /* Parsing & Formatting */ = {
@@ -667,6 +441,31 @@
 			name = Pods;
 			sourceTree = "<group>";
 		};
+		BE0146E12083ACBB0072AAB5 /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				BE0146EC2083BA000072AAB5 /* cub-guide.htmlcontainer */,
+				BEA4992B1FDC0918001B9B9D /* icon-320.png */,
+				BE38085C1FD9BFB600393EB8 /* Assets.xcassets */,
+				BE3A62E0208B49EF0014A498 /* cub-docs.json */,
+			);
+			path = Assets;
+			sourceTree = "<group>";
+		};
+		BE102813207A36A5005E965F /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				3C406E1B2020987B005F97C4 /* AutoComplete */,
+				28CDA4282024B3510055206D /* BookmarkManager.swift */,
+				3CE5764220225E1B00760E43 /* HistoryManager.swift */,
+				BEBD36E620755B0400C9725C /* StoryboardFactory.swift */,
+				BEA499251FD9C4D7001B9B9D /* DocumentManager.swift */,
+				BE9275052013961D00BD2761 /* UserDefaultsController.swift */,
+				BE57BDCE207BE0CD00A60950 /* CommandManager.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
 		BE18903720700EE200EE6739 /* Credits */ = {
 			isa = PBXGroup;
 			children = (
@@ -690,6 +489,9 @@
 		BE3768EC1FEC4DCE00D5A2D1 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				228B234B208A98230009A7C3 /* libSystem.B.tbd */,
+				228B2348208A97400009A7C3 /* libSystem.tbd */,
+				228B2346208A97350009A7C3 /* libc.tbd */,
 				22B41D28206AE85000FC2BF0 /* libbibtex.dylib */,
 				22B41D26206AE85000FC2BF0 /* libctags.dylib */,
 				22B41D24206AE84F00FC2BF0 /* libkpathsea.6.dylib */,
@@ -716,9 +518,7 @@
 		BE3808491FD9BFB600393EB8 = {
 			isa = PBXGroup;
 			children = (
-				22A36F04208775A4008B8F92 /* Other llvm commands */,
-				225F922E2076538000632A88 /* clang */,
-				225F91D52076497700632A88 /* lli */,
+				22A36F04208775A4008B8F92 /* llvm-clang */,
 				22B41D37206AE9A700FC2BF0 /* lua_ios.framework */,
 				22B41D38206AE9A800FC2BF0 /* Python_ios.framework */,
 				BE3808541FD9BFB600393EB8 /* OpenTerm */,
@@ -743,20 +543,52 @@
 		BE3808541FD9BFB600393EB8 /* OpenTerm */ = {
 			isa = PBXGroup;
 			children = (
+				BE0146E12083ACBB0072AAB5 /* Assets */,
 				3C15E37C2026CE4F003216CF /* Commands */,
 				BE244DC6201FBB4F00A7EA4E /* Default certs */,
 				BEA8E28F2001346D00002475 /* Util */,
+				BE102813207A36A5005E965F /* Data */,
 				BEA8E28E2001345700002475 /* View */,
 				BEA8E28D2001344400002475 /* Controller */,
-				BEA4992B1FDC0918001B9B9D /* icon-320.png */,
 				BEA499241FD9C46C001B9B9D /* OpenTerm.entitlements */,
 				BE3808551FD9BFB600393EB8 /* AppDelegate.swift */,
 				BE3808591FD9BFB600393EB8 /* Main.storyboard */,
-				BE38085C1FD9BFB600393EB8 /* Assets.xcassets */,
 				BE38085E1FD9BFB600393EB8 /* LaunchScreen.storyboard */,
 				BE3808611FD9BFB600393EB8 /* Info.plist */,
 			);
 			path = OpenTerm;
+			sourceTree = "<group>";
+		};
+		BE3A62DB208B3B120014A498 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+				BE3A62E4208B54B70014A498 /* Cells */,
+				BE3A62DC208B3B570014A498 /* CubDocumentationBundle.swift */,
+				BE3A62DE208B3BB70014A498 /* CubDocumentationUpdater.swift */,
+				BE3A62E2208B4A7D0014A498 /* CubDocumentationViewController.swift */,
+				BE3A62E9208B57C80014A498 /* CubDocumentationItemViewController.swift */,
+			);
+			path = Documentation;
+			sourceTree = "<group>";
+		};
+		BE3A62E4208B54B70014A498 /* Cells */ = {
+			isa = PBXGroup;
+			children = (
+				BE3A62E5208B54D00014A498 /* CubDocumentationItemTableViewCell.swift */,
+				BE3A62E6208B54D00014A498 /* CubDocumentationItemTableViewCell.xib */,
+			);
+			path = Cells;
+			sourceTree = "<group>";
+		};
+		BE740C192082664E001C1F24 /* Cells */ = {
+			isa = PBXGroup;
+			children = (
+				BEB7752320716B5200201EBB /* PridelandCollectionViewCell.swift */,
+				BEB7752420716B5200201EBB /* PridelandCollectionViewCell.xib */,
+				BE740C1520826648001C1F24 /* NewPridelandCollectionViewCell.swift */,
+				BE740C1620826648001C1F24 /* NewPridelandCollectionViewCell.xib */,
+			);
+			path = Cells;
 			sourceTree = "<group>";
 		};
 		BEA8E28D2001344400002475 /* Controller */ = {
@@ -779,6 +611,8 @@
 				3C2E4373201EF67C00E4254A /* TerminalView+AutoComplete.swift */,
 				F456629D200B9BC500C574AA /* ColorDisplayView.swift */,
 				3CA320FC201FE73900974B5F /* TerminalTextView.swift */,
+				BEB775632073F85600201EBB /* CustomColorBarPicker.swift */,
+				BEB7756720740DFE00201EBB /* CustomTextView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -787,21 +621,22 @@
 			isa = PBXGroup;
 			children = (
 				3CE576442022607000760E43 /* Parsing & Formatting */,
-				3C406E1B2020987B005F97C4 /* AutoComplete */,
 				3C406E1820207CDA005F97C4 /* Execution */,
 				3CA32100201FF6A100974B5F /* Scripting */,
-				3CE5764120225E1B00760E43 /* History */,
-				28CDA4272024B33D0055206D /* Bookmarks */,
 				BEA8E2902001348C00002475 /* UIColor+AssetCatalog.swift */,
 				F4602B48200A63FC009D0547 /* UserDefaults+UIColor.swift */,
 				BEA4992D1FDC305B001B9B9D /* KeyboardObserver.swift */,
-				BEA499251FD9C4D7001B9B9D /* DocumentManager.swift */,
-				BE9275052013961D00BD2761 /* UserDefaultsController.swift */,
 				3C905FC920265BC60084BA63 /* StoreReviewPrompter.swift */,
 				BE8E66FB206196A7007B14E6 /* Notification+Names.swift */,
 				BE8E66FD206196B8007B14E6 /* UIDevice+Name.swift */,
 				BE8E66FF206196D5007B14E6 /* Bundle+Info.swift */,
+				BEB77527207172D100201EBB /* UIColor+Hex.swift */,
 				BEB7752120714E2C00201EBB /* UIViewController+Alerts.swift */,
+				BE1643D32077F857002939B7 /* DirectoryObserver.swift */,
+				BE1643D52077FFC0002939B7 /* UICollectionView+Update.swift */,
+				BE102814207A372C005E965F /* String+C.swift */,
+				BEEAD9C5207E8C8500CBC254 /* Array+Safe.swift */,
+				BEEAD9C7207EA09700CBC254 /* Stdin+Read.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -829,7 +664,6 @@
 				BE000C0B1FEC4F7000D06B91 /* Embed Frameworks */,
 				BEE23C96202A35AD00D038C6 /* SwiftLint */,
 				0BA57695505EFB0FE6354191 /* [CP] Embed Pods Frameworks */,
-				E6CA2FE896168E728A365513 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -914,13 +748,18 @@
 				22A808CB20664BF0001AB98D /* commandDictionary.plist in Resources */,
 				22A808CC20664BF0001AB98D /* extraCommandsDictionary.plist in Resources */,
 				BE3808601FD9BFB600393EB8 /* LaunchScreen.storyboard in Resources */,
+				BE740C1820826648001C1F24 /* NewPridelandCollectionViewCell.xib in Resources */,
 				BEB774F12070206E00201EBB /* Logo-small.txt in Resources */,
 				BE38085D1FD9BFB600393EB8 /* Assets.xcassets in Resources */,
 				BEA4992C1FDC0918001B9B9D /* icon-320.png in Resources */,
 				BE38085B1FD9BFB600393EB8 /* Main.storyboard in Resources */,
 				BE244DC8201FBB6000A7EA4E /* cacert.pem in Resources */,
+				BE3A62E8208B54D00014A498 /* CubDocumentationItemTableViewCell.xib in Resources */,
+				BE3A62E1208B49EF0014A498 /* cub-docs.json in Resources */,
 				BE189036206FF36500EE6739 /* Logo.txt in Resources */,
 				BEB774EF20701D8500201EBB /* authors.json in Resources */,
+				BE0146ED2083BA000072AAB5 /* cub-guide.htmlcontainer in Resources */,
+				BEB7752620716B5200201EBB /* PridelandCollectionViewCell.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -941,6 +780,7 @@
 			);
 			inputPaths = (
 				"${SRCROOT}/Pods/Target Support Files/Pods-OpenTerm/Pods-OpenTerm-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/BezierPathLength/BezierPathLength.framework",
 				"${BUILT_PRODUCTS_DIR}/Cub/Cub.framework",
 				"${BUILT_PRODUCTS_DIR}/HueKit/HueKit.framework",
 				"${BUILT_PRODUCTS_DIR}/InputAssistant/InputAssistant.framework",
@@ -951,6 +791,7 @@
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/BezierPathLength.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Cub.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/HueKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/InputAssistant.framework",
@@ -978,21 +819,6 @@
 			shellPath = /bin/sh;
 			shellScript = "if which swiftlint >/dev/null; then\nswiftlint\nelse\necho \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi";
 		};
-		E6CA2FE896168E728A365513 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-OpenTerm/Pods-OpenTerm-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		EAD887D1C605B72756B620DA /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1018,46 +844,72 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BEEAD9C6207E8C8500CBC254 /* Array+Safe.swift in Sources */,
+				BE3A62DD208B3B570014A498 /* CubDocumentationBundle.swift in Sources */,
+				BE740C1720826648001C1F24 /* NewPridelandCollectionViewCell.swift in Sources */,
+				BE1D5F9D204C66F1008A1C36 /* Cub+Runner.swift in Sources */,
 				3CE57681202A52ED00760E43 /* TerminalViewController.swift in Sources */,
 				BEA8E2912001348C00002475 /* UIColor+AssetCatalog.swift in Sources */,
 				28CDA4292024B3510055206D /* BookmarkManager.swift in Sources */,
 				BEB7752220714E2C00201EBB /* UIViewController+Alerts.swift in Sources */,
+				BE3A62E7208B54D00014A498 /* CubDocumentationItemTableViewCell.swift in Sources */,
+				BEEAD9C8207EA09700CBC254 /* Stdin+Read.swift in Sources */,
 				BE8E66FC206196A7007B14E6 /* Notification+Names.swift in Sources */,
+				BE2AA98B208E692600B85CFE /* Sleep.swift in Sources */,
+				BE1643D62077FFC0002939B7 /* UICollectionView+Update.swift in Sources */,
 				3CA320FF201FE8E100974B5F /* ScriptsViewController.swift in Sources */,
+				BEBD36E720755B0400C9725C /* StoryboardFactory.swift in Sources */,
+				BE3A62DF208B3BB70014A498 /* CubDocumentationUpdater.swift in Sources */,
+				BE102815207A372C005E965F /* String+C.swift in Sources */,
 				3C2E4385201EFF4700E4254A /* AutoCompleteManager.swift in Sources */,
-				3CA32102201FF6B100974B5F /* Script.swift in Sources */,
 				BEA499301FDC3B93001B9B9D /* TerminalView.swift in Sources */,
 				BE18903B20700EFA00EE6739 /* Author.swift in Sources */,
+				BEB775662074095800201EBB /* ScriptMetadataViewController.swift in Sources */,
 				BE8E66FE206196B8007B14E6 /* UIDevice+Name.swift in Sources */,
 				3CE57680202A529200760E43 /* TerminalTabViewController.swift in Sources */,
-				BEA14A69202CEE5800AB7351 /* Cub+SavannaKit.swift in Sources */,
 				F4602B49200A63FC009D0547 /* UserDefaults+UIColor.swift in Sources */,
 				28CDA426202444CC0055206D /* BookmarkViewController.swift in Sources */,
 				3CA32105201FFC1300974B5F /* ScriptEditViewController.swift in Sources */,
 				3C2E4374201EF67C00E4254A /* TerminalView+AutoComplete.swift in Sources */,
+				BE0146EB2083B2F90072AAB5 /* ManualWebViewController.swift in Sources */,
 				BEECFF391FFEC187009608B3 /* SettingsViewController.swift in Sources */,
 				F456629E200B9BC500C574AA /* ColorDisplayView.swift in Sources */,
 				BE165408201909040067EC92 /* xCallBackUrl.swift in Sources */,
 				BEA499261FD9C4D7001B9B9D /* DocumentManager.swift in Sources */,
+				BEA14A65202CE5B700AB7351 /* Cub+SavannaKit.swift in Sources */,
 				BE505066201E5ED900CDFC60 /* Share.swift in Sources */,
+				BEB7756820740DFE00201EBB /* CustomTextView.swift in Sources */,
 				3CE5764820226A1500760E43 /* ANSITextState.swift in Sources */,
+				BEB77528207172D100201EBB /* UIColor+Hex.swift in Sources */,
+				BE3A62E3208B4A7D0014A498 /* CubDocumentationViewController.swift in Sources */,
 				3CE576A0202A874C00760E43 /* OutputSanitizer.swift in Sources */,
 				BEECFF0A1FFC1DC0009608B3 /* HistoryViewController.swift in Sources */,
 				BE8E6700206196D5007B14E6 /* Bundle+Info.swift in Sources */,
 				BEA4992E1FDC305B001B9B9D /* KeyboardObserver.swift in Sources */,
 				3CA3210B20212D4200974B5F /* CommandExecutionContext.swift in Sources */,
+				BE57BDD4207BF3B200A60950 /* EmptyExecutorCommand.swift in Sources */,
+				BE70DA2C204DD5D900DEFF10 /* ScriptEditViewController+AutoComplete.swift in Sources */,
+				BE57BDD2207BF3AA00A60950 /* SystemExecutorCommand.swift in Sources */,
 				3CA320FD201FE73900974B5F /* TerminalTextView.swift in Sources */,
 				3CE5769E202A7EC500760E43 /* Parser.swift in Sources */,
 				F4602B41200A08D0009D0547 /* ColorPickerViewController.swift in Sources */,
+				BE57BDCF207BE0CD00A60950 /* CommandManager.swift in Sources */,
 				BE9275062013961D00BD2761 /* UserDefaultsController.swift in Sources */,
 				3CA3210920211D5600974B5F /* ScriptExecutorCommand.swift in Sources */,
 				3C406E1D2020988B005F97C4 /* AutoCompleteManager+InputAssistant.swift in Sources */,
 				1C81BE5720225C3800D07301 /* Clipboard.swift in Sources */,
+				BEB7752520716B5200201EBB /* PridelandCollectionViewCell.swift in Sources */,
+				BE1643D22077E9D4002939B7 /* PridelandDocument.swift in Sources */,
 				BE3808561FD9BFB600393EB8 /* AppDelegate.swift in Sources */,
 				3C406E1A20207CE7005F97C4 /* CommandExecutor.swift in Sources */,
+				BE57BDD6207BF9D800A60950 /* Say.swift in Sources */,
 				3C905FCA20265BC60084BA63 /* StoreReviewPrompter.swift in Sources */,
+				BEA14A67202CE5D300AB7351 /* Cub.swift in Sources */,
+				BEB775642073F85600201EBB /* CustomColorBarPicker.swift in Sources */,
 				BEB774ED20701D2900201EBB /* Credits.swift in Sources */,
+				BE1643D42077F857002939B7 /* DirectoryObserver.swift in Sources */,
 				3CE5764320225E1B00760E43 /* HistoryManager.swift in Sources */,
+				BE3A62EA208B57C80014A498 /* CubDocumentationItemViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1212,6 +1064,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = OpenTerm/OpenTerm.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -1231,6 +1084,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch-OpenTerm";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_STYLE = "non-global";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1242,6 +1096,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = OpenTerm/OpenTerm.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
@@ -1261,6 +1116,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch-OpenTerm";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_STYLE = "non-global";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
