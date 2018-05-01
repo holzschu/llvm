@@ -36,6 +36,7 @@
 #include <TargetConditionals.h>
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 #include "ios_error.h"
+#undef write
 #endif
 #endif
 

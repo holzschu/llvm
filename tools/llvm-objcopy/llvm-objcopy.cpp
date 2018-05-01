@@ -44,6 +44,7 @@
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 #include "ios_error.h"
 #undef exit
+#undef write
 #define exit(a) { llvm_shutdown(); ios_exit(a); }
 #endif
 #endif

@@ -60,8 +60,8 @@ fi
 if [ ! -d $OSX_BUILDDIR ]; then
   mkdir $OSX_BUILDDIR
 fi
-# testing DLLVM_LINK_LLVM_DYLIB (= single big shared lib) instead of BUILD_SHARED_LIBS (= multiple shared libs)
-# check it works, easier to make a framework with
+# building with -DLLVM_LINK_LLVM_DYLIB (= single big shared lib) 
+# Easier to make a framework with
 pushd $OSX_BUILDDIR
 cmake -G Ninja \
 -DLLVM_TARGETS_TO_BUILD="AArch64;X86" \
@@ -96,11 +96,8 @@ popd
 
 # TODO: some combination of build variables might allow us to build these too. 
 # Right now, they fail. Maybe CFLAGS with: -D__need_size_t -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS 
-# TODO: use LLD in linking second phase. Cmake can't find it.
 # Now, compile for iOS using the previous build:
-# About 24h, 5 GB of disk space
-#
-# building clang phase 2 in the first phase might speed up this build, but phase2 build is > 4h.
+# About 1h, 12 GB of disk space
 if [ $CLEAN ]; then
   rm -rf $IOS_BUILDDIR
 fi
@@ -126,7 +123,7 @@ cmake -G Ninja \
 -DCMAKE_C_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -I${OSX_BUILDDIR}/include/ -I${IOS_SYSTEM} -miphoneos-version-min=11" \
 -DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11" \
 -DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system " \
--DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system " \
+-DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system -dylib " \
 ..
 ninja
 popd

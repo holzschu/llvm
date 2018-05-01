@@ -67,6 +67,7 @@
 #include <TargetConditionals.h>
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 #include "ios_error.h"
+#undef write
 #include <stdio.h>
 #undef exit
 #define exit(a) { llvm_shutdown(); ios_exit(a); }

@@ -35,16 +35,17 @@ The steps for compilation are:
 - compile LLVM, clang, lld, libcxx and libcxxabi for OSX
 - move libcxx and libcxxabi out of the way
 - get libffi and compile it
+- make sure ios_system has been compiled, and if not compile it.
 - compile LLVM and clang for iOS (that's the long step)
 
 "bootstrap.sh" in this directory takes care of all these steps. Remember, 
 you have time for a long walk in the woods while it compiles. 
 
-Once you have compiled everything, add clang and lli to the list of embedded 
-binaries, along with all the required dynamic libraries (a lot of them). 
-See `project.pbxproj` in this directory for an example. 
+Once you have compiled everything, add the binaries you want (at least clang and lli) 
+to the list of embedded binaries, along with libLLVM.dylib and libclang.dylib.
+See `project.pbxproj` in this directory for an example.
 
-Commands in `project.pbxproj`: clang, lli, llvm-link, llvm-nm, llvm-dis 
+Commands in `project.pbxproj`: clang, lli, llvm-link, opt, llvm-nm, llvm-dis 
 
 Once you have the binaries inside your app, you need to provide the header files. I copied the ones from the Xcode iPhone SDK into ~/usr/include, and the ones from build_ios/lib/clang/7.0.0/include/ into ~/lib/clang/7.0.0/include/ This will need some thinking.
 
@@ -94,7 +95,7 @@ External functions are called using libFFI, and libFFI has problems with pointer
 LLVM iOS version TODO list:
 ===========================
 
-- make it easier to add llvm binaries to existing iOS projects, with associated dylibs
+X make it easier to add llvm binaries to existing iOS projects, with associated dylibs
 X added external functions for exit, print, abort, system, exec... (both interpreter and JIT)
 - check that memory is freed when LLVM exits, that all flags are reset
 - create a "fake libc" for functions that don't work with FFI (qsort, bsearch,...)
