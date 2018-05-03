@@ -3,10 +3,51 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 48;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		22379399209B047C00B15016 /* opt.h in Headers */ = {isa = PBXBuildFile; fileRef = 22379397209B047C00B15016 /* opt.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		2237939E209B048C00B15016 /* libopt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237939D209B048C00B15016 /* libopt.a */; };
+		2237939F209B04C700B15016 /* libLLVM.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */; };
+		223793A0209B04D300B15016 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
+		223793A6209B0B9B00B15016 /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505D0209A3CF700FDDFA9 /* ios_system.framework */; };
+		223793AD209B277E00B15016 /* libclang_tool.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793AC209B277E00B15016 /* libclang_tool.a */; };
+		223793AE209B27FF00B15016 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
+		223793C9209B289C00B15016 /* libLLVM.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */; };
+		223793CC209B293C00B15016 /* libclangFrontend.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793CB209B293C00B15016 /* libclangFrontend.a */; };
+		223793D2209B296100B15016 /* libclangToolingRefactor.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793CD209B296100B15016 /* libclangToolingRefactor.a */; };
+		223793D3209B296100B15016 /* libclangIndex.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793CE209B296100B15016 /* libclangIndex.a */; };
+		223793D4209B296100B15016 /* libclangCodeGen.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793CF209B296100B15016 /* libclangCodeGen.a */; };
+		223793D5209B296100B15016 /* libclangSema.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793D0209B296100B15016 /* libclangSema.a */; };
+		223793D6209B296100B15016 /* libclangStaticAnalyzerCheckers.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793D1209B296100B15016 /* libclangStaticAnalyzerCheckers.a */; };
+		223793D7209B297700B15016 /* libclangRewriteFrontend.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793B7209B285D00B15016 /* libclangRewriteFrontend.a */; };
+		223793D8209B297700B15016 /* libclangTooling.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793B9209B285D00B15016 /* libclangTooling.a */; };
+		223793D9209B297700B15016 /* libclangToolingASTDiff.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793B1209B285D00B15016 /* libclangToolingASTDiff.a */; };
+		223793DA209B297700B15016 /* libclangToolingCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793B4209B285D00B15016 /* libclangToolingCore.a */; };
+		223793DB209B297700B15016 /* libclangARCMigrate.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793BB209B285E00B15016 /* libclangARCMigrate.a */; };
+		223793DC209B297700B15016 /* libclangFrontendTool.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793AF209B285D00B15016 /* libclangFrontendTool.a */; };
+		223793DD209B297700B15016 /* libclangSerialization.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793BA209B285E00B15016 /* libclangSerialization.a */; };
+		223793DE209B297700B15016 /* libclangDriver.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793B2209B285D00B15016 /* libclangDriver.a */; };
+		223793DF209B297700B15016 /* libclangAST.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793B0209B285D00B15016 /* libclangAST.a */; };
+		223793E0209B297700B15016 /* libclangAnalysis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793B6209B285D00B15016 /* libclangAnalysis.a */; };
+		223793E1209B297700B15016 /* libclangEdit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793B8209B285D00B15016 /* libclangEdit.a */; };
+		223793E2209B297700B15016 /* libclangRewrite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793B5209B285D00B15016 /* libclangRewrite.a */; };
+		223793E3209B297700B15016 /* libclangStaticAnalyzerCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793B3209B285D00B15016 /* libclangStaticAnalyzerCore.a */; };
+		223793EB209B299500B15016 /* libclangFormat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793E4209B299500B15016 /* libclangFormat.a */; };
+		223793EC209B299500B15016 /* libclangParse.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793E5209B299500B15016 /* libclangParse.a */; };
+		223793ED209B299500B15016 /* libclangStaticAnalyzerFrontend.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793E6209B299500B15016 /* libclangStaticAnalyzerFrontend.a */; };
+		223793EE209B299500B15016 /* libclangASTMatchers.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793E7209B299500B15016 /* libclangASTMatchers.a */; };
+		223793EF209B299500B15016 /* libclangDynamicASTMatchers.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793E8209B299500B15016 /* libclangDynamicASTMatchers.a */; };
+		223793F0209B299500B15016 /* libclangCrossTU.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793E9209B299500B15016 /* libclangCrossTU.a */; };
+		223793F1209B299500B15016 /* libclangHandleCXX.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793EA209B299500B15016 /* libclangHandleCXX.a */; };
+		223793F4209B29B200B15016 /* libclangLex.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793F2209B29B200B15016 /* libclangLex.a */; };
+		223793F5209B29B200B15016 /* libclangBasic.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793F3209B29B200B15016 /* libclangBasic.a */; };
+		223793F6209B2A1100B15016 /* clang.h in Headers */ = {isa = PBXBuildFile; fileRef = 22379388209B028600B15016 /* clang.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		22379402209B2B8B00B15016 /* nm.h in Headers */ = {isa = PBXBuildFile; fileRef = 22379400209B2B8B00B15016 /* nm.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		22379407209B2BCE00B15016 /* llvm-nm.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379406209B2BCE00B15016 /* llvm-nm.cpp.o */; };
+		22379408209B2BDE00B15016 /* libLLVM.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */; };
+		22379409209B2C0B00B15016 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
 		22C505C9209A3B8700FDDFA9 /* liblli.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505C8209A3B8700FDDFA9 /* liblli.a */; };
 		22C505CB209A3BF400FDDFA9 /* libLLVM.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */; };
 		22C505CD209A3CB500FDDFA9 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
@@ -14,6 +55,49 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		22379386209B028600B15016 /* clang.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = clang.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		22379388209B028600B15016 /* clang.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = clang.h; sourceTree = "<group>"; };
+		22379389209B028600B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2237938E209B03BE00B15016 /* libclang.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclang.a; path = ../build_ios/lib/libclang.a; sourceTree = "<group>"; };
+		22379395209B047C00B15016 /* opt.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = opt.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		22379397209B047C00B15016 /* opt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = opt.h; sourceTree = "<group>"; };
+		22379398209B047C00B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2237939D209B048C00B15016 /* libopt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libopt.a; path = ../build_ios/lib/libopt.a; sourceTree = "<group>"; };
+		223793A3209B093500B15016 /* libclang.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclang.dylib; path = ../build_ios/lib/libclang.dylib; sourceTree = "<group>"; };
+		223793AA209B191D00B15016 /* clang-7.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "clang-7.h"; path = "clang-7/clang-7.h"; sourceTree = "<group>"; };
+		223793AC209B277E00B15016 /* libclang_tool.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclang_tool.a; path = ../build_ios/lib/libclang_tool.a; sourceTree = "<group>"; };
+		223793AF209B285D00B15016 /* libclangFrontendTool.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangFrontendTool.a; path = ../build_ios/lib/libclangFrontendTool.a; sourceTree = "<group>"; };
+		223793B0209B285D00B15016 /* libclangAST.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangAST.a; path = ../build_ios/lib/libclangAST.a; sourceTree = "<group>"; };
+		223793B1209B285D00B15016 /* libclangToolingASTDiff.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangToolingASTDiff.a; path = ../build_ios/lib/libclangToolingASTDiff.a; sourceTree = "<group>"; };
+		223793B2209B285D00B15016 /* libclangDriver.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangDriver.a; path = ../build_ios/lib/libclangDriver.a; sourceTree = "<group>"; };
+		223793B3209B285D00B15016 /* libclangStaticAnalyzerCore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangStaticAnalyzerCore.a; path = ../build_ios/lib/libclangStaticAnalyzerCore.a; sourceTree = "<group>"; };
+		223793B4209B285D00B15016 /* libclangToolingCore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangToolingCore.a; path = ../build_ios/lib/libclangToolingCore.a; sourceTree = "<group>"; };
+		223793B5209B285D00B15016 /* libclangRewrite.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangRewrite.a; path = ../build_ios/lib/libclangRewrite.a; sourceTree = "<group>"; };
+		223793B6209B285D00B15016 /* libclangAnalysis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangAnalysis.a; path = ../build_ios/lib/libclangAnalysis.a; sourceTree = "<group>"; };
+		223793B7209B285D00B15016 /* libclangRewriteFrontend.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangRewriteFrontend.a; path = ../build_ios/lib/libclangRewriteFrontend.a; sourceTree = "<group>"; };
+		223793B8209B285D00B15016 /* libclangEdit.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangEdit.a; path = ../build_ios/lib/libclangEdit.a; sourceTree = "<group>"; };
+		223793B9209B285D00B15016 /* libclangTooling.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangTooling.a; path = ../build_ios/lib/libclangTooling.a; sourceTree = "<group>"; };
+		223793BA209B285E00B15016 /* libclangSerialization.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangSerialization.a; path = ../build_ios/lib/libclangSerialization.a; sourceTree = "<group>"; };
+		223793BB209B285E00B15016 /* libclangARCMigrate.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangARCMigrate.a; path = ../build_ios/lib/libclangARCMigrate.a; sourceTree = "<group>"; };
+		223793CB209B293C00B15016 /* libclangFrontend.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangFrontend.a; path = ../build_ios/lib/libclangFrontend.a; sourceTree = "<group>"; };
+		223793CD209B296100B15016 /* libclangToolingRefactor.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangToolingRefactor.a; path = ../build_ios/lib/libclangToolingRefactor.a; sourceTree = "<group>"; };
+		223793CE209B296100B15016 /* libclangIndex.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangIndex.a; path = ../build_ios/lib/libclangIndex.a; sourceTree = "<group>"; };
+		223793CF209B296100B15016 /* libclangCodeGen.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangCodeGen.a; path = ../build_ios/lib/libclangCodeGen.a; sourceTree = "<group>"; };
+		223793D0209B296100B15016 /* libclangSema.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangSema.a; path = ../build_ios/lib/libclangSema.a; sourceTree = "<group>"; };
+		223793D1209B296100B15016 /* libclangStaticAnalyzerCheckers.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangStaticAnalyzerCheckers.a; path = ../build_ios/lib/libclangStaticAnalyzerCheckers.a; sourceTree = "<group>"; };
+		223793E4209B299500B15016 /* libclangFormat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangFormat.a; path = ../build_ios/lib/libclangFormat.a; sourceTree = "<group>"; };
+		223793E5209B299500B15016 /* libclangParse.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangParse.a; path = ../build_ios/lib/libclangParse.a; sourceTree = "<group>"; };
+		223793E6209B299500B15016 /* libclangStaticAnalyzerFrontend.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangStaticAnalyzerFrontend.a; path = ../build_ios/lib/libclangStaticAnalyzerFrontend.a; sourceTree = "<group>"; };
+		223793E7209B299500B15016 /* libclangASTMatchers.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangASTMatchers.a; path = ../build_ios/lib/libclangASTMatchers.a; sourceTree = "<group>"; };
+		223793E8209B299500B15016 /* libclangDynamicASTMatchers.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangDynamicASTMatchers.a; path = ../build_ios/lib/libclangDynamicASTMatchers.a; sourceTree = "<group>"; };
+		223793E9209B299500B15016 /* libclangCrossTU.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangCrossTU.a; path = ../build_ios/lib/libclangCrossTU.a; sourceTree = "<group>"; };
+		223793EA209B299500B15016 /* libclangHandleCXX.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangHandleCXX.a; path = ../build_ios/lib/libclangHandleCXX.a; sourceTree = "<group>"; };
+		223793F2209B29B200B15016 /* libclangLex.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangLex.a; path = ../build_ios/lib/libclangLex.a; sourceTree = "<group>"; };
+		223793F3209B29B200B15016 /* libclangBasic.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangBasic.a; path = ../build_ios/lib/libclangBasic.a; sourceTree = "<group>"; };
+		223793FE209B2B8B00B15016 /* nm.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = nm.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		22379400209B2B8B00B15016 /* nm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = nm.h; sourceTree = "<group>"; };
+		22379401209B2B8B00B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		22379406209B2BCE00B15016 /* llvm-nm.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = "llvm-nm.cpp.o"; path = "../build_ios/tools/llvm-nm/CMakeFiles/llvm-nm.dir/llvm-nm.cpp.o"; sourceTree = "<group>"; };
 		22C505BC209A3B5800FDDFA9 /* lli.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = lli.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22C505C8209A3B8700FDDFA9 /* liblli.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblli.a; path = ../build_ios/lib/liblli.a; sourceTree = "<group>"; };
 		22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVM.dylib; path = ../build_ios/lib/libLLVM.dylib; sourceTree = "<group>"; };
@@ -22,6 +106,65 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		22379382209B028600B15016 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				223793AD209B277E00B15016 /* libclang_tool.a in Frameworks */,
+				223793F4209B29B200B15016 /* libclangLex.a in Frameworks */,
+				223793F5209B29B200B15016 /* libclangBasic.a in Frameworks */,
+				223793EB209B299500B15016 /* libclangFormat.a in Frameworks */,
+				223793EC209B299500B15016 /* libclangParse.a in Frameworks */,
+				223793ED209B299500B15016 /* libclangStaticAnalyzerFrontend.a in Frameworks */,
+				223793EE209B299500B15016 /* libclangASTMatchers.a in Frameworks */,
+				223793EF209B299500B15016 /* libclangDynamicASTMatchers.a in Frameworks */,
+				223793F0209B299500B15016 /* libclangCrossTU.a in Frameworks */,
+				223793F1209B299500B15016 /* libclangHandleCXX.a in Frameworks */,
+				223793D7209B297700B15016 /* libclangRewriteFrontend.a in Frameworks */,
+				223793D8209B297700B15016 /* libclangTooling.a in Frameworks */,
+				223793D9209B297700B15016 /* libclangToolingASTDiff.a in Frameworks */,
+				223793DA209B297700B15016 /* libclangToolingCore.a in Frameworks */,
+				223793DB209B297700B15016 /* libclangARCMigrate.a in Frameworks */,
+				223793DC209B297700B15016 /* libclangFrontendTool.a in Frameworks */,
+				223793DD209B297700B15016 /* libclangSerialization.a in Frameworks */,
+				223793DE209B297700B15016 /* libclangDriver.a in Frameworks */,
+				223793DF209B297700B15016 /* libclangAST.a in Frameworks */,
+				223793E0209B297700B15016 /* libclangAnalysis.a in Frameworks */,
+				223793E1209B297700B15016 /* libclangEdit.a in Frameworks */,
+				223793E2209B297700B15016 /* libclangRewrite.a in Frameworks */,
+				223793E3209B297700B15016 /* libclangStaticAnalyzerCore.a in Frameworks */,
+				223793D2209B296100B15016 /* libclangToolingRefactor.a in Frameworks */,
+				223793D3209B296100B15016 /* libclangIndex.a in Frameworks */,
+				223793D4209B296100B15016 /* libclangCodeGen.a in Frameworks */,
+				223793D5209B296100B15016 /* libclangSema.a in Frameworks */,
+				223793D6209B296100B15016 /* libclangStaticAnalyzerCheckers.a in Frameworks */,
+				223793CC209B293C00B15016 /* libclangFrontend.a in Frameworks */,
+				223793C9209B289C00B15016 /* libLLVM.dylib in Frameworks */,
+				223793AE209B27FF00B15016 /* libc++.tbd in Frameworks */,
+				223793A6209B0B9B00B15016 /* ios_system.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22379391209B047C00B15016 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2237939E209B048C00B15016 /* libopt.a in Frameworks */,
+				2237939F209B04C700B15016 /* libLLVM.dylib in Frameworks */,
+				223793A0209B04D300B15016 /* libc++.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		223793FA209B2B8B00B15016 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22379407209B2BCE00B15016 /* llvm-nm.cpp.o in Frameworks */,
+				22379409209B2C0B00B15016 /* libc++.tbd in Frameworks */,
+				22379408209B2BDE00B15016 /* libLLVM.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22C505B8209A3B5800FDDFA9 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -36,9 +179,40 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		22379387209B028600B15016 /* clang */ = {
+			isa = PBXGroup;
+			children = (
+				22379388209B028600B15016 /* clang.h */,
+				22379389209B028600B15016 /* Info.plist */,
+			);
+			path = clang;
+			sourceTree = "<group>";
+		};
+		22379396209B047C00B15016 /* opt */ = {
+			isa = PBXGroup;
+			children = (
+				22379397209B047C00B15016 /* opt.h */,
+				22379398209B047C00B15016 /* Info.plist */,
+			);
+			path = opt;
+			sourceTree = "<group>";
+		};
+		223793FF209B2B8B00B15016 /* nm */ = {
+			isa = PBXGroup;
+			children = (
+				22379400209B2B8B00B15016 /* nm.h */,
+				22379401209B2B8B00B15016 /* Info.plist */,
+			);
+			path = nm;
+			sourceTree = "<group>";
+		};
 		22C505B2209A3B5800FDDFA9 = {
 			isa = PBXGroup;
 			children = (
+				223793AA209B191D00B15016 /* clang-7.h */,
+				22379387209B028600B15016 /* clang */,
+				22379396209B047C00B15016 /* opt */,
+				223793FF209B2B8B00B15016 /* nm */,
 				22C505BD209A3B5800FDDFA9 /* Products */,
 				22C505C7209A3B8700FDDFA9 /* Frameworks */,
 			);
@@ -48,6 +222,9 @@
 			isa = PBXGroup;
 			children = (
 				22C505BC209A3B5800FDDFA9 /* lli.framework */,
+				22379386209B028600B15016 /* clang.framework */,
+				22379395209B047C00B15016 /* opt.framework */,
+				223793FE209B2B8B00B15016 /* nm.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -55,6 +232,39 @@
 		22C505C7209A3B8700FDDFA9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				22379406209B2BCE00B15016 /* llvm-nm.cpp.o */,
+				223793F3209B29B200B15016 /* libclangBasic.a */,
+				223793F2209B29B200B15016 /* libclangLex.a */,
+				223793E7209B299500B15016 /* libclangASTMatchers.a */,
+				223793E9209B299500B15016 /* libclangCrossTU.a */,
+				223793E8209B299500B15016 /* libclangDynamicASTMatchers.a */,
+				223793E4209B299500B15016 /* libclangFormat.a */,
+				223793EA209B299500B15016 /* libclangHandleCXX.a */,
+				223793E5209B299500B15016 /* libclangParse.a */,
+				223793E6209B299500B15016 /* libclangStaticAnalyzerFrontend.a */,
+				223793CF209B296100B15016 /* libclangCodeGen.a */,
+				223793CE209B296100B15016 /* libclangIndex.a */,
+				223793D0209B296100B15016 /* libclangSema.a */,
+				223793D1209B296100B15016 /* libclangStaticAnalyzerCheckers.a */,
+				223793CD209B296100B15016 /* libclangToolingRefactor.a */,
+				223793CB209B293C00B15016 /* libclangFrontend.a */,
+				223793B6209B285D00B15016 /* libclangAnalysis.a */,
+				223793BB209B285E00B15016 /* libclangARCMigrate.a */,
+				223793B0209B285D00B15016 /* libclangAST.a */,
+				223793B2209B285D00B15016 /* libclangDriver.a */,
+				223793B8209B285D00B15016 /* libclangEdit.a */,
+				223793AF209B285D00B15016 /* libclangFrontendTool.a */,
+				223793B5209B285D00B15016 /* libclangRewrite.a */,
+				223793B7209B285D00B15016 /* libclangRewriteFrontend.a */,
+				223793BA209B285E00B15016 /* libclangSerialization.a */,
+				223793B3209B285D00B15016 /* libclangStaticAnalyzerCore.a */,
+				223793B9209B285D00B15016 /* libclangTooling.a */,
+				223793B1209B285D00B15016 /* libclangToolingASTDiff.a */,
+				223793B4209B285D00B15016 /* libclangToolingCore.a */,
+				223793AC209B277E00B15016 /* libclang_tool.a */,
+				223793A3209B093500B15016 /* libclang.dylib */,
+				2237939D209B048C00B15016 /* libopt.a */,
+				2237938E209B03BE00B15016 /* libclang.a */,
 				22C505D0209A3CF700FDDFA9 /* ios_system.framework */,
 				22C505CC209A3CB500FDDFA9 /* libc++.tbd */,
 				22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */,
@@ -66,6 +276,30 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		22379383209B028600B15016 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				223793F6209B2A1100B15016 /* clang.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22379392209B047C00B15016 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22379399209B047C00B15016 /* opt.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		223793FB209B2B8B00B15016 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22379402209B2B8B00B15016 /* nm.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22C505B9209A3B5800FDDFA9 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -76,6 +310,60 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		22379385209B028600B15016 /* clang */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2237938D209B028600B15016 /* Build configuration list for PBXNativeTarget "clang" */;
+			buildPhases = (
+				22379381209B028600B15016 /* Sources */,
+				22379382209B028600B15016 /* Frameworks */,
+				22379383209B028600B15016 /* Headers */,
+				22379384209B028600B15016 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = clang;
+			productName = clang;
+			productReference = 22379386209B028600B15016 /* clang.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		22379394209B047C00B15016 /* opt */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2237939A209B047C00B15016 /* Build configuration list for PBXNativeTarget "opt" */;
+			buildPhases = (
+				22379390209B047C00B15016 /* Sources */,
+				22379391209B047C00B15016 /* Frameworks */,
+				22379392209B047C00B15016 /* Headers */,
+				22379393209B047C00B15016 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = opt;
+			productName = opt;
+			productReference = 22379395209B047C00B15016 /* opt.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		223793FD209B2B8B00B15016 /* nm */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 22379403209B2B8B00B15016 /* Build configuration list for PBXNativeTarget "nm" */;
+			buildPhases = (
+				223793F9209B2B8B00B15016 /* Sources */,
+				223793FA209B2B8B00B15016 /* Frameworks */,
+				223793FB209B2B8B00B15016 /* Headers */,
+				223793FC209B2B8B00B15016 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = nm;
+			productName = nm;
+			productReference = 223793FE209B2B8B00B15016 /* nm.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		22C505BB209A3B5800FDDFA9 /* lli */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 22C505C4209A3B5800FDDFA9 /* Build configuration list for PBXNativeTarget "lli" */;
@@ -103,13 +391,26 @@
 				LastUpgradeCheck = 0940;
 				ORGANIZATIONNAME = "Nicolas Holzschuch";
 				TargetAttributes = {
+					22379385209B028600B15016 = {
+						CreatedOnToolsVersion = 9.4;
+						ProvisioningStyle = Automatic;
+					};
+					22379394209B047C00B15016 = {
+						CreatedOnToolsVersion = 9.4;
+						ProvisioningStyle = Automatic;
+					};
+					223793FD209B2B8B00B15016 = {
+						CreatedOnToolsVersion = 9.4;
+						ProvisioningStyle = Automatic;
+					};
 					22C505BB209A3B5800FDDFA9 = {
 						CreatedOnToolsVersion = 9.4;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
 			buildConfigurationList = 22C505B6209A3B5800FDDFA9 /* Build configuration list for PBXProject "frameworks" */;
-			compatibilityVersion = "Xcode 9.3";
+			compatibilityVersion = "Xcode 8.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -120,12 +421,36 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				22379385209B028600B15016 /* clang */,
 				22C505BB209A3B5800FDDFA9 /* lli */,
+				22379394209B047C00B15016 /* opt */,
+				223793FD209B2B8B00B15016 /* nm */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		22379384209B028600B15016 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22379393209B047C00B15016 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		223793FC209B2B8B00B15016 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22C505BA209A3B5800FDDFA9 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -136,6 +461,27 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		22379381209B028600B15016 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22379390209B047C00B15016 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		223793F9209B2B8B00B15016 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22C505B7209A3B5800FDDFA9 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -146,6 +492,162 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		2237938B209B028600B15016 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = clang/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				OTHER_LDFLAGS = (
+					"-L",
+					../build_ios/lib/,
+					"-all_load",
+					"-F",
+					"../../ios_system/build/Debug-iphoneos/",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.clang";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		2237938C209B028600B15016 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = clang/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				OTHER_LDFLAGS = (
+					"-L",
+					../build_ios/lib/,
+					"-all_load",
+					"-F",
+					"../../ios_system/build/Debug-iphoneos/",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.clang";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		2237939B209B047C00B15016 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = opt/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				OTHER_LDFLAGS = (
+					"-all_load",
+					"-L",
+					../build_ios/lib/,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.opt";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		2237939C209B047C00B15016 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = opt/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				OTHER_LDFLAGS = (
+					"-all_load",
+					"-L",
+					../build_ios/lib/,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.opt";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		22379404209B2B8B00B15016 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = nm/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.nm";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		22379405209B2B8B00B15016 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = nm/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.nm";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		22C505C2209A3B5800FDDFA9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -198,9 +700,16 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-all_load",
+					"-L",
+					../build_ios/lib,
+					"-F",
+					"../../ios_system/build/Debug-iphoneos/",
+				);
 				SDKROOT = iphoneos;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -253,8 +762,15 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = (
+					"-all_load",
+					"-L",
+					../build_ios/lib,
+					"-F",
+					"../../ios_system/build/Debug-iphoneos/",
+				);
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -276,19 +792,15 @@
 				INFOPLIST_FILE = frameworks/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				OTHER_LDFLAGS = (
+					"-all_load",
 					"-L",
 					../build_ios/lib/,
-					"-all_load",
 					"-F",
 					"../../ios_system/build/Debug-iphoneos/",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.lli";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -309,19 +821,15 @@
 				INFOPLIST_FILE = frameworks/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				OTHER_LDFLAGS = (
+					"-all_load",
 					"-L",
 					../build_ios/lib/,
-					"-all_load",
 					"-F",
 					"../../ios_system/build/Debug-iphoneos/",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.lli";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -331,6 +839,33 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		2237938D209B028600B15016 /* Build configuration list for PBXNativeTarget "clang" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2237938B209B028600B15016 /* Debug */,
+				2237938C209B028600B15016 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2237939A209B047C00B15016 /* Build configuration list for PBXNativeTarget "opt" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2237939B209B047C00B15016 /* Debug */,
+				2237939C209B047C00B15016 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		22379403209B2B8B00B15016 /* Build configuration list for PBXNativeTarget "nm" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				22379404209B2B8B00B15016 /* Debug */,
+				22379405209B2B8B00B15016 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		22C505B6209A3B5800FDDFA9 /* Build configuration list for PBXProject "frameworks" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
