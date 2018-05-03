@@ -321,10 +321,11 @@ namespace llvm {
 
 ProcessInfo sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
                       bool WaitUntilTerminates, std::string *ErrMsg) {
+  int status;
+  ProcessInfo WaitResult;
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
   // This is relatively crude, but there's not much we can do:
-  if (ios_getLastThreadId()) pthread_join(ios_getLastThreadId(), NULL);
-  ProcessInfo WaitResult;
+  WaitResult.Pid = waitpid(PI.Pid, &status, 0);
 #else
   struct sigaction Act, Old;
   assert(PI.Pid && "invalid pid to wait on, process not started?");
@@ -346,8 +347,6 @@ ProcessInfo sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
     WaitPidOptions = WNOHANG;
 
   // Parent process: Wait for the child process to terminate.
-  int status;
-  ProcessInfo WaitResult;
 
   do {
     WaitResult.Pid = waitpid(ChildPid, &status, WaitPidOptions);
@@ -387,6 +386,7 @@ ProcessInfo sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
     alarm(0);
     sigaction(SIGALRM, &Old, nullptr);
   }
+#endif // (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 
   // Return the proper exit status. Detect error conditions
   // so we can return -1 for them and set ErrMsg informatively.
@@ -419,7 +419,6 @@ ProcessInfo sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
     // signal during execution as opposed to failing to execute.
     WaitResult.ReturnCode = -2;
   }
-#endif // (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
   return WaitResult;
 }
 
