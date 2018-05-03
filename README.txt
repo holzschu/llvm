@@ -99,8 +99,8 @@ X make it easier to add llvm binaries to existing iOS projects, with associated 
 X added external functions for exit, print, abort, system, exec... (both interpreter and JIT)
 - check that memory is freed when LLVM exits, that all flags are reset
 - create a "fake libc" for functions that don't work with FFI (qsort, bsearch,...)
-- create dynamic libraries instead of executables
-- create frameworks with the dynamic libraries
+X create static libraries instead of executables
+X create frameworks with the static libraries
 
 LLVM iOS version wish list:
 ===========================
