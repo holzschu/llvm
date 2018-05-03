@@ -37,10 +37,10 @@ if( LLVM_USE_INTEL_JITEVENTS )
 endif( LLVM_USE_INTEL_JITEVENTS )
 
 add_llvm_tool(lli
-  lli.cpp
-  OrcLazyJIT.cpp
+	lli.cpp
+	OrcLazyJIT.cpp
 
-  DEPENDS
-  intrinsics_gen
-  )
+	DEPENDS
+	intrinsics_gen
+	)
 export_executable_symbols(lli)
