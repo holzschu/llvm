@@ -126,4 +126,6 @@ cmake -G Ninja \
 -DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system " \
 ..
 ninja
+ar -r lib/liblli.a tools/lli/CMakeFiles/lli.dir/lli.cpp.o tools/lli/CMakeFiles/lli.dir/OrcLazyJIT.cpp.o 
 popd
+xcodebuild -project frameworks/frameworks.xcodeproj -alltargets -sdk iphoneos -configuration Debug -quiet
