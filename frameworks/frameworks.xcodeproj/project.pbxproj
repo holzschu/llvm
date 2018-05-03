@@ -61,7 +61,6 @@
 		2237948A209B557A00B15016 /* libLLVMCoverage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237944C209B557800B15016 /* libLLVMCoverage.a */; };
 		2237948B209B557A00B15016 /* libLLVMCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237944D209B557800B15016 /* libLLVMCore.a */; };
 		2237948C209B557A00B15016 /* libLLVMDlltoolDriver.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237944E209B557800B15016 /* libLLVMDlltoolDriver.a */; };
-		2237948D209B557A00B15016 /* libLLVMExegesis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237944F209B557800B15016 /* libLLVMExegesis.a */; };
 		2237948E209B557A00B15016 /* libLLVMInterpreter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379450209B557800B15016 /* libLLVMInterpreter.a */; };
 		2237948F209B557A00B15016 /* libLLVMWindowsManifest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379451209B557800B15016 /* libLLVMWindowsManifest.a */; };
 		22379490209B557A00B15016 /* libLLVMAArch64Utils.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379452209B557800B15016 /* libLLVMAArch64Utils.a */; };
@@ -103,7 +102,6 @@
 		223794B5209B557A00B15016 /* libLLVMOrcJIT.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379477209B557A00B15016 /* libLLVMOrcJIT.a */; };
 		223794B6209B557A00B15016 /* libLLVMIRReader.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379478209B557A00B15016 /* libLLVMIRReader.a */; };
 		223794B7209B557A00B15016 /* libLLVMGlobalISel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379479209B557A00B15016 /* libLLVMGlobalISel.a */; };
-		223794B8209B557A00B15016 /* libLLVMTableGen.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237947A209B557A00B15016 /* libLLVMTableGen.a */; };
 		223794B9209B557A00B15016 /* libLLVMDebugInfoMSF.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237947B209B557A00B15016 /* libLLVMDebugInfoMSF.a */; };
 		223794BA209B557A00B15016 /* libLLVMAggressiveInstCombine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237947C209B557A00B15016 /* libLLVMAggressiveInstCombine.a */; };
 		223794BB209B557A00B15016 /* libLLVMObjectYAML.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237947D209B557A00B15016 /* libLLVMObjectYAML.a */; };
@@ -114,7 +112,6 @@
 		223794C0209B557A00B15016 /* libLLVMSelectionDAG.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379482209B557A00B15016 /* libLLVMSelectionDAG.a */; };
 		223794C1209B557A00B15016 /* libLLVMAArch64AsmPrinter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379483209B557A00B15016 /* libLLVMAArch64AsmPrinter.a */; };
 		223794C2209B557A00B15016 /* libLLVMRuntimeDyld.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379484209B557A00B15016 /* libLLVMRuntimeDyld.a */; };
-		223794C3209B557A00B15016 /* libLLVMCFIVerify.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379485209B557A00B15016 /* libLLVMCFIVerify.a */; };
 		223794C4209B557A00B15016 /* libLLVMCodeGen.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379486209B557A00B15016 /* libLLVMCodeGen.a */; };
 		223794C5209B557A00B15016 /* libLLVMBitReader.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379487209B557A00B15016 /* libLLVMBitReader.a */; };
 		223794C6209B563C00B15016 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
@@ -357,7 +354,6 @@
 				2237948A209B557A00B15016 /* libLLVMCoverage.a in Frameworks */,
 				2237948B209B557A00B15016 /* libLLVMCore.a in Frameworks */,
 				2237948C209B557A00B15016 /* libLLVMDlltoolDriver.a in Frameworks */,
-				2237948D209B557A00B15016 /* libLLVMExegesis.a in Frameworks */,
 				2237948E209B557A00B15016 /* libLLVMInterpreter.a in Frameworks */,
 				2237948F209B557A00B15016 /* libLLVMWindowsManifest.a in Frameworks */,
 				22379490209B557A00B15016 /* libLLVMAArch64Utils.a in Frameworks */,
@@ -399,7 +395,6 @@
 				223794B5209B557A00B15016 /* libLLVMOrcJIT.a in Frameworks */,
 				223794B6209B557A00B15016 /* libLLVMIRReader.a in Frameworks */,
 				223794B7209B557A00B15016 /* libLLVMGlobalISel.a in Frameworks */,
-				223794B8209B557A00B15016 /* libLLVMTableGen.a in Frameworks */,
 				223794B9209B557A00B15016 /* libLLVMDebugInfoMSF.a in Frameworks */,
 				223794BA209B557A00B15016 /* libLLVMAggressiveInstCombine.a in Frameworks */,
 				223794BB209B557A00B15016 /* libLLVMObjectYAML.a in Frameworks */,
@@ -410,7 +405,6 @@
 				223794C0209B557A00B15016 /* libLLVMSelectionDAG.a in Frameworks */,
 				223794C1209B557A00B15016 /* libLLVMAArch64AsmPrinter.a in Frameworks */,
 				223794C2209B557A00B15016 /* libLLVMRuntimeDyld.a in Frameworks */,
-				223794C3209B557A00B15016 /* libLLVMCFIVerify.a in Frameworks */,
 				223794C4209B557A00B15016 /* libLLVMCodeGen.a in Frameworks */,
 				223794C5209B557A00B15016 /* libLLVMBitReader.a in Frameworks */,
 				22379449209B554900B15016 /* libffi.a in Frameworks */,
