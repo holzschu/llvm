@@ -1,3 +1,9 @@
 [submodule "tools/clang"]
 	path = tools/clang
 	url = https://github.com/holzschu/clang.git
+[submodule "projects/libcxx"]
+	path = projects/libcxx
+	url = https://github.com/llvm-mirror/libcxx.git
+[submodule "projects/libcxxabi"]
+	path = projects/libcxxabi
+	url = https://github.com/llvm-mirror/libcxxabi.git
