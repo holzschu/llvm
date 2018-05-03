@@ -48,6 +48,15 @@
 		22379407209B2BCE00B15016 /* llvm-nm.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379406209B2BCE00B15016 /* llvm-nm.cpp.o */; };
 		22379408209B2BDE00B15016 /* libLLVM.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */; };
 		22379409209B2C0B00B15016 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
+		22379415209B4E3900B15016 /* dis.h in Headers */ = {isa = PBXBuildFile; fileRef = 22379413209B4E3900B15016 /* dis.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		2237941A209B4E6200B15016 /* llvm-dis.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379419209B4E6200B15016 /* llvm-dis.cpp.o */; };
+		2237941B209B4EA100B15016 /* libLLVM.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */; };
+		2237941C209B4EAE00B15016 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
+		2237941D209B4EC000B15016 /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505D0209A3CF700FDDFA9 /* ios_system.framework */; };
+		22379429209B4F2300B15016 /* link.h in Headers */ = {isa = PBXBuildFile; fileRef = 22379427209B4F2300B15016 /* link.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		2237942E209B4F9200B15016 /* llvm-link.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237942D209B4F9200B15016 /* llvm-link.cpp.o */; };
+		2237942F209B4FA300B15016 /* libLLVM.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */; };
+		22379430209B4FB600B15016 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
 		22C505C9209A3B8700FDDFA9 /* liblli.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505C8209A3B8700FDDFA9 /* liblli.a */; };
 		22C505CB209A3BF400FDDFA9 /* libLLVM.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */; };
 		22C505CD209A3CB500FDDFA9 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
@@ -64,7 +73,6 @@
 		22379398209B047C00B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2237939D209B048C00B15016 /* libopt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libopt.a; path = ../build_ios/lib/libopt.a; sourceTree = "<group>"; };
 		223793A3209B093500B15016 /* libclang.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclang.dylib; path = ../build_ios/lib/libclang.dylib; sourceTree = "<group>"; };
-		223793AA209B191D00B15016 /* clang-7.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "clang-7.h"; path = "clang-7/clang-7.h"; sourceTree = "<group>"; };
 		223793AC209B277E00B15016 /* libclang_tool.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclang_tool.a; path = ../build_ios/lib/libclang_tool.a; sourceTree = "<group>"; };
 		223793AF209B285D00B15016 /* libclangFrontendTool.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangFrontendTool.a; path = ../build_ios/lib/libclangFrontendTool.a; sourceTree = "<group>"; };
 		223793B0209B285D00B15016 /* libclangAST.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangAST.a; path = ../build_ios/lib/libclangAST.a; sourceTree = "<group>"; };
@@ -98,6 +106,14 @@
 		22379400209B2B8B00B15016 /* nm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = nm.h; sourceTree = "<group>"; };
 		22379401209B2B8B00B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		22379406209B2BCE00B15016 /* llvm-nm.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = "llvm-nm.cpp.o"; path = "../build_ios/tools/llvm-nm/CMakeFiles/llvm-nm.dir/llvm-nm.cpp.o"; sourceTree = "<group>"; };
+		22379411209B4E3900B15016 /* dis.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = dis.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		22379413209B4E3900B15016 /* dis.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dis.h; sourceTree = "<group>"; };
+		22379414209B4E3900B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		22379419209B4E6200B15016 /* llvm-dis.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = "llvm-dis.cpp.o"; path = "../build_ios/tools/llvm-dis/CMakeFiles/llvm-dis.dir/llvm-dis.cpp.o"; sourceTree = "<group>"; };
+		22379425209B4F2300B15016 /* link.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = link.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		22379427209B4F2300B15016 /* link.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = link.h; sourceTree = "<group>"; };
+		22379428209B4F2300B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2237942D209B4F9200B15016 /* llvm-link.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = "llvm-link.cpp.o"; path = "../build_ios/tools/llvm-link/CMakeFiles/llvm-link.dir/llvm-link.cpp.o"; sourceTree = "<group>"; };
 		22C505BC209A3B5800FDDFA9 /* lli.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = lli.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22C505C8209A3B8700FDDFA9 /* liblli.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblli.a; path = ../build_ios/lib/liblli.a; sourceTree = "<group>"; };
 		22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVM.dylib; path = ../build_ios/lib/libLLVM.dylib; sourceTree = "<group>"; };
@@ -165,6 +181,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2237940D209B4E3900B15016 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2237941A209B4E6200B15016 /* llvm-dis.cpp.o in Frameworks */,
+				2237941C209B4EAE00B15016 /* libc++.tbd in Frameworks */,
+				2237941B209B4EA100B15016 /* libLLVM.dylib in Frameworks */,
+				2237941D209B4EC000B15016 /* ios_system.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22379421209B4F2300B15016 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2237942E209B4F9200B15016 /* llvm-link.cpp.o in Frameworks */,
+				22379430209B4FB600B15016 /* libc++.tbd in Frameworks */,
+				2237942F209B4FA300B15016 /* libLLVM.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22C505B8209A3B5800FDDFA9 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -206,13 +243,32 @@
 			path = nm;
 			sourceTree = "<group>";
 		};
+		22379412209B4E3900B15016 /* dis */ = {
+			isa = PBXGroup;
+			children = (
+				22379413209B4E3900B15016 /* dis.h */,
+				22379414209B4E3900B15016 /* Info.plist */,
+			);
+			path = dis;
+			sourceTree = "<group>";
+		};
+		22379426209B4F2300B15016 /* link */ = {
+			isa = PBXGroup;
+			children = (
+				22379427209B4F2300B15016 /* link.h */,
+				22379428209B4F2300B15016 /* Info.plist */,
+			);
+			path = link;
+			sourceTree = "<group>";
+		};
 		22C505B2209A3B5800FDDFA9 = {
 			isa = PBXGroup;
 			children = (
-				223793AA209B191D00B15016 /* clang-7.h */,
 				22379387209B028600B15016 /* clang */,
 				22379396209B047C00B15016 /* opt */,
 				223793FF209B2B8B00B15016 /* nm */,
+				22379412209B4E3900B15016 /* dis */,
+				22379426209B4F2300B15016 /* link */,
 				22C505BD209A3B5800FDDFA9 /* Products */,
 				22C505C7209A3B8700FDDFA9 /* Frameworks */,
 			);
@@ -225,6 +281,8 @@
 				22379386209B028600B15016 /* clang.framework */,
 				22379395209B047C00B15016 /* opt.framework */,
 				223793FE209B2B8B00B15016 /* nm.framework */,
+				22379411209B4E3900B15016 /* dis.framework */,
+				22379425209B4F2300B15016 /* link.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -232,6 +290,8 @@
 		22C505C7209A3B8700FDDFA9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2237942D209B4F9200B15016 /* llvm-link.cpp.o */,
+				22379419209B4E6200B15016 /* llvm-dis.cpp.o */,
 				22379406209B2BCE00B15016 /* llvm-nm.cpp.o */,
 				223793F3209B29B200B15016 /* libclangBasic.a */,
 				223793F2209B29B200B15016 /* libclangLex.a */,
@@ -300,6 +360,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2237940E209B4E3900B15016 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22379415209B4E3900B15016 /* dis.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22379422209B4F2300B15016 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22379429209B4F2300B15016 /* link.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22C505B9209A3B5800FDDFA9 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -364,6 +440,42 @@
 			productReference = 223793FE209B2B8B00B15016 /* nm.framework */;
 			productType = "com.apple.product-type.framework";
 		};
+		22379410209B4E3900B15016 /* dis */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 22379416209B4E3900B15016 /* Build configuration list for PBXNativeTarget "dis" */;
+			buildPhases = (
+				2237940C209B4E3900B15016 /* Sources */,
+				2237940D209B4E3900B15016 /* Frameworks */,
+				2237940E209B4E3900B15016 /* Headers */,
+				2237940F209B4E3900B15016 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = dis;
+			productName = dis;
+			productReference = 22379411209B4E3900B15016 /* dis.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		22379424209B4F2300B15016 /* link */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2237942A209B4F2300B15016 /* Build configuration list for PBXNativeTarget "link" */;
+			buildPhases = (
+				22379420209B4F2300B15016 /* Sources */,
+				22379421209B4F2300B15016 /* Frameworks */,
+				22379422209B4F2300B15016 /* Headers */,
+				22379423209B4F2300B15016 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = link;
+			productName = link;
+			productReference = 22379425209B4F2300B15016 /* link.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		22C505BB209A3B5800FDDFA9 /* lli */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 22C505C4209A3B5800FDDFA9 /* Build configuration list for PBXNativeTarget "lli" */;
@@ -403,6 +515,14 @@
 						CreatedOnToolsVersion = 9.4;
 						ProvisioningStyle = Automatic;
 					};
+					22379410209B4E3900B15016 = {
+						CreatedOnToolsVersion = 9.4;
+						ProvisioningStyle = Automatic;
+					};
+					22379424209B4F2300B15016 = {
+						CreatedOnToolsVersion = 9.4;
+						ProvisioningStyle = Automatic;
+					};
 					22C505BB209A3B5800FDDFA9 = {
 						CreatedOnToolsVersion = 9.4;
 						ProvisioningStyle = Automatic;
@@ -425,6 +545,8 @@
 				22C505BB209A3B5800FDDFA9 /* lli */,
 				22379394209B047C00B15016 /* opt */,
 				223793FD209B2B8B00B15016 /* nm */,
+				22379410209B4E3900B15016 /* dis */,
+				22379424209B4F2300B15016 /* link */,
 			);
 		};
 /* End PBXProject section */
@@ -445,6 +567,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		223793FC209B2B8B00B15016 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2237940F209B4E3900B15016 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22379423209B4F2300B15016 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -476,6 +612,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		223793F9209B2B8B00B15016 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2237940C209B4E3900B15016 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22379420209B4F2300B15016 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -617,7 +767,7 @@
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = nm/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.nm";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -639,9 +789,95 @@
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = nm/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.nm";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		22379417209B4E3900B15016 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = dis/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.dis";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		22379418209B4E3900B15016 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = dis/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.dis";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		2237942B209B4F2300B15016 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = link/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.link";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		2237942C209B4F2300B15016 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = link/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.link";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -684,6 +920,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -752,6 +989,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_BITCODE = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -862,6 +1100,24 @@
 			buildConfigurations = (
 				22379404209B2B8B00B15016 /* Debug */,
 				22379405209B2B8B00B15016 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		22379416209B4E3900B15016 /* Build configuration list for PBXNativeTarget "dis" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				22379417209B4E3900B15016 /* Debug */,
+				22379418209B4E3900B15016 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2237942A209B4F2300B15016 /* Build configuration list for PBXNativeTarget "link" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2237942B209B4F2300B15016 /* Debug */,
+				2237942C209B4F2300B15016 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
