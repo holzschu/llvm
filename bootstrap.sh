@@ -4,8 +4,6 @@
 # Bail out on error
 set -e
 
-LIBCXX_SRC=http://releases.llvm.org/6.0.0/libcxx-6.0.0.src.tar.xz
-LIBCXXABI_SRC=http://releases.llvm.org/6.0.0/libcxxabi-6.0.0.src.tar.xz
 LIBFFI_SRC=https://www.mirrorservice.org/sites/sourceware.org/pub/libffi/libffi-3.2.1.tar.gz
 
 LLVM_SRCDIR=$(pwd)
@@ -31,29 +29,13 @@ esac
 done
 
 
-# get clang 
+# get clang, libcxx, libcxxabi
 git submodule update --init --recursive
 
 # Get libcxx and libcxxabi
-pushd projects
-if [ -d $LLVM_SRCDIR/dontBuild/libcxx ]; then
-	mv $LLVM_SRCDIR/dontBuild/libcxx .
-fi
-if [ ! -d libcxx ]; then
-  mkdir libcxx
-  curl $LIBCXX_SRC | tar xz -C libcxx --strip-components 1
-fi
-if [ -d $LLVM_SRCDIR/dontBuild/libcxxabi ]; then
-	mv $LLVM_SRCDIR/dontBuild/libcxxabi .
-fi
-if [ ! -d libcxxabi ]; then
-  mkdir libcxxabi
-  curl $LIBCXXABI_SRC | tar xz -C libcxxabi --strip-components 1
-fi
-popd
 # End downloading source
 
-# compile for OSX (about 3h, 8GB of disk space)
+# compile for OSX (about 1h, 1GB of disk space)
 if [ $CLEAN ]; then
   rm -rf $OSX_BUILDDIR
 fi
@@ -72,6 +54,7 @@ ninja
 popd
 
 # get libcxx and libcxxabi out of the way:
+echo "Moving libcxx / libcxxabi out of the way:"
 rm -rf dontBuild
 mkdir dontBuild
 mv $LLVM_SRCDIR/projects/libcxx dontBuild
@@ -96,6 +79,7 @@ popd
 
 # TODO: some combination of build variables might allow us to build these too. 
 # Right now, they fail. Maybe CFLAGS with: -D__need_size_t -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS 
+# Only -D__need_size_t needed, but breaks compilation of other elements.
 # Now, compile for iOS using the previous build:
 # About 1h, 12 GB of disk space
 if [ $CLEAN ]; then
@@ -120,12 +104,17 @@ cmake -G Ninja \
 -DCMAKE_C_COMPILER=${OSX_BUILDDIR}/bin/clang \
 -DCMAKE_LIBRARY_PATH=${OSX_BUILDDIR}/lib/ \
 -DCMAKE_INCLUDE_PATH=${OSX_BUILDDIR}/include/ \
--DCMAKE_C_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -I${OSX_BUILDDIR}/include/ -I${IOS_SYSTEM} -miphoneos-version-min=11" \
--DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11" \
+-DCMAKE_C_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -I${OSX_BUILDDIR}/include/ -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11  " \
+-DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -I${OSX_BUILDDIR}/include/ -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11 " \
 -DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system " \
 -DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system " \
 ..
 ninja
+# Move libcxx, libcxxabi back in place:
+pushd projects
+mv $LLVM_SRCDIR/dontBuild/libcxx .
+mv $LLVM_SRCDIR/dontBuild/libcxxabi .
+popd
 # Now build the static libraries for the executables:
 rm -f lib/liblli.a
 # Xcode gets confused if a static and a dynamic library share the same name:
@@ -134,6 +123,7 @@ rm -f lib/libopt.a
 ar -r lib/liblli.a tools/lli/CMakeFiles/lli.dir/lli.cpp.o tools/lli/CMakeFiles/lli.dir/OrcLazyJIT.cpp.o 
 ar -r lib/libclang_tool.a tools/clang/tools/driver/CMakeFiles/clang.dir/driver.cpp.o tools/clang/tools/driver/CMakeFiles/clang.dir/cc1_main.cpp.o tools/clang/tools/driver/CMakeFiles/clang.dir/cc1as_main.cpp.o tools/clang/tools/driver/CMakeFiles/clang.dir/cc1gen_reproducer_main.cpp.o  
 ar -r lib/libopt.a  tools/opt/CMakeFiles/opt.dir/AnalysisWrappers.cpp.o tools/opt/CMakeFiles/opt.dir/BreakpointPrinter.cpp.o tools/opt/CMakeFiles/opt.dir/Debugify.cpp.o tools/opt/CMakeFiles/opt.dir/GraphPrinters.cpp.o tools/opt/CMakeFiles/opt.dir/NewPMDriver.cpp.o tools/opt/CMakeFiles/opt.dir/PassPrinters.cpp.o tools/opt/CMakeFiles/opt.dir/PrintSCC.cpp.o tools/opt/CMakeFiles/opt.dir/opt.cpp.o
+# No need to make static libraries for these:
 # llvm-link: tools/llvm-link/CMakeFiles/llvm-link.dir/llvm-link.cpp.o
 # llvm-nm:  tools/llvm-nm/CMakeFiles/llvm-nm.dir/llvm-nm.cpp.o
 # llvm-dis:  tools/llvm-dis/CMakeFiles/llvm-dis.dir/llvm-dis.cpp.o
