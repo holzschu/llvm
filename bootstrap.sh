@@ -78,10 +78,12 @@ xcodebuild -project ios_system.xcodeproj -target ios_system -sdk iphoneos -confi
 popd
 
 # TODO: some combination of build variables might allow us to build these too. 
-# Right now, they fail. Maybe CFLAGS with: -D__need_size_t -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS 
-# Only -D__need_size_t needed, but breaks compilation of other elements.
+# Right now, they fail. 
+# Progress on libcxx with -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS  and -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=OFF
+# No progress on libcxxabi
 # Now, compile for iOS using the previous build:
 # About 1h, 12 GB of disk space
+# -DLLVM_ENABLE_THREADS=OFF \
 if [ $CLEAN ]; then
   rm -rf $IOS_BUILDDIR
 fi
@@ -94,8 +96,8 @@ cmake -G Ninja \
 -DLLVM_TARGET_ARCH=AArch64 \
 -DLLVM_TARGETS_TO_BUILD="AArch64" \
 -DLLVM_DEFAULT_TARGET_TRIPLE=arm64-apple-darwin17.5.0 \
--DLLVM_ENABLE_THREADS=OFF \
 -DLLVM_ENABLE_FFI=ON \
+-DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=OFF \
 -DFFI_LIBRARY_PATH=${FFI_SRCDIR}/build/Debug-iphoneos/libffi.a \
 -DFFI_INCLUDE_DIR=${FFI_SRCDIR}/build_iphoneos-arm64/include \
 -DLLVM_TABLEGEN=${OSX_BUILDDIR}/bin/llvm-tblgen \
@@ -104,8 +106,8 @@ cmake -G Ninja \
 -DCMAKE_C_COMPILER=${OSX_BUILDDIR}/bin/clang \
 -DCMAKE_LIBRARY_PATH=${OSX_BUILDDIR}/lib/ \
 -DCMAKE_INCLUDE_PATH=${OSX_BUILDDIR}/include/ \
--DCMAKE_C_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -I${OSX_BUILDDIR}/include/ -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11  " \
--DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -I${OSX_BUILDDIR}/include/ -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11 " \
+-DCMAKE_C_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0  -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS  -I${OSX_BUILDDIR}/include/ -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11  " \
+-DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0  -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS  -I${OSX_BUILDDIR}/include/ -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11 " \
 -DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system " \
 -DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system " \
 ..
