@@ -83,7 +83,7 @@ popd
 # No progress on libcxxabi
 # Now, compile for iOS using the previous build:
 # About 1h, 12 GB of disk space
-# -DLLVM_ENABLE_THREADS=OFF \
+# -DLLVM_ENABLE_THREADS=OFF is necessary to run commands multiple times
 if [ $CLEAN ]; then
   rm -rf $IOS_BUILDDIR
 fi
@@ -97,6 +97,7 @@ cmake -G Ninja \
 -DLLVM_TARGETS_TO_BUILD="AArch64" \
 -DLLVM_DEFAULT_TARGET_TRIPLE=arm64-apple-darwin17.5.0 \
 -DLLVM_ENABLE_FFI=ON \
+-DLLVM_ENABLE_THREADS=OFF \
 -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=OFF \
 -DFFI_LIBRARY_PATH=${FFI_SRCDIR}/build/Debug-iphoneos/libffi.a \
 -DFFI_INCLUDE_DIR=${FFI_SRCDIR}/build_iphoneos-arm64/include \
@@ -112,11 +113,6 @@ cmake -G Ninja \
 -DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system " \
 ..
 ninja
-# Move libcxx, libcxxabi back in place:
-pushd projects
-mv $LLVM_SRCDIR/dontBuild/libcxx .
-mv $LLVM_SRCDIR/dontBuild/libcxxabi .
-popd
 # Now build the static libraries for the executables:
 rm -f lib/liblli.a
 # Xcode gets confused if a static and a dynamic library share the same name:
@@ -129,6 +125,11 @@ ar -r lib/libopt.a  tools/opt/CMakeFiles/opt.dir/AnalysisWrappers.cpp.o tools/op
 # llvm-link: tools/llvm-link/CMakeFiles/llvm-link.dir/llvm-link.cpp.o
 # llvm-nm:  tools/llvm-nm/CMakeFiles/llvm-nm.dir/llvm-nm.cpp.o
 # llvm-dis:  tools/llvm-dis/CMakeFiles/llvm-dis.dir/llvm-dis.cpp.o
+popd
+# Move libcxx, libcxxabi back in place:
+pushd projects
+mv $LLVM_SRCDIR/dontBuild/libcxx .
+mv $LLVM_SRCDIR/dontBuild/libcxxabi .
 popd
 # And then build the frameworks from these static libraries:
 xcodebuild -project frameworks/frameworks.xcodeproj -alltargets -sdk iphoneos -configuration Debug -quiet
