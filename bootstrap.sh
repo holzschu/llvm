@@ -57,8 +57,8 @@ popd
 echo "Moving libcxx / libcxxabi out of the way:"
 rm -rf dontBuild
 mkdir dontBuild
-mv $LLVM_SRCDIR/projects/libcxx dontBuild
-mv $LLVM_SRCDIR/projects/libcxxabi dontBuild
+# mv $LLVM_SRCDIR/projects/libcxx dontBuild
+# mv $LLVM_SRCDIR/projects/libcxxabi dontBuild
 
 # get libffi:
 if [ ! -d $FFI_SRCDIR ]; then 
@@ -80,10 +80,11 @@ popd
 # TODO: some combination of build variables might allow us to build these too. 
 # Right now, they fail. 
 # Progress on libcxx with -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS  and -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=OFF
-# No progress on libcxxabi
+# libcxx: we need include_next to include /usr/include/stdlib.h 
 # Now, compile for iOS using the previous build:
 # About 1h, 12 GB of disk space
 # -DLLVM_ENABLE_THREADS=OFF is necessary to run commands multiple times
+# -I${OSX_BUILDDIR}/include/c++/v1/
 if [ $CLEAN ]; then
   rm -rf $IOS_BUILDDIR
 fi
@@ -108,9 +109,9 @@ cmake -G Ninja \
 -DCMAKE_LIBRARY_PATH=${OSX_BUILDDIR}/lib/ \
 -DCMAKE_INCLUDE_PATH=${OSX_BUILDDIR}/include/ \
 -DCMAKE_C_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0  -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS  -I${OSX_BUILDDIR}/include/ -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11  " \
--DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0  -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS  -I${OSX_BUILDDIR}/include/ -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11 " \
--DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system " \
--DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system " \
+-DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -stdlib=libc++ -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS  -I${OSX_BUILDDIR}/include/  -I${IOS_SYSTEM} -miphoneos-version-min=11 " \
+-DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system -lobjc " \
+-DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system -lobjc " \
 ..
 ninja
 # Now build the static libraries for the executables:
@@ -127,9 +128,9 @@ ar -r lib/libopt.a  tools/opt/CMakeFiles/opt.dir/AnalysisWrappers.cpp.o tools/op
 # llvm-dis:  tools/llvm-dis/CMakeFiles/llvm-dis.dir/llvm-dis.cpp.o
 popd
 # Move libcxx, libcxxabi back in place:
-pushd projects
-mv $LLVM_SRCDIR/dontBuild/libcxx .
-mv $LLVM_SRCDIR/dontBuild/libcxxabi .
-popd
+# pushd projects
+# mv $LLVM_SRCDIR/dontBuild/libcxx .
+# mv $LLVM_SRCDIR/dontBuild/libcxxabi .
+# popd
 # And then build the frameworks from these static libraries:
 xcodebuild -project frameworks/frameworks.xcodeproj -alltargets -sdk iphoneos -configuration Debug -quiet
