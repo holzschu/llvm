@@ -54,9 +54,9 @@ ninja
 popd
 
 # get libcxx and libcxxabi out of the way:
-echo "Moving libcxx / libcxxabi out of the way:"
-rm -rf dontBuild
-mkdir dontBuild
+# echo "Moving libcxx / libcxxabi out of the way:"
+# rm -rf dontBuild
+# mkdir dontBuild
 # mv $LLVM_SRCDIR/projects/libcxx dontBuild
 # mv $LLVM_SRCDIR/projects/libcxxabi dontBuild
 
@@ -85,6 +85,8 @@ popd
 # About 1h, 12 GB of disk space
 # -DLLVM_ENABLE_THREADS=OFF is necessary to run commands multiple times
 # -I${OSX_BUILDDIR}/include/c++/v1/
+# Try to reduce inlining (doesn't work at compile time)
+#  -D_LIBCPP_INLINE_VISIBILITY=\"\" -D_LIBCPP_ALWAYS_INLINE=\"\" -D_LIBCPP_EXTERN_TEMPLATE_INLINE_VISIBILITY=\"\"
 if [ $CLEAN ]; then
   rm -rf $IOS_BUILDDIR
 fi
@@ -109,7 +111,7 @@ cmake -G Ninja \
 -DCMAKE_LIBRARY_PATH=${OSX_BUILDDIR}/lib/ \
 -DCMAKE_INCLUDE_PATH=${OSX_BUILDDIR}/include/ \
 -DCMAKE_C_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0  -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS  -I${OSX_BUILDDIR}/include/ -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11  " \
--DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -stdlib=libc++ -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS  -I${OSX_BUILDDIR}/include/  -I${IOS_SYSTEM} -miphoneos-version-min=11 " \
+-DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -stdlib=libc++ -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS -I${OSX_BUILDDIR}/include/  -I${IOS_SYSTEM} -miphoneos-version-min=11 " \
 -DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system -lobjc " \
 -DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system -lobjc " \
 ..
@@ -134,3 +136,5 @@ popd
 # popd
 # And then build the frameworks from these static libraries:
 xcodebuild -project frameworks/frameworks.xcodeproj -alltargets -sdk iphoneos -configuration Debug -quiet
+cp build_ios/lib/libc++.1.0.dylib frameworks/libc++.1.dylib
+cp build_ios/lib/libc++abi.1.0.dylib frameworks/libc++abi.1.dylib
