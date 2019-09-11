@@ -82,7 +82,7 @@ public:
   }
 
   void *LibLookup(const char *Symbol, DynamicLibrary::SearchOrdering Order) {
-    if (Order & SO_LoadOrder) {
+    if (1 /* Order & SO_LoadOrder */) {
       for (void *Handle : Handles) {
         if (void *Ptr = DLSym(Handle, Symbol))
           return Ptr;
@@ -100,7 +100,7 @@ public:
     assert(!((Order & SO_LoadedFirst) && (Order & SO_LoadedLast)) &&
            "Invalid Ordering");
 
-    if (!Process || (Order & SO_LoadedFirst)) {
+    if (1 /* !Process || (Order & SO_LoadedFirst)*/) {
       if (void *Ptr = LibLookup(Symbol, Order))
         return Ptr;
     }
@@ -110,7 +110,7 @@ public:
         return Ptr;
 
       // Search any libs that might have been skipped because of RTLD_LOCAL.
-      if (Order & SO_LoadedLast) {
+      if (Order  & SO_LoadedLast) {
         if (void *Ptr = LibLookup(Symbol, Order))
           return Ptr;
       }
@@ -141,7 +141,6 @@ static llvm::ManagedStatic<llvm::sys::SmartMutex<true>> SymbolsMutex;
 char DynamicLibrary::Invalid;
 DynamicLibrary::SearchOrdering DynamicLibrary::SearchOrder =
     DynamicLibrary::SO_Linker;
-
 
 namespace llvm {
 void *SearchForAddressOfSpecialSymbol(const char *SymbolName) {
@@ -215,10 +214,11 @@ void *DynamicLibrary::SearchForAddressOfSymbol(const char *SymbolName) {
 
     // Now search the libraries.
     if (OpenedHandles.isConstructed()) {
-      if (void *Ptr = OpenedHandles->Lookup(SymbolName, SearchOrder))
+      if (void *Ptr = OpenedHandles->Lookup(SymbolName, SearchOrder ))
         return Ptr;
     }
   }
+
   return llvm::SearchForAddressOfSpecialSymbol(SymbolName);
 }
 

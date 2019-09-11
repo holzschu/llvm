@@ -59,6 +59,9 @@
 #ifdef __APPLE__
 #include <TargetConditionals.h>
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include <CoreFoundation/CoreFoundation.h>
+#include <objc/objc.h>
+#include <objc/message.h>
 #include "ios_error.h"
 #include <fcntl.h>
 #endif
@@ -150,6 +153,10 @@ static ffi_type *ffiTypeFor(Type *Ty) {
     default: break;
   }
   // TODO: Support other types such as StructTyID, ArrayTyID, OpaqueTyID, etc.
+  // So, for Swift, it's a StructTyID that breaks things. 
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+  fprintf(thread_stderr, "Type error: type= %d \n", Ty->getTypeID());
+#endif
   report_fatal_error("Type could not be mapped for use with libffi.");
   return NULL;
 }
@@ -198,6 +205,9 @@ static void *ffiValueFor(Type *Ty, const GenericValue &AV,
     default: break;
   }
   // TODO: Support other types such as StructTyID, ArrayTyID, OpaqueTyID, etc.
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+  fprintf(thread_stderr, "Type value error: type= %d \n", Ty->getTypeID());
+#endif
   report_fatal_error("Type value could not be mapped for use with libffi.");
   return NULL;
 }
@@ -474,7 +484,7 @@ static GenericValue lle_X_scanf(FunctionType *FT, ArrayRef<GenericValue> args) {
                   Args[5], Args[6], Args[7], Args[8], Args[9]));
 #else
   GV.IntVal = APInt(32, scanf( Args[0], Args[1], Args[2], Args[3], Args[4],
-                  Args[5], Args[6], Args[7], Args[8], Args[9]));
+                    Args[5], Args[6], Args[7], Args[8], Args[9]));
 #endif
   return GV;
 }
@@ -593,6 +603,32 @@ static GenericValue lle_X_errx(FunctionType *FT, ArrayRef<GenericValue> Args) {
 	return GenericValue();
 }
 
+// Objective-C:
+static GenericValue lle_X_objc_msgSend(FunctionType *FT,
+                                 ArrayRef<GenericValue> args) {
+	// Note: that method fails at runtime, with: 
+	// selector () for message 'stringByAppendingString:' does not match selector known to Objective C runtime ()-- abort
+	// Needs linking with -f Foundation -f CoreFoundation. HOW?
+
+  id self = (objc_object *)GVTOP(args[0]); 
+  SEL op = (SEL)GVTOP(args[1]);
+    
+  GenericValue GV;
+  if (args.size() <= 2) 
+	  GV.PointerVal = *(void **) objc_msgSend(self, op); 
+  else {
+	  objc_object *Args[10];
+	  for (unsigned i = 2; i < args.size(); ++i)
+		  Args[i - 2] = (objc_object *)GVTOP(args[i]);
+
+	  GenericValue GV;
+	  // Add -lobjc to bootstrap.sh before removal
+	  GV.PointerVal = *(void **) (id)objc_msgSend(self, op, Args[0], Args[1], Args[2], Args[3], Args[4],
+			  Args[5], Args[6], Args[7], Args[8], Args[9]);
+  }
+  return GV;
+}
+// 
 
 #endif //  (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 
@@ -601,6 +637,7 @@ void Interpreter::initializeExternalFunctions() {
   (*FuncNames)["lle_X_atexit"]       = lle_X_atexit;
   (*FuncNames)["lle_X_exit"]         = lle_X_exit;
   (*FuncNames)["lle_X_abort"]        = lle_X_abort;
+
   (*FuncNames)["lle_X_printf"]       = lle_X_printf;
   (*FuncNames)["lle_X_sprintf"]      = lle_X_sprintf;
   (*FuncNames)["lle_X_sscanf"]       = lle_X_sscanf;
@@ -616,5 +653,7 @@ void Interpreter::initializeExternalFunctions() {
   (*FuncNames)["lle_X_errx"]     = lle_X_errx;
   (*FuncNames)["lle_X_warn"]     = lle_X_warn;
   (*FuncNames)["lle_X_warnx"]     = lle_X_warnx;
+  // objective-C
+  (*FuncNames)["lle_X_objc_msgSend"]     = lle_X_objc_msgSend;
 #endif
 }

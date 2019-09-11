@@ -73,6 +73,12 @@
 #define exit(a) { llvm_shutdown(); ios_exit(a); }
 extern "C" {
 extern const char* llvm_ios_progname;
+// TODO: add these to the list of symbols, plus _dso_handle, plus __cxa_atexit
+// Q = interpreter only?
+// dso_handle *could* be the pointer for libstdc++?
+// raw_fd_ostream standard_out(STDOUT_FILENO, false, false);
+// raw_fd_ostream standard_err(STDERR_FILENO, false, true);
+
 void llvm_ios_exit(int a) { llvm_shutdown(); ios_exit(a); }
 void llvm_ios_abort(int a) { report_fatal_error("LLVM JIT compiled program raised SIGABRT"); }
 int llvm_ios_putchar(char c) { return fputc(c, thread_stdout); }
@@ -595,6 +601,10 @@ int main(int argc, char **argv, char * const *envp) {
 	  sys::DynamicLibrary::AddSymbol("warnx", (void*)&llvm_ios_warnx);
 	  sys::DynamicLibrary::AddSymbol("vwarn", (void*)&llvm_ios_vwarn);
 	  sys::DynamicLibrary::AddSymbol("vwarnx", (void*)&llvm_ios_vwarnx);
+	  // External C++ symbols (todo)
+	  sys::DynamicLibrary::AddSymbol("__dso_handle", NULL);
+	  // sys::DynamicLibrary::AddSymbol("_ZSt4cout", &standard_out);
+	  // sys::DynamicLibrary::AddSymbol("_ZSt4cerr", &standard_err);
 #endif  
 
   std::unique_ptr<ExecutionEngine> EE(builder.create());

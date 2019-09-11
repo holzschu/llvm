@@ -17,6 +17,17 @@
 #include "llvm/Support/MutexGuard.h"
 #include "llvm/Support/Threading.h"
 #include <cassert>
+
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include <llvm-c/Support.h>
+#include "ios_error.h"
+#undef write
+#undef exit
+#endif
+#endif
+
 using namespace llvm;
 
 static const ManagedStaticBase *StaticList = nullptr;

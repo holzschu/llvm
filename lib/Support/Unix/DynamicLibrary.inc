@@ -10,9 +10,6 @@
 // This file provides the UNIX specific implementation of DynamicLibrary.
 //
 //===----------------------------------------------------------------------===//
-// #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-// #include "llvm/Support/raw_ostream.h"
-// #endif
 #if defined(HAVE_DLFCN_H) && defined(HAVE_DLOPEN)
 #include <dlfcn.h>
 
@@ -28,8 +25,10 @@ DynamicLibrary::HandleSet::~HandleSet() {
 }
 
 void *DynamicLibrary::HandleSet::DLOpen(const char *File, std::string *Err) {
+  fprintf(stderr, "DLOpen %s \n", File); fflush(stderr);
   void *Handle = ::dlopen(File, RTLD_LAZY|RTLD_GLOBAL);
   if (!Handle) {
+	  fprintf(stderr, "Could not load library %s: %s \n", File, ::dlerror()); fflush(stderr);
     if (Err) *Err = ::dlerror();
     return &DynamicLibrary::Invalid;
   }
@@ -53,18 +52,18 @@ void *DynamicLibrary::HandleSet::DLSym(void *Handle, const char *Symbol) {
 	const char* symbolName = Symbol;
 	// Works, but why? deMangleName?
 	void* returnPtr = ::dlsym(Handle, symbolName);
-	// outs() << "Trying " << symbolName << ", got " << returnPtr << "\n"; outs().flush(); fflush(thread_stdout);  
+	fprintf(stderr, "Trying %s, got %x \n", symbolName, returnPtr);  fflush(stderr);  
 	if (returnPtr) return returnPtr;
 	if (symbolName[0] == '\x01') {
 		symbolName += 1;
 		returnPtr = ::dlsym(Handle, symbolName);
-		// outs() << "Trying " << symbolName << ", got " << returnPtr << "\n"; outs().flush(); fflush(thread_stdout);  
+		fprintf(stderr, "Trying %s, got %x \n", symbolName, returnPtr);  fflush(stderr);  
 	}
 	if (returnPtr) return returnPtr;
 	if (symbolName[0] == '_') {
 		symbolName += 1;
 		returnPtr = ::dlsym(Handle, symbolName);
-		// outs() << "Trying " << symbolName << ", got " << returnPtr << "\n"; outs().flush(); fflush(thread_stdout);  
+		fprintf(stderr, "Trying %s, got %x \n", symbolName, returnPtr);  fflush(stderr);  
 	}
 	return returnPtr;
 #else

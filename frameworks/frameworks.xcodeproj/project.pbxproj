@@ -128,6 +128,7 @@
 		22C505C9209A3B8700FDDFA9 /* liblli.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505C8209A3B8700FDDFA9 /* liblli.a */; };
 		22C505CD209A3CB500FDDFA9 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
 		22C505D1209A3CF700FDDFA9 /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505D0209A3CF700FDDFA9 /* ios_system.framework */; };
+		22F9512F20AF0677006268D5 /* libobjc.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C1D2E720A841E60093127F /* libobjc.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -252,6 +253,7 @@
 		223794C8209B566E00B15016 /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
 		223794CA209B568A00B15016 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		223794CC209B56AF00B15016 /* libcurses.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurses.tbd; path = usr/lib/libcurses.tbd; sourceTree = SDKROOT; };
+		22C1D2E720A841E60093127F /* libobjc.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libobjc.tbd; path = usr/lib/libobjc.tbd; sourceTree = SDKROOT; };
 		22C505BC209A3B5800FDDFA9 /* lli.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = lli.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22C505C8209A3B8700FDDFA9 /* liblli.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblli.a; path = ../build_ios/lib/liblli.a; sourceTree = "<group>"; };
 		22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVM.dylib; path = ../build_ios/lib/libLLVM.dylib; sourceTree = "<group>"; };
@@ -344,6 +346,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22F9512F20AF0677006268D5 /* libobjc.tbd in Frameworks */,
 				223794CD209B56AF00B15016 /* libcurses.tbd in Frameworks */,
 				223794CB209B568A00B15016 /* libz.tbd in Frameworks */,
 				223794C9209B566E00B15016 /* libxml2.tbd in Frameworks */,
@@ -512,6 +515,7 @@
 		22C505C7209A3B8700FDDFA9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				22C1D2E720A841E60093127F /* libobjc.tbd */,
 				223794CC209B56AF00B15016 /* libcurses.tbd */,
 				223794CA209B568A00B15016 /* libz.tbd */,
 				223794C8209B566E00B15016 /* libxml2.tbd */,

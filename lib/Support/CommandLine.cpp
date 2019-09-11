@@ -2221,7 +2221,9 @@ void cl::HideUnrelatedOptions(ArrayRef<const cl::OptionCategory *> Categories,
   }
 }
 
-void cl::ResetCommandLineParser() { GlobalParser->reset(); }
+void cl::ResetCommandLineParser() { 
+	GlobalParser->reset(); 
+}
 void cl::ResetAllOptionOccurrences() {
   GlobalParser->ResetAllOptionOccurrences();
 }
@@ -2231,3 +2233,4 @@ void LLVMParseCommandLineOptions(int argc, const char *const *argv,
   llvm::cl::ParseCommandLineOptions(argc, argv, StringRef(Overview),
                                     &llvm::nulls());
 }
+
