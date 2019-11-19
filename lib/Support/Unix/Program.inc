@@ -47,6 +47,7 @@
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 #undef HAVE_POSIX_SPAWN // function is present, but not working
 #include "ios_error.h"
+#undef getenv 
 #endif
 #endif
 

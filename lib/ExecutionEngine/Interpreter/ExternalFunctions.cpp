@@ -604,6 +604,7 @@ static GenericValue lle_X_errx(FunctionType *FT, ArrayRef<GenericValue> Args) {
 	return GenericValue();
 }
 
+#if 0
 // Objective-C:
 static GenericValue lle_X_objc_msgSend(FunctionType *FT,
                                  ArrayRef<GenericValue> args) {
@@ -630,6 +631,7 @@ static GenericValue lle_X_objc_msgSend(FunctionType *FT,
   return GV;
 }
 // 
+#endif 
 
 #endif //  (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 
