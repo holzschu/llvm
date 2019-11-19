@@ -1,9 +1,8 @@
 //===--- lib/CodeGen/DebugLocStream.h - DWARF debug_loc stream --*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -22,7 +21,7 @@ class DwarfCompileUnit;
 class MachineInstr;
 class MCSymbol;
 
-/// \brief Byte stream of .debug_loc entries.
+/// Byte stream of .debug_loc entries.
 ///
 /// Stores a unified stream of .debug_loc entries.  There's \a List for each
 /// variable/inlined-at pair, and an \a Entry for each \a DebugLocEntry.
@@ -39,23 +38,20 @@ public:
         : CU(CU), EntryOffset(EntryOffset) {}
   };
   struct Entry {
-    const MCSymbol *BeginSym;
-    const MCSymbol *EndSym;
+    const MCSymbol *Begin;
+    const MCSymbol *End;
     size_t ByteOffset;
     size_t CommentOffset;
-    Entry(const MCSymbol *BeginSym, const MCSymbol *EndSym, size_t ByteOffset,
-          size_t CommentOffset)
-        : BeginSym(BeginSym), EndSym(EndSym), ByteOffset(ByteOffset),
-          CommentOffset(CommentOffset) {}
   };
 
 private:
   SmallVector<List, 4> Lists;
   SmallVector<Entry, 32> Entries;
   SmallString<256> DWARFBytes;
-  SmallVector<std::string, 32> Comments;
+  std::vector<std::string> Comments;
+  MCSymbol *Sym;
 
-  /// \brief Only verbose textual output needs comments.  This will be set to
+  /// Only verbose textual output needs comments.  This will be set to
   /// true for that case, and false otherwise.
   bool GenerateComments;
 
@@ -64,12 +60,18 @@ public:
   size_t getNumLists() const { return Lists.size(); }
   const List &getList(size_t LI) const { return Lists[LI]; }
   ArrayRef<List> getLists() const { return Lists; }
+  MCSymbol *getSym() const {
+    return Sym;
+  }
+  void setSym(MCSymbol *Sym) {
+    this->Sym = Sym;
+  }
 
   class ListBuilder;
   class EntryBuilder;
 
 private:
-  /// \brief Start a new .debug_loc entry list.
+  /// Start a new .debug_loc entry list.
   ///
   /// Start a new .debug_loc entry list.  Return the new list's index so it can
   /// be retrieved later via \a getList().
@@ -89,12 +91,12 @@ private:
   /// \return false iff the list is deleted.
   bool finalizeList(AsmPrinter &Asm);
 
-  /// \brief Start a new .debug_loc entry.
+  /// Start a new .debug_loc entry.
   ///
   /// Until the next call, bytes added to the stream will be added to this
   /// entry.
   void startEntry(const MCSymbol *BeginSym, const MCSymbol *EndSym) {
-    Entries.emplace_back(BeginSym, EndSym, DWARFBytes.size(), Comments.size());
+    Entries.push_back({BeginSym, EndSym, DWARFBytes.size(), Comments.size()});
   }
 
   /// Finalize a .debug_loc entry, deleting if it's empty.

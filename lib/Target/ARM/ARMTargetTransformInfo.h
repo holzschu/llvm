@@ -1,9 +1,8 @@
 //===- ARMTargetTransformInfo.h - ARM specific TTI --------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -49,7 +48,7 @@ class ARMTTIImpl : public BasicTTIImplBase<ARMTTIImpl> {
   const ARMTargetLowering *TLI;
 
   // Currently the following features are excluded from InlineFeatureWhitelist.
-  // ModeThumb, FeatureNoARM, ModeSoftFloat, FeatureVFPOnlySP, FeatureD16
+  // ModeThumb, FeatureNoARM, ModeSoftFloat, FeatureFP64, FeatureD32
   // Depending on whether they are set or unset, different
   // instructions/registers are available. For example, inlining a callee with
   // -thumb-mode in a caller with +thumb-mode, may cause the assembler to
@@ -57,7 +56,7 @@ class ARMTTIImpl : public BasicTTIImplBase<ARMTTIImpl> {
   const FeatureBitset InlineFeatureWhitelist = {
       ARM::FeatureVFP2, ARM::FeatureVFP3, ARM::FeatureNEON, ARM::FeatureThumb2,
       ARM::FeatureFP16, ARM::FeatureVFP4, ARM::FeatureFPARMv8,
-      ARM::FeatureFullFP16, ARM::FeatureHWDivThumb,
+      ARM::FeatureFullFP16, ARM::FeatureFP16FML, ARM::FeatureHWDivThumb,
       ARM::FeatureHWDivARM, ARM::FeatureDB, ARM::FeatureV7Clrex,
       ARM::FeatureAcquireRelease, ARM::FeatureSlowFPBrcc,
       ARM::FeaturePerfMon, ARM::FeatureTrustZone, ARM::Feature8MSecExt,
@@ -94,11 +93,17 @@ public:
 
   bool enableInterleavedAccessVectorization() { return true; }
 
+  bool shouldFavorBackedgeIndex(const Loop *L) const {
+    if (L->getHeader()->getParent()->hasOptSize())
+      return false;
+    return ST->isMClass() && ST->isThumb2() && L->getNumBlocks() == 1;
+  }
+
   /// Floating-point computation using ARMv8 AArch32 Advanced
   /// SIMD instructions remains unchanged from ARMv7. Only AArch64 SIMD
-  /// is IEEE-754 compliant, but it's not covered in this target.
+  /// and Arm MVE are IEEE-754 compliant.
   bool isFPVectorizationPotentiallyUnsafe() {
-    return !ST->isTargetDarwin();
+    return !ST->isTargetDarwin() && !ST->hasMVEFloatOps();
   }
 
   /// \name Scalar TTI Implementations
@@ -117,10 +122,13 @@ public:
   /// \name Vector TTI Implementations
   /// @{
 
-  unsigned getNumberOfRegisters(bool Vector) {
+  unsigned getNumberOfRegisters(unsigned ClassID) const {
+    bool Vector = (ClassID == 1);
     if (Vector) {
       if (ST->hasNEON())
         return 16;
+      if (ST->hasMVEIntegerOps())
+        return 8;
       return 0;
     }
 
@@ -133,6 +141,8 @@ public:
     if (Vector) {
       if (ST->hasNEON())
         return 128;
+      if (ST->hasMVEIntegerOps())
+        return 128;
       return 0;
     }
 
@@ -143,7 +153,22 @@ public:
     return ST->getMaxInterleaveFactor();
   }
 
+  bool isLegalMaskedLoad(Type *DataTy, MaybeAlign Alignment);
+
+  bool isLegalMaskedStore(Type *DataTy, MaybeAlign Alignment) {
+    return isLegalMaskedLoad(DataTy, Alignment);
+  }
+
+  int getMemcpyCost(const Instruction *I);
+
   int getShuffleCost(TTI::ShuffleKind Kind, Type *Tp, int Index, Type *SubTp);
+
+  bool useReductionIntrinsic(unsigned Opcode, Type *Ty,
+                             TTI::ReductionFlags Flags) const;
+
+  bool shouldExpandReduction(const IntrinsicInst *II) const {
+    return false;
+  }
 
   int getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src,
                        const Instruction *I = nullptr);
@@ -153,7 +178,7 @@ public:
 
   int getVectorInstrCost(unsigned Opcode, Type *Val, unsigned Index);
 
-  int getAddressComputationCost(Type *Val, ScalarEvolution *SE, 
+  int getAddressComputationCost(Type *Val, ScalarEvolution *SE,
                                 const SCEV *Ptr);
 
   int getArithmeticInstrCost(
@@ -169,7 +194,15 @@ public:
 
   int getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy, unsigned Factor,
                                  ArrayRef<unsigned> Indices, unsigned Alignment,
-                                 unsigned AddressSpace);
+                                 unsigned AddressSpace,
+                                 bool UseMaskForCond = false,
+                                 bool UseMaskForGaps = false);
+
+  bool isLoweredToCall(const Function *F);
+  bool isHardwareLoopProfitable(Loop *L, ScalarEvolution &SE,
+                                AssumptionCache &AC,
+                                TargetLibraryInfo *LibInfo,
+                                HardwareLoopInfo &HWLoopInfo);
 
   void getUnrollingPreferences(Loop *L, ScalarEvolution &SE,
                                TTI::UnrollingPreferences &UP);

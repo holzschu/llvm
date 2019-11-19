@@ -1,9 +1,8 @@
 //===- llvm/ADT/MapVector.h - Map w/ deterministic value order --*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -157,14 +156,14 @@ public:
                             (Vector.begin() + Pos->second);
   }
 
-  /// \brief Remove the last element from the vector.
+  /// Remove the last element from the vector.
   void pop_back() {
     typename MapType::iterator Pos = Map.find(Vector.back().first);
     Map.erase(Pos);
     Vector.pop_back();
   }
 
-  /// \brief Remove the element given by Iterator.
+  /// Remove the element given by Iterator.
   ///
   /// Returns an iterator to the element following the one which was removed,
   /// which may be end().
@@ -187,7 +186,7 @@ public:
     return Next;
   }
 
-  /// \brief Remove all elements with the key value Key.
+  /// Remove all elements with the key value Key.
   ///
   /// Returns the number of elements removed.
   size_type erase(const KeyT &Key) {
@@ -198,7 +197,7 @@ public:
     return 1;
   }
 
-  /// \brief Remove the elements that match the predicate.
+  /// Remove the elements that match the predicate.
   ///
   /// Erase all elements that match \c Pred in a single pass.  Takes linear
   /// time.
@@ -227,7 +226,7 @@ void MapVector<KeyT, ValueT, MapType, VectorType>::remove_if(Function Pred) {
   Vector.erase(O, Vector.end());
 }
 
-/// \brief A MapVector that performs no allocations if smaller than a certain
+/// A MapVector that performs no allocations if smaller than a certain
 /// size.
 template <typename KeyT, typename ValueT, unsigned N>
 struct SmallMapVector

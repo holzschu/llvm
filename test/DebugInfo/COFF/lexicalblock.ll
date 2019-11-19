@@ -1,4 +1,4 @@
-; RUN: llc < %s -filetype=obj | llvm-readobj - -codeview | FileCheck %s
+; RUN: llc < %s -filetype=obj | llvm-readobj - --codeview | FileCheck %s
 ;
 ; -- lexicablock.cxx begin ----------------------------------------------------
 ; int main(int argc, char *argv[]) {
@@ -70,8 +70,12 @@
 ; CHECK:   Kind: S_BLOCK32 {{.*}}
 ; CHECK:   BlockName: 
 ; CHECK: }
-; CHECK: LocalSym {
-; CHECK:   VarName: localC
+; CHECK: ScopeEndSym {
+; CHECK:   Kind: S_END {{.*}}
+; CHECK: }
+; CHECK: BlockSym {
+; CHECK:   Kind: S_BLOCK32 {{.*}}
+; CHECK:   BlockName: 
 ; CHECK: }
 ; CHECK: ScopeEndSym {
 ; CHECK:   Kind: S_END {{.*}}
@@ -80,47 +84,11 @@
 ; CHECK:   Kind: S_BLOCK32 {{.*}}
 ; CHECK:   BlockName: 
 ; CHECK: }
-; CHECK: LocalSym {
-; CHECK:   VarName: localD
-; CHECK: }
-; CHECK: ScopeEndSym {
-; CHECK:   Kind: S_END {{.*}}
-; CHECK: }
-; CHECK: BlockSym {
-; CHECK:   Kind: S_BLOCK32 {{.*}}
-; CHECK:   BlockName: 
-; CHECK: }
-; CHECK: LocalSym {
-; CHECK:   VarName: localE
-; CHECK: }
 ; CHECK: ScopeEndSym {
 ; CHECK: }
 ; CHECK: BlockSym {
 ; CHECK:   Kind: S_BLOCK32 {{.*}}
 ; CHECK:   BlockName: 
-; CHECK: }
-; CHECK: LocalSym {
-; CHECK:   VarName: localF
-; CHECK: }
-; CHECK: BlockSym {
-; CHECK:   Kind: S_BLOCK32 {{.*}}
-; CHECK:   BlockName: 
-; CHECK: }
-; CHECK: LocalSym {
-; CHECK:   VarName: localG
-; CHECK: }
-; CHECK: ScopeEndSym {
-; CHECK:   Kind: S_END {{.*}}
-; CHECK: }
-; CHECK: ScopeEndSym {
-; CHECK:   Kind: S_END {{.*}}
-; CHECK: }
-; CHECK: BlockSym {
-; CHECK:   Kind: S_BLOCK32 {{.*}}
-; CHECK:   BlockName: 
-; CHECK: }
-; CHECK: LocalSym {
-; CHECK:   VarName: localH
 ; CHECK: }
 ; CHECK: ScopeEndSym {
 ; CHECK:   Kind: S_END {{.*}}
@@ -265,7 +233,7 @@ attributes #4 = { nounwind }
 !5 = !{i32 2, !"Debug Info Version", i32 3}
 !6 = !{i32 1, !"wchar_size", i32 2}
 !7 = !{!"clang version 7.0.0 (trunk)"}
-!8 = distinct !DISubprogram(name: "main", scope: !9, file: !9, line: 1, type: !10, isLocal: false, isDefinition: true, scopeLine: 1, flags: DIFlagPrototyped, isOptimized: true, unit: !0, variables: !16)
+!8 = distinct !DISubprogram(name: "main", scope: !9, file: !9, line: 1, type: !10, isLocal: false, isDefinition: true, scopeLine: 1, flags: DIFlagPrototyped, isOptimized: true, unit: !0, retainedNodes: !16)
 !9 = !DIFile(filename: "lexicalblock.cxx", directory: "C:/path/to/directory", checksumkind: CSK_MD5, checksum: "169b810b4f895de9a9e19d8d0634af5d")
 !10 = !DISubroutineType(types: !11)
 !11 = !{!12, !12, !13}

@@ -31,14 +31,14 @@
 
 ; CHECK: 0x00000043:   DW_TAG_variable
 ; CHECK-NEXT:                DW_AT_name	("ptr2")
-; CHECK-NEXT:                DW_AT_type	(0x00000054 "subroutine *")
+; CHECK-NEXT:                DW_AT_type	(0x00000054 "void()*")
 ; CHECK-NEXT:                DW_AT_external	(true)
 ; CHECK-NEXT:                DW_AT_decl_file	("/usr/local/google/home/sbc/dev/wasm/simple{{[/\\]}}test.c")
 ; CHECK-NEXT:                DW_AT_decl_line	(5)
 ; CHECK-NEXT:                DW_AT_location	(DW_OP_addr 0x4)
 
 ; CHECK: 0x00000054:   DW_TAG_pointer_type
-; CHECK-NEXT:                DW_AT_type	(0x00000059 "subroutine ")
+; CHECK-NEXT:                DW_AT_type	(0x00000059 "void()")
 
 ; CHECK: 0x00000059:   DW_TAG_subroutine_type
 ; CHECK-NEXT:                DW_AT_prototyped	(true)
@@ -54,7 +54,7 @@
 
 ; CHECK: 0x00000069:   NULL
 
-target triple = "wasm32-unknown-unknown-wasm"
+target triple = "wasm32-unknown-unknown"
 
 source_filename = "test.c"
 
@@ -91,5 +91,5 @@ attributes #0 = { noinline nounwind optnone "correctly-rounded-divide-sqrt-fp-ma
 !14 = !{i32 2, !"Debug Info Version", i32 3}
 !15 = !{i32 1, !"wchar_size", i32 4}
 !16 = !{!"clang version 6.0.0 (trunk 315924) (llvm/trunk 315960)"}
-!17 = distinct !DISubprogram(name: "f2", scope: !3, file: !3, line: 2, type: !9, isLocal: false, isDefinition: true, scopeLine: 2, flags: DIFlagPrototyped, isOptimized: false, unit: !2, variables: !4)
+!17 = distinct !DISubprogram(name: "f2", scope: !3, file: !3, line: 2, type: !9, isLocal: false, isDefinition: true, scopeLine: 2, flags: DIFlagPrototyped, isOptimized: false, unit: !2, retainedNodes: !4)
 !18 = !DILocation(line: 2, column: 16, scope: !17)

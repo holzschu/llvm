@@ -7,6 +7,7 @@ include(CheckIncludeFile)
 include(CheckLibraryExists)
 include(CheckSymbolExists)
 include(CheckFunctionExists)
+include(CheckStructHasMember)
 include(CheckCCompilerFlag)
 
 include(CheckCompilerVersion)
@@ -22,12 +23,24 @@ if( CMAKE_SYSTEM MATCHES "FreeBSD-9.2-RELEASE" AND
   list(APPEND CMAKE_REQUIRED_LIBRARIES "cxxrt")
 endif()
 
+# Do checks with _XOPEN_SOURCE and large-file API on AIX, because we will build
+# with those too.
+if (UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "AIX")
+          list(APPEND CMAKE_REQUIRED_DEFINITIONS "-D_XOPEN_SOURCE=700")
+          list(APPEND CMAKE_REQUIRED_DEFINITIONS "-D_LARGE_FILE_API")
+endif()
+
+# Do checks with _FILE_OFFSET_BITS=64 on Solaris, because we will build
+# with those too.
+if (UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
+          list(APPEND CMAKE_REQUIRED_DEFINITIONS "-D_FILE_OFFSET_BITS=64")
+endif()
+
 # include checks
 check_include_file(dlfcn.h HAVE_DLFCN_H)
 check_include_file(errno.h HAVE_ERRNO_H)
 check_include_file(fcntl.h HAVE_FCNTL_H)
 check_include_file(link.h HAVE_LINK_H)
-check_include_file(malloc.h HAVE_MALLOC_H)
 check_include_file(malloc/malloc.h HAVE_MALLOC_MALLOC_H)
 if( NOT PURE_WINDOWS )
   check_include_file(pthread.h HAVE_PTHREAD_H)
@@ -128,7 +141,7 @@ if(NOT LLVM_USE_SANITIZER MATCHES "Memory.*")
     endif()
     if(LLVM_ENABLE_TERMINFO)
       set(HAVE_TERMINFO 0)
-      foreach(library tinfo terminfo curses ncurses ncursesw)
+      foreach(library terminfo tinfo curses ncurses ncursesw)
         string(TOUPPER ${library} library_suffix)
         check_library_exists(${library} setupterm "" HAVE_TERMINFO_${library_suffix})
         if(HAVE_TERMINFO_${library_suffix})
@@ -148,7 +161,11 @@ if(NOT LLVM_USE_SANITIZER MATCHES "Memory.*")
       find_package(LibXml2)
       if (LIBXML2_FOUND)
         set(LLVM_LIBXML2_ENABLED 1)
-        include_directories(${LIBXML2_INCLUDE_DIR})
+        if ((CMAKE_OSX_SYSROOT) AND (EXISTS ${CMAKE_OSX_SYSROOT}/${LIBXML2_INCLUDE_DIR}))
+          include_directories(${CMAKE_OSX_SYSROOT}/${LIBXML2_INCLUDE_DIR})
+        else()
+          include_directories(${LIBXML2_INCLUDE_DIR})
+        endif()
         set(LIBXML2_LIBS "xml2")
       endif()
     endif()
@@ -203,7 +220,6 @@ check_symbol_exists(malloc_zone_statistics malloc/malloc.h
 check_symbol_exists(getrlimit "sys/types.h;sys/time.h;sys/resource.h" HAVE_GETRLIMIT)
 check_symbol_exists(posix_spawn spawn.h HAVE_POSIX_SPAWN)
 check_symbol_exists(pread unistd.h HAVE_PREAD)
-check_symbol_exists(realpath stdlib.h HAVE_REALPATH)
 check_symbol_exists(sbrk unistd.h HAVE_SBRK)
 check_symbol_exists(strerror string.h HAVE_STRERROR)
 check_symbol_exists(strerror_r string.h HAVE_STRERROR_R)
@@ -243,6 +259,11 @@ if( HAVE_DLFCN_H )
     list(REMOVE_ITEM CMAKE_REQUIRED_LIBRARIES dl)
   endif()
 endif()
+
+CHECK_STRUCT_HAS_MEMBER("struct stat" st_mtimespec.tv_nsec
+    "sys/types.h;sys/stat.h" HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC)
+CHECK_STRUCT_HAS_MEMBER("struct stat" st_mtim.tv_nsec
+    "sys/types.h;sys/stat.h" HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC)
 
 check_symbol_exists(__GLIBC__ stdio.h LLVM_USING_GLIBC)
 if( LLVM_USING_GLIBC )
@@ -315,6 +336,15 @@ else()
   unset(HAVE_FFI_CALL CACHE)
 endif( LLVM_ENABLE_FFI )
 
+# Whether we can use std::is_trivially_copyable to verify llvm::is_trivially_copyable.
+CHECK_CXX_SOURCE_COMPILES("
+#include <type_traits>
+struct T { int val; };
+static_assert(std::is_trivially_copyable<T>::value, \"ok\");
+int main() { return 0;}
+" HAVE_STD_IS_TRIVIALLY_COPYABLE)
+
+
 # Define LLVM_HAS_ATOMICS if gcc or MSVC atomic builtins are supported.
 include(CheckAtomic)
 
@@ -376,12 +406,16 @@ elseif (LLVM_NATIVE_ARCH MATCHES "sparc")
   set(LLVM_NATIVE_ARCH Sparc)
 elseif (LLVM_NATIVE_ARCH MATCHES "powerpc")
   set(LLVM_NATIVE_ARCH PowerPC)
+elseif (LLVM_NATIVE_ARCH MATCHES "ppc64le")
+  set(LLVM_NATIVE_ARCH PowerPC)
 elseif (LLVM_NATIVE_ARCH MATCHES "aarch64")
   set(LLVM_NATIVE_ARCH AArch64)
 elseif (LLVM_NATIVE_ARCH MATCHES "arm64")
   set(LLVM_NATIVE_ARCH AArch64)
 elseif (LLVM_NATIVE_ARCH MATCHES "arm")
   set(LLVM_NATIVE_ARCH ARM)
+elseif (LLVM_NATIVE_ARCH MATCHES "avr")
+  set(LLVM_NATIVE_ARCH AVR)
 elseif (LLVM_NATIVE_ARCH MATCHES "mips")
   set(LLVM_NATIVE_ARCH Mips)
 elseif (LLVM_NATIVE_ARCH MATCHES "xcore")
@@ -440,7 +474,8 @@ if( MSVC )
   set(strdup "_strdup")
 
   # See if the DIA SDK is available and usable.
-  set(MSVC_DIA_SDK_DIR "$ENV{VSINSTALLDIR}DIA SDK")
+  set(MSVC_DIA_SDK_DIR "$ENV{VSINSTALLDIR}DIA SDK" CACHE PATH
+      "Path to the DIA SDK")
 
   # Due to a bug in MSVC 2013's installation software, it is possible
   # for MSVC 2013 to write the DIA SDK into the Visual Studio 2012
@@ -511,10 +546,10 @@ else()
 endif()
 
 set(LLVM_BINDINGS "")
-if(WIN32)
+find_program(GO_EXECUTABLE NAMES go DOC "go executable")
+if(WIN32 OR NOT LLVM_ENABLE_BINDINGS)
   message(STATUS "Go bindings disabled.")
 else()
-  find_program(GO_EXECUTABLE NAMES go DOC "go executable")
   if(GO_EXECUTABLE STREQUAL "GO_EXECUTABLE-NOTFOUND")
     message(STATUS "Go bindings disabled.")
   else()
@@ -532,6 +567,20 @@ endif()
 find_program(GOLD_EXECUTABLE NAMES ${LLVM_DEFAULT_TARGET_TRIPLE}-ld.gold ld.gold ${LLVM_DEFAULT_TARGET_TRIPLE}-ld ld DOC "The gold linker")
 set(LLVM_BINUTILS_INCDIR "" CACHE PATH
 	"PATH to binutils/include containing plugin-api.h for gold plugin.")
+
+if(CMAKE_GENERATOR STREQUAL "Ninja")
+  execute_process(COMMAND ${CMAKE_MAKE_PROGRAM} --version
+    OUTPUT_VARIABLE NINJA_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(NINJA_VERSION ${NINJA_VERSION} CACHE STRING "Ninja version number" FORCE)
+  message(STATUS "Ninja version: ${NINJA_VERSION}")
+endif()
+
+if(CMAKE_GENERATOR STREQUAL "Ninja" AND
+    NOT "${NINJA_VERSION}" VERSION_LESS "1.9.0" AND
+    CMAKE_HOST_APPLE AND CMAKE_HOST_SYSTEM_VERSION VERSION_GREATER "15.6.0")
+  set(LLVM_TOUCH_STATIC_LIBRARIES ON)
+endif()
 
 if(CMAKE_HOST_APPLE AND APPLE)
   if(NOT CMAKE_XCRUN)
@@ -554,7 +603,7 @@ endif()
 # Keep the version requirements in sync with bindings/ocaml/README.txt.
 include(FindOCaml)
 include(AddOCaml)
-if(WIN32)
+if(WIN32 OR NOT LLVM_ENABLE_BINDINGS)
   message(STATUS "OCaml bindings disabled.")
 else()
   find_package(OCaml)
@@ -585,16 +634,19 @@ function(find_python_module module)
   string(REPLACE "." "_" module_name ${module})
   string(TOUPPER ${module_name} module_upper)
   set(FOUND_VAR PY_${module_upper}_FOUND)
+  if (DEFINED ${FOUND_VAR})
+    return()
+  endif()
 
   execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c" "import ${module}"
     RESULT_VARIABLE status
     ERROR_QUIET)
 
   if(status)
-    set(${FOUND_VAR} 0 PARENT_SCOPE)
+    set(${FOUND_VAR} OFF CACHE BOOL "Failed to find python module '${module}'")
     message(STATUS "Could NOT find Python module ${module}")
   else()
-    set(${FOUND_VAR} 1 PARENT_SCOPE)
+  set(${FOUND_VAR} ON CACHE BOOL "Found python module '${module}'")
     message(STATUS "Found Python module ${module}")
   endif()
 endfunction()

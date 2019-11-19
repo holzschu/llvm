@@ -3,6 +3,10 @@
 ; RUN: FileCheck %s < %t.s --check-prefix=ASM
 ; RUN: llvm-dwarfdump %t.o | FileCheck %s --check-prefix=DWARF
 
+; XFAIL: *
+; See PR41992, the third and final dbg.value disappears after
+; LiveDebugVariables.
+
 ; In this example, the variable lives mostly in memory, but at the point of the
 ; assignment to global, it lives nowhere, and is described as the constant
 ; value 1.
@@ -46,13 +50,12 @@ entry:
 }
 
 ; ASM-LABEL: f: # @f
-; ASM: movl    %ecx, [[OFF_X:[0-9]+]](%rsp)
-; ASM: #DEBUG_VALUE: f:x <- [DW_OP_plus_uconst [[OFF_X]]] [$rsp+0]
+; ASM: #DEBUG_VALUE: f:x <- [DW_OP_plus_uconst [[OFF_X:[0-9]+]], DW_OP_deref] $rsp
+; ASM: movl    %ecx, [[OFF_X]](%rsp)
 ; ASM: callq   escape
 ; ASM: #DEBUG_VALUE: f:x <- 1
 ; ASM: movl    $1, global(%rip)
-; FIXME: Needs a fix to LiveDebugVariables
-; ASMX: #DEBUG_VALUE: f:x <- [DW_OP_plus_uconst [[OFF_X]]] [$rsp+0]
+; ASM: #DEBUG_VALUE: f:x <- [DW_OP_plus_uconst [[OFF_X]], DW_OP_deref] $rsp
 ; ASM: movl    $2, [[OFF_X]](%rsp)
 ; ASM: callq   escape
 ; ASM: retq
@@ -79,7 +82,7 @@ attributes #2 = { nounwind readnone speculatable }
 !5 = !{i32 1, !"wchar_size", i32 2}
 !6 = !{i32 7, !"PIC Level", i32 2}
 !7 = !{!"clang version 6.0.0 "}
-!8 = distinct !DISubprogram(name: "f", scope: !1, file: !1, line: 3, type: !9, isLocal: false, isDefinition: true, scopeLine: 3, flags: DIFlagPrototyped, isOptimized: true, unit: !0, variables: !12)
+!8 = distinct !DISubprogram(name: "f", scope: !1, file: !1, line: 3, type: !9, isLocal: false, isDefinition: true, scopeLine: 3, flags: DIFlagPrototyped, isOptimized: true, unit: !0, retainedNodes: !12)
 !9 = !DISubroutineType(types: !10)
 !10 = !{null, !11}
 !11 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)

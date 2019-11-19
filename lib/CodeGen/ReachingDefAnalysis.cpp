@@ -1,15 +1,15 @@
 //===---- ReachingDefAnalysis.cpp - Reaching Def Analysis ---*- C++ -*-----===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #include "llvm/CodeGen/ReachingDefAnalysis.h"
 #include "llvm/CodeGen/TargetRegisterInfo.h"
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
+#include "llvm/Support/Debug.h"
 
 using namespace llvm;
 
@@ -47,7 +47,7 @@ void ReachingDefAnalysis::enterBasicBlock(
         MBBReachingDefs[MBBNumber][*Unit].push_back(LiveRegs[*Unit]);
       }
     }
-    DEBUG(dbgs() << printMBBReference(*MBB) << ": entry\n");
+    LLVM_DEBUG(dbgs() << printMBBReference(*MBB) << ": entry\n");
     return;
   }
 
@@ -69,9 +69,9 @@ void ReachingDefAnalysis::enterBasicBlock(
     }
   }
 
-  DEBUG(dbgs() << printMBBReference(*MBB)
-               << (!TraversedMBB.IsDone ? ": incomplete\n"
-                                        : ": all preds known\n"));
+  LLVM_DEBUG(dbgs() << printMBBReference(*MBB)
+                    << (!TraversedMBB.IsDone ? ": incomplete\n"
+                                             : ": all preds known\n"));
 }
 
 void ReachingDefAnalysis::leaveBasicBlock(
@@ -93,7 +93,7 @@ void ReachingDefAnalysis::leaveBasicBlock(
 }
 
 void ReachingDefAnalysis::processDefs(MachineInstr *MI) {
-  assert(!MI->isDebugValue() && "Won't process debug values");
+  assert(!MI->isDebugInstr() && "Won't process debug instructions");
 
   unsigned MBBNumber = MI->getParent()->getNumber();
   assert(MBBNumber < MBBReachingDefs.size() &&
@@ -109,8 +109,8 @@ void ReachingDefAnalysis::processDefs(MachineInstr *MI) {
       continue;
     for (MCRegUnitIterator Unit(MO.getReg(), TRI); Unit.isValid(); ++Unit) {
       // This instruction explicitly defines the current reg unit.
-      DEBUG(dbgs() << printReg(MO.getReg(), TRI) << ":\t" << CurInstr << '\t'
-                   << *MI);
+      LLVM_DEBUG(dbgs() << printReg(MO.getReg(), TRI) << ":\t" << CurInstr
+                        << '\t' << *MI);
 
       // How many instructions since this reg unit was last written?
       LiveRegs[*Unit] = CurInstr;
@@ -125,7 +125,7 @@ void ReachingDefAnalysis::processBasicBlock(
     const LoopTraversal::TraversedMBBInfo &TraversedMBB) {
   enterBasicBlock(TraversedMBB);
   for (MachineInstr &MI : *TraversedMBB.MBB) {
-    if (!MI.isDebugValue())
+    if (!MI.isDebugInstr())
       processDefs(&MI);
   }
   leaveBasicBlock(TraversedMBB);
@@ -142,7 +142,7 @@ bool ReachingDefAnalysis::runOnMachineFunction(MachineFunction &mf) {
 
   MBBReachingDefs.resize(mf.getNumBlockIDs());
 
-  DEBUG(dbgs() << "********** REACHING DEFINITION ANALYSIS **********\n");
+  LLVM_DEBUG(dbgs() << "********** REACHING DEFINITION ANALYSIS **********\n");
 
   // Initialize the MBBOutRegsInfos
   MBBOutRegsInfos.resize(mf.getNumBlockIDs());
@@ -157,7 +157,7 @@ bool ReachingDefAnalysis::runOnMachineFunction(MachineFunction &mf) {
   // Sorting all reaching defs found for a ceartin reg unit in a given BB.
   for (MBBDefsInfo &MBBDefs : MBBReachingDefs) {
     for (MBBRegUnitDefs &RegUnitDefs : MBBDefs)
-      llvm::sort(RegUnitDefs.begin(), RegUnitDefs.end());
+      llvm::sort(RegUnitDefs);
   }
 
   return false;

@@ -1,19 +1,20 @@
 //===- unittests/Passes/Plugins/PluginsTest.cpp ---------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Analysis/CGSCCPassManager.h"
+#include "llvm/Config/config.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Passes/PassPlugin.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Testing/Support/Error.h"
 #include "llvm/Transforms/Scalar/LoopPassManager.h"
 #include "gtest/gtest.h"
 
@@ -32,7 +33,7 @@ static std::string LibPath(const std::string Name = "TestPlugin") {
   void *Ptr = (void *)(intptr_t)anchor;
   std::string Path = sys::fs::getMainExecutable(Argv0, Ptr);
   llvm::SmallString<256> Buf{sys::path::parent_path(Path)};
-  sys::path::append(Buf, (Name + ".so").c_str());
+  sys::path::append(Buf, (Name + LTDL_SHLIB_EXT).c_str());
   return Buf.str();
 }
 
@@ -53,8 +54,8 @@ TEST(PluginsTests, LoadPlugin) {
 
   PassBuilder PB;
   ModulePassManager PM;
-  ASSERT_FALSE(PB.parsePassPipeline(PM, "plugin-pass"));
+  ASSERT_THAT_ERROR(PB.parsePassPipeline(PM, "plugin-pass"), Failed());
 
   Plugin->registerPassBuilderCallbacks(PB);
-  ASSERT_TRUE(PB.parsePassPipeline(PM, "plugin-pass"));
+  ASSERT_THAT_ERROR(PB.parsePassPipeline(PM, "plugin-pass"), Succeeded());
 }

@@ -1,9 +1,8 @@
 //===---- MachineCombiner.cpp - Instcombining on SSA form machine code ----===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -138,7 +137,7 @@ void MachineCombiner::getAnalysisUsage(AnalysisUsage &AU) const {
 MachineInstr *MachineCombiner::getOperandDef(const MachineOperand &MO) {
   MachineInstr *DefInstr = nullptr;
   // We need a virtual register definition.
-  if (MO.isReg() && TargetRegisterInfo::isVirtualRegister(MO.getReg()))
+  if (MO.isReg() && Register::isVirtualRegister(MO.getReg()))
     DefInstr = MRI->getUniqueVRegDef(MO.getReg());
   // PHI's have no depth etc.
   if (DefInstr && DefInstr->isPHI())
@@ -169,7 +168,7 @@ MachineCombiner::getDepth(SmallVectorImpl<MachineInstr *> &InsInstrs,
     unsigned IDepth = 0;
     for (const MachineOperand &MO : InstrPtr->operands()) {
       // Check for virtual register operand.
-      if (!(MO.isReg() && TargetRegisterInfo::isVirtualRegister(MO.getReg())))
+      if (!(MO.isReg() && Register::isVirtualRegister(MO.getReg())))
         continue;
       if (!MO.isUse())
         continue;
@@ -224,13 +223,15 @@ unsigned MachineCombiner::getLatency(MachineInstr *Root, MachineInstr *NewRoot,
 
   for (const MachineOperand &MO : NewRoot->operands()) {
     // Check for virtual register operand.
-    if (!(MO.isReg() && TargetRegisterInfo::isVirtualRegister(MO.getReg())))
+    if (!(MO.isReg() && Register::isVirtualRegister(MO.getReg())))
       continue;
     if (!MO.isDef())
       continue;
     // Get the first instruction that uses MO
     MachineRegisterInfo::reg_iterator RI = MRI->reg_begin(MO.getReg());
     RI++;
+    if (RI == MRI->reg_end())
+      continue;
     MachineInstr *UseMO = RI->getParent();
     unsigned LatencyOp = 0;
     if (UseMO && BlockTrace.isDepInTrace(*Root, *UseMO)) {
@@ -308,8 +309,8 @@ bool MachineCombiner::improvesCriticalPathLen(
   unsigned NewRootDepth = getDepth(InsInstrs, InstrIdxForVirtReg, BlockTrace);
   unsigned RootDepth = BlockTrace.getInstrCycles(*Root).Depth;
 
-  DEBUG(dbgs() << "  Dependence data for " << *Root << "\tNewRootDepth: "
-               << NewRootDepth << "\tRootDepth: " << RootDepth);
+  LLVM_DEBUG(dbgs() << "  Dependence data for " << *Root << "\tNewRootDepth: "
+                    << NewRootDepth << "\tRootDepth: " << RootDepth);
 
   // For a transform such as reassociation, the cost equation is
   // conservatively calculated so that we must improve the depth (data
@@ -317,9 +318,10 @@ bool MachineCombiner::improvesCriticalPathLen(
   // Being conservative also protects against inaccuracies in the underlying
   // machine trace metrics and CPU models.
   if (getCombinerObjective(Pattern) == CombinerObjective::MustReduceDepth) {
-    DEBUG(dbgs() << "\tIt MustReduceDepth ");
-    DEBUG(NewRootDepth < RootDepth ? dbgs() << "\t  and it does it\n"
-                                   : dbgs() << "\t  but it does NOT do it\n");
+    LLVM_DEBUG(dbgs() << "\tIt MustReduceDepth ");
+    LLVM_DEBUG(NewRootDepth < RootDepth
+                   ? dbgs() << "\t  and it does it\n"
+                   : dbgs() << "\t  but it does NOT do it\n");
     return NewRootDepth < RootDepth;
   }
 
@@ -336,17 +338,17 @@ bool MachineCombiner::improvesCriticalPathLen(
   unsigned NewCycleCount = NewRootDepth + NewRootLatency;
   unsigned OldCycleCount =
       RootDepth + RootLatency + (SlackIsAccurate ? RootSlack : 0);
-  DEBUG(dbgs() << "\n\tNewRootLatency: " << NewRootLatency << "\tRootLatency: "
-               << RootLatency << "\n\tRootSlack: " << RootSlack
-               << " SlackIsAccurate=" << SlackIsAccurate
-               << "\n\tNewRootDepth + NewRootLatency = " << NewCycleCount
-               << "\n\tRootDepth + RootLatency + RootSlack = "
-               << OldCycleCount;);
-  DEBUG(NewCycleCount <= OldCycleCount
-            ? dbgs() << "\n\t  It IMPROVES PathLen because"
-            : dbgs() << "\n\t  It DOES NOT improve PathLen because");
-  DEBUG(dbgs() << "\n\t\tNewCycleCount = " << NewCycleCount
-               << ", OldCycleCount = " << OldCycleCount << "\n");
+  LLVM_DEBUG(dbgs() << "\n\tNewRootLatency: " << NewRootLatency
+                    << "\tRootLatency: " << RootLatency << "\n\tRootSlack: "
+                    << RootSlack << " SlackIsAccurate=" << SlackIsAccurate
+                    << "\n\tNewRootDepth + NewRootLatency = " << NewCycleCount
+                    << "\n\tRootDepth + RootLatency + RootSlack = "
+                    << OldCycleCount;);
+  LLVM_DEBUG(NewCycleCount <= OldCycleCount
+                 ? dbgs() << "\n\t  It IMPROVES PathLen because"
+                 : dbgs() << "\n\t  It DOES NOT improve PathLen because");
+  LLVM_DEBUG(dbgs() << "\n\t\tNewCycleCount = " << NewCycleCount
+                    << ", OldCycleCount = " << OldCycleCount << "\n");
 
   return NewCycleCount <= OldCycleCount;
 }
@@ -392,10 +394,10 @@ bool MachineCombiner::preservesResourceLen(
   unsigned ResLenAfterCombine =
       BlockTrace.getResourceLength(MBBarr, MSCInsArr, MSCDelArr);
 
-  DEBUG(dbgs() << "\t\tResource length before replacement: "
-               << ResLenBeforeCombine << " and after: " << ResLenAfterCombine
-               << "\n";);
-  DEBUG(
+  LLVM_DEBUG(dbgs() << "\t\tResource length before replacement: "
+                    << ResLenBeforeCombine
+                    << " and after: " << ResLenAfterCombine << "\n";);
+  LLVM_DEBUG(
       ResLenAfterCombine <= ResLenBeforeCombine
           ? dbgs() << "\t\t  As result it IMPROVES/PRESERVES Resource Length\n"
           : dbgs() << "\t\t  As result it DOES NOT improve/preserve Resource "
@@ -492,7 +494,7 @@ void MachineCombiner::verifyPatternOrder(
 /// sequence is shorter.
 bool MachineCombiner::combineInstructions(MachineBasicBlock *MBB) {
   bool Changed = false;
-  DEBUG(dbgs() << "Combining MBB " << MBB->getName() << "\n");
+  LLVM_DEBUG(dbgs() << "Combining MBB " << MBB->getName() << "\n");
 
   bool IncrementalUpdate = false;
   auto BlockIter = MBB->begin();
@@ -555,17 +557,16 @@ bool MachineCombiner::combineInstructions(MachineBasicBlock *MBB) {
       if (!NewInstCount)
         continue;
 
-      DEBUG(if (dump_intrs) {
-        dbgs() << "\tFor the Pattern (" << (int)P << ") these instructions could be removed\n";
-        for (auto const *InstrPtr : DelInstrs) {
-          dbgs() << "\t\t" << STI->getSchedInfoStr(*InstrPtr) << ": ";
-          InstrPtr->print(dbgs(), false, false, false, TII);
-        }
+      LLVM_DEBUG(if (dump_intrs) {
+        dbgs() << "\tFor the Pattern (" << (int)P
+               << ") these instructions could be removed\n";
+        for (auto const *InstrPtr : DelInstrs)
+          InstrPtr->print(dbgs(), /*IsStandalone*/false, /*SkipOpers*/false,
+                          /*SkipDebugLoc*/false, /*AddNewLine*/true, TII);
         dbgs() << "\tThese instructions could replace the removed ones\n";
-        for (auto const *InstrPtr : InsInstrs) {
-          dbgs() << "\t\t" << STI->getSchedInfoStr(*InstrPtr) << ": ";
-          InstrPtr->print(dbgs(), false, false, false, TII);
-        }
+        for (auto const *InstrPtr : InsInstrs)
+          InstrPtr->print(dbgs(), /*IsStandalone*/false, /*SkipOpers*/false,
+                          /*SkipDebugLoc*/false, /*AddNewLine*/true, TII);
       });
 
       bool SubstituteAlways = false;
@@ -638,11 +639,13 @@ bool MachineCombiner::runOnMachineFunction(MachineFunction &MF) {
   MLI = &getAnalysis<MachineLoopInfo>();
   Traces = &getAnalysis<MachineTraceMetrics>();
   MinInstr = nullptr;
-  OptSize = MF.getFunction().optForSize();
+  OptSize = MF.getFunction().hasOptSize();
 
-  DEBUG(dbgs() << getPassName() << ": " << MF.getName() << '\n');
+  LLVM_DEBUG(dbgs() << getPassName() << ": " << MF.getName() << '\n');
   if (!TII->useMachineCombiner()) {
-    DEBUG(dbgs() << "  Skipping pass: Target does not support machine combiner\n");
+    LLVM_DEBUG(
+        dbgs()
+        << "  Skipping pass: Target does not support machine combiner\n");
     return false;
   }
 

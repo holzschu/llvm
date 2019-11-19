@@ -1,9 +1,8 @@
 //===-- PPCMachObjectWriter.cpp - PPC Mach-O Writer -----------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -179,7 +178,7 @@ static uint32_t getFixupOffset(const MCAsmLayout &Layout,
   uint32_t FixupOffset = Layout.getFragmentOffset(Fragment) + Fixup.getOffset();
   // On Mach-O, ppc_fixup_half16 relocations must refer to the
   // start of the instruction, not the second halfword, as ELF does
-  if (unsigned(Fixup.getKind()) == PPC::fixup_ppc_half16)
+  if (Fixup.getTargetKind() == PPC::fixup_ppc_half16)
     FixupOffset &= ~uint32_t(3);
   return FixupOffset;
 }
@@ -374,10 +373,8 @@ void PPCMachObjectWriter::RecordPPCRelocation(
   Writer->addRelocation(RelSymbol, Fragment->getParent(), MRE);
 }
 
-std::unique_ptr<MCObjectWriter>
-llvm::createPPCMachObjectWriter(raw_pwrite_stream &OS, bool Is64Bit,
-                                uint32_t CPUType, uint32_t CPUSubtype) {
-  return createMachObjectWriter(
-      llvm::make_unique<PPCMachObjectWriter>(Is64Bit, CPUType, CPUSubtype), OS,
-      /*IsLittleEndian=*/false);
+std::unique_ptr<MCObjectTargetWriter>
+llvm::createPPCMachObjectWriter(bool Is64Bit, uint32_t CPUType,
+                                uint32_t CPUSubtype) {
+  return std::make_unique<PPCMachObjectWriter>(Is64Bit, CPUType, CPUSubtype);
 }

@@ -61,8 +61,7 @@ define i16 @fun1(<16 x i1> %src)
 ; CHECK-NEXT:    rosbg %r0, %r1, 62, 62, 1
 ; CHECK-NEXT:    vlgvb %r1, %v24, 15
 ; CHECK-NEXT:    rosbg %r0, %r1, 63, 63, 0
-; CHECK-NEXT:    sth %r0, 160(%r15)
-; CHECK-NEXT:    lh %r2, 160(%r15)
+; CHECK-NEXT:    llhr %r2, %r0
 ; CHECK-NEXT:    aghi %r15, 168
 ; CHECK-NEXT:    br %r14
 {
@@ -77,39 +76,38 @@ define void @fun2(<8 x i32> %src, <8 x i31>* %p)
 ; CHECK-NEXT:    stmg %r14, %r15, 112(%r15)
 ; CHECK-NEXT:    .cfi_offset %r14, -48
 ; CHECK-NEXT:    .cfi_offset %r15, -40
-; CHECK-NEXT:    vlgvf %r3, %v26, 1
-; CHECK-NEXT:    vlgvf %r1, %v26, 2
-; CHECK-NEXT:    risbgn %r4, %r3, 0, 129, 62
-; CHECK-NEXT:    rosbg %r4, %r1, 2, 32, 31
 ; CHECK-NEXT:    vlgvf %r0, %v26, 3
-; CHECK-NEXT:    rosbg %r4, %r0, 33, 63, 0
+; CHECK-NEXT:    vlgvf %r4, %v24, 1
+; CHECK-NEXT:    vlgvf %r3, %v24, 2
+; CHECK-NEXT:    srlk %r1, %r0, 8
+; CHECK-NEXT:    vlgvf %r5, %v24, 0
+; CHECK-NEXT:    sth %r1, 28(%r2)
+; CHECK-NEXT:    risbgn %r1, %r4, 0, 133, 58
+; CHECK-NEXT:    sllg %r5, %r5, 25
 ; CHECK-NEXT:    stc %r0, 30(%r2)
-; CHECK-NEXT:    # kill: def $r0l killed $r0l killed $r0d def $r0d
-; CHECK-NEXT:    srl %r0, 8
-; CHECK-NEXT:    vlgvf %r1, %v24, 1
-; CHECK-NEXT:    vlgvf %r14, %v24, 0
-; CHECK-NEXT:    sth %r0, 28(%r2)
-; CHECK-NEXT:    vlgvf %r0, %v24, 2
-; CHECK-NEXT:    risbgn %r5, %r1, 0, 133, 58
-; CHECK-NEXT:    rosbg %r5, %r0, 6, 36, 27
-; CHECK-NEXT:    sllg %r14, %r14, 25
-; CHECK-NEXT:    rosbg %r14, %r1, 39, 63, 58
-; CHECK-NEXT:    vlgvf %r0, %v24, 3
-; CHECK-NEXT:    rosbg %r5, %r0, 37, 63, 60
-; CHECK-NEXT:    sllg %r1, %r14, 8
-; CHECK-NEXT:    rosbg %r1, %r5, 56, 63, 8
-; CHECK-NEXT:    stg %r1, 0(%r2)
-; CHECK-NEXT:    srlg %r1, %r4, 24
-; CHECK-NEXT:    st %r1, 24(%r2)
-; CHECK-NEXT:    vlgvf %r1, %v26, 0
-; CHECK-NEXT:    risbgn %r0, %r0, 0, 131, 60
-; CHECK-NEXT:    rosbg %r0, %r1, 4, 34, 29
-; CHECK-NEXT:    sllg %r1, %r5, 8
-; CHECK-NEXT:    rosbg %r0, %r3, 35, 63, 62
-; CHECK-NEXT:    rosbg %r1, %r0, 56, 63, 8
-; CHECK-NEXT:    stg %r1, 8(%r2)
-; CHECK-NEXT:    sllg %r0, %r0, 8
-; CHECK-NEXT:    rosbg %r0, %r4, 56, 63, 8
+; CHECK-NEXT:    rosbg %r1, %r3, 6, 36, 27
+; CHECK-NEXT:    vlgvf %r3, %v24, 3
+; CHECK-NEXT:    rosbg %r5, %r4, 39, 63, 58
+; CHECK-NEXT:    sllg %r4, %r5, 8
+; CHECK-NEXT:    rosbg %r1, %r3, 37, 63, 60
+; CHECK-NEXT:    vlgvf %r5, %v26, 1
+; CHECK-NEXT:    rosbg %r4, %r1, 56, 63, 8
+; CHECK-NEXT:    stg %r4, 0(%r2)
+; CHECK-NEXT:    vlgvf %r4, %v26, 2
+; CHECK-NEXT:    risbgn %r14, %r5, 0, 129, 62
+; CHECK-NEXT:    risbgn %r3, %r3, 0, 131, 60
+; CHECK-NEXT:    rosbg %r14, %r4, 2, 32, 31
+; CHECK-NEXT:    rosbg %r14, %r0, 33, 63, 0
+; CHECK-NEXT:    srlg %r0, %r14, 24
+; CHECK-NEXT:    st %r0, 24(%r2)
+; CHECK-NEXT:    vlgvf %r0, %v26, 0
+; CHECK-NEXT:    rosbg %r3, %r0, 4, 34, 29
+; CHECK-NEXT:    sllg %r0, %r1, 8
+; CHECK-NEXT:    rosbg %r3, %r5, 35, 63, 62
+; CHECK-NEXT:    rosbg %r0, %r3, 56, 63, 8
+; CHECK-NEXT:    stg %r0, 8(%r2)
+; CHECK-NEXT:    sllg %r0, %r3, 8
+; CHECK-NEXT:    rosbg %r0, %r14, 56, 63, 8
 ; CHECK-NEXT:    stg %r0, 16(%r2)
 ; CHECK-NEXT:    lmg %r14, %r15, 112(%r15)
 ; CHECK-NEXT:    br %r14
@@ -123,15 +121,15 @@ define void @fun2(<8 x i32> %src, <8 x i31>* %p)
 define void @fun3(<3 x i31>* %src, <3 x i31>* %p)
 ; CHECK-LABEL: fun3:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    llgf %r1, 0(%r2)
 ; CHECK-NEXT:    llgf %r0, 3(%r2)
-; CHECK-NEXT:    sllg %r4, %r1, 62
+; CHECK-NEXT:    llgf %r1, 6(%r2)
+; CHECK-NEXT:    llgf %r2, 0(%r2)
+; CHECK-NEXT:    rosbg %r1, %r0, 0, 32, 31
+; CHECK-NEXT:    sllg %r4, %r2, 62
 ; CHECK-NEXT:    rosbg %r4, %r0, 0, 32, 31
-; CHECK-NEXT:    llgf %r0, 6(%r2)
-; CHECK-NEXT:    ogr %r0, %r4
-; CHECK-NEXT:    st %r0, 8(%r3)
 ; CHECK-NEXT:    srlg %r0, %r4, 32
-; CHECK-NEXT:    sllg %r1, %r1, 30
+; CHECK-NEXT:    st %r1, 8(%r3)
+; CHECK-NEXT:    sllg %r1, %r2, 30
 ; CHECK-NEXT:    lr %r1, %r0
 ; CHECK-NEXT:    nihh %r1, 8191
 ; CHECK-NEXT:    stg %r1, 0(%r3)

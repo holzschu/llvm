@@ -1,9 +1,8 @@
 //===- llvm/CodeGen/AsmPrinter.h - AsmPrinter Framework ---------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -20,6 +19,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
+#include "llvm/CodeGen/AsmPrinterHandler.h"
 #include "llvm/CodeGen/DwarfStringPoolEntry.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/IR/InlineAsm.h"
@@ -33,7 +33,6 @@
 
 namespace llvm {
 
-class AsmPrinterHandler;
 class BasicBlock;
 class BlockAddress;
 class Constant;
@@ -71,6 +70,7 @@ class MCTargetOptions;
 class MDNode;
 class Module;
 class raw_ostream;
+class StackMaps;
 class TargetLoweringObjectFile;
 class TargetMachine;
 
@@ -111,6 +111,10 @@ public:
   /// of each call to runOnMachineFunction().
   MCSymbol *CurrentFnSym = nullptr;
 
+  /// The symbol for the current function descriptor on AIX. This is created
+  /// at the beginning of each call to SetupMachineFunction().
+  MCSymbol *CurrentFnDescSym = nullptr;
+
   /// The symbol used to represent the start of the current function for the
   /// purpose of calculating its size (e.g. using the .size directive). By
   /// default, this is equal to CurrentFnSym.
@@ -120,9 +124,6 @@ public:
   /// its number of uses by other globals.
   using GOTEquivUsePair = std::pair<const GlobalVariable *, unsigned>;
   MapVector<const MCSymbol *, GOTEquivUsePair> GlobalGOTEquivs;
-
-  /// Enable print [latency:throughput] in output.
-  bool EnablePrintSchedInfo = false;
 
 private:
   MCSymbol *CurrentFnBegin = nullptr;
@@ -137,17 +138,20 @@ private:
 
   static char ID;
 
+protected:
+  /// Protected struct HandlerInfo and Handlers permit target extended
+  /// AsmPrinter adds their own handlers.
   struct HandlerInfo {
-    AsmPrinterHandler *Handler;
+    std::unique_ptr<AsmPrinterHandler> Handler;
     const char *TimerName;
     const char *TimerDescription;
     const char *TimerGroupName;
     const char *TimerGroupDescription;
 
-    HandlerInfo(AsmPrinterHandler *Handler, const char *TimerName,
-                const char *TimerDescription, const char *TimerGroupName,
-                const char *TimerGroupDescription)
-        : Handler(Handler), TimerName(TimerName),
+    HandlerInfo(std::unique_ptr<AsmPrinterHandler> Handler,
+                const char *TimerName, const char *TimerDescription,
+                const char *TimerGroupName, const char *TimerGroupDescription)
+        : Handler(std::move(Handler)), TimerName(TimerName),
           TimerDescription(TimerDescription), TimerGroupName(TimerGroupName),
           TimerGroupDescription(TimerGroupDescription) {}
   };
@@ -201,6 +205,10 @@ public:
   /// Return a unique ID for the current function.
   unsigned getFunctionNumber() const;
 
+  /// Return symbol for the function pseudo stack if the stack frame is not a
+  /// register based.
+  virtual const MCSymbol *getFunctionFrameSymbol() const { return nullptr; }
+
   MCSymbol *getFunctionBegin() const { return CurrentFnBegin; }
   MCSymbol *getFunctionEnd() const { return CurrentFnEnd; }
   MCSymbol *getCurExceptionSym();
@@ -218,6 +226,9 @@ public:
   const MCSubtargetInfo &getSubtargetInfo() const;
 
   void EmitToStreamer(MCStreamer &S, const MCInst &Inst);
+
+  /// Emits inital debug location directive.
+  void emitInitialRawDwarfLocDirective(const MachineFunction &MF);
 
   /// Return the current section we are emitting to.
   const MCSection *getCurrentSection() const;
@@ -297,7 +308,7 @@ public:
 
   /// This should be called when a new MachineFunction is being processed from
   /// runOnMachineFunction.
-  void SetupMachineFunction(MachineFunction &MF);
+  virtual void SetupMachineFunction(MachineFunction &MF);
 
   /// This method emits the body and trailer for a function.
   void EmitFunctionBody();
@@ -307,6 +318,8 @@ public:
   void emitFrameAlloc(const MachineInstr &MI);
 
   void emitStackSizeSection(const MachineFunction &MF);
+
+  void emitRemarksSection(Module &M);
 
   enum CFIMoveType { CFI_M_None, CFI_M_EH, CFI_M_Debug };
   CFIMoveType needsCFIMoves() const;
@@ -333,20 +346,19 @@ public:
   /// so, emit it and return true, otherwise do nothing and return false.
   bool EmitSpecialLLVMGlobal(const GlobalVariable *GV);
 
-  /// Emit an alignment directive to the specified power of two boundary. For
-  /// example, if you pass in 3 here, you will get an 8 byte alignment. If a
+  /// Emit an alignment directive to the specified power of two boundary. If a
   /// global value is specified, and if that global has an explicit alignment
   /// requested, it will override the alignment request if required for
   /// correctness.
-  void EmitAlignment(unsigned NumBits, const GlobalObject *GO = nullptr) const;
+  void EmitAlignment(Align Alignment, const GlobalObject *GV = nullptr) const;
 
   /// Lower the specified LLVM Constant to an MCExpr.
   virtual const MCExpr *lowerConstant(const Constant *CV);
 
-  /// \brief Print a general LLVM constant to the .s file.
+  /// Print a general LLVM constant to the .s file.
   void EmitGlobalConstant(const DataLayout &DL, const Constant *CV);
 
-  /// \brief Unnamed constant global variables solely contaning a pointer to
+  /// Unnamed constant global variables solely contaning a pointer to
   /// another globals variable act like a global variable "proxy", or GOT
   /// equivalents, i.e., it's only used to hold the address of the latter. One
   /// optimization is to replace accesses to these proxies by using the GOT
@@ -356,10 +368,13 @@ public:
   /// accesses to GOT entries.
   void computeGlobalGOTEquivs(Module &M);
 
-  /// \brief Constant expressions using GOT equivalent globals may not be
+  /// Constant expressions using GOT equivalent globals may not be
   /// eligible for PC relative GOT entry conversion, in such cases we need to
   /// emit the proxies we previously omitted in EmitGlobalVariable.
   void emitGlobalGOTEquivs();
+
+  /// Emit the stack maps.
+  void emitStackMaps(StackMaps &SM);
 
   //===------------------------------------------------------------------===//
   // Overridable Hooks
@@ -388,7 +403,7 @@ public:
   /// By default, this method prints the label for the specified
   /// MachineBasicBlock, an alignment (if present) and a comment describing it
   /// if appropriate.
-  virtual void EmitBasicBlockStart(const MachineBasicBlock &MBB) const;
+  virtual void EmitBasicBlockStart(const MachineBasicBlock &MBB);
 
   /// Targets can override this to emit stuff at the end of a basic block.
   virtual void EmitBasicBlockEnd(const MachineBasicBlock &MBB);
@@ -402,6 +417,10 @@ public:
   virtual MCSymbol *GetCPISymbol(unsigned CPID) const;
 
   virtual void EmitFunctionEntryLabel();
+
+  virtual void EmitFunctionDescriptor() {
+    llvm_unreachable("Function descriptor is target-specific.");
+  }
 
   virtual void EmitMachineConstantPoolValue(MachineConstantPoolValue *MCPV);
 
@@ -463,6 +482,9 @@ public:
   /// Emit a long directive and value.
   void emitInt32(int Value) const;
 
+  /// Emit a long long directive and value.
+  void emitInt64(uint64_t Value) const;
+
   /// Emit something like ".long Hi-Lo" where the size in bytes of the directive
   /// is specified by Size and Hi/Lo specify the labels.  This implicitly uses
   /// .set if it is available.
@@ -497,7 +519,7 @@ public:
   void EmitSLEB128(int64_t Value, const char *Desc = nullptr) const;
 
   /// Emit the specified unsigned leb128 value.
-  void EmitULEB128(uint64_t Value, const char *Desc = nullptr) const;
+  void EmitULEB128(uint64_t Value, const char *Desc = nullptr, unsigned PadTo = 0) const;
 
   /// Emit a .byte 42 directive that corresponds to an encoding.  If verbose
   /// assembly output is enabled, we output comments describing the encoding.
@@ -528,6 +550,12 @@ public:
     emitDwarfStringOffset(S.getEntry());
   }
 
+  /// Emit reference to a call site with a specified encoding
+  void EmitCallSiteOffset(const MCSymbol *Hi, const MCSymbol *Lo,
+                          unsigned Encoding) const;
+  /// Emit an integer value corresponding to the call site encoding
+  void EmitCallSiteValue(uint64_t Value, unsigned Encoding) const;
+
   /// Get the value for DW_AT_APPLE_isa. Zero if no isa encoding specified.
   virtual unsigned getISAEncoding() { return 0; }
 
@@ -535,16 +563,16 @@ public:
   ///
   /// \p Value - The value to emit.
   /// \p Size - The size of the integer (in bytes) to emit.
-  virtual void EmitDebugThreadLocal(const MCExpr *Value, unsigned Size) const;
+  virtual void EmitDebugValue(const MCExpr *Value, unsigned Size) const;
 
   //===------------------------------------------------------------------===//
   // Dwarf Lowering Routines
   //===------------------------------------------------------------------===//
 
-  /// \brief Emit frame instruction to describe the layout of the frame.
+  /// Emit frame instruction to describe the layout of the frame.
   void emitCFIInstruction(const MCCFIInstruction &Inst) const;
 
-  /// \brief Emit Dwarf abbreviation table.
+  /// Emit Dwarf abbreviation table.
   template <typename T> void emitDwarfAbbrevs(const T &Abbrevs) const {
     // For each abbreviation.
     for (const auto &Abbrev : Abbrevs)
@@ -556,7 +584,7 @@ public:
 
   void emitDwarfAbbrev(const DIEAbbrev &Abbrev) const;
 
-  /// \brief Recursively emit Dwarf DIE tree.
+  /// Recursively emit Dwarf DIE tree.
   void emitDwarfDIE(const DIE &Die) const;
 
   //===------------------------------------------------------------------===//
@@ -575,20 +603,22 @@ public:
   virtual void PrintSpecial(const MachineInstr *MI, raw_ostream &OS,
                             const char *Code) const;
 
+  /// Print the MachineOperand as a symbol. Targets with complex handling of
+  /// symbol references should override the base implementation.
+  virtual void PrintSymbolOperand(const MachineOperand &MO, raw_ostream &OS);
+
   /// Print the specified operand of MI, an INLINEASM instruction, using the
   /// specified assembler variant.  Targets should override this to format as
   /// appropriate.  This method can return true if the operand is erroneous.
   virtual bool PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
-                               unsigned AsmVariant, const char *ExtraCode,
-                               raw_ostream &OS);
+                               const char *ExtraCode, raw_ostream &OS);
 
   /// Print the specified operand of MI, an INLINEASM instruction, using the
   /// specified assembler variant as an address. Targets should override this to
   /// format as appropriate.  This method can return true if the operand is
   /// erroneous.
   virtual bool PrintAsmMemoryOperand(const MachineInstr *MI, unsigned OpNo,
-                                     unsigned AsmVariant, const char *ExtraCode,
-                                     raw_ostream &OS);
+                                     const char *ExtraCode, raw_ostream &OS);
 
   /// Let the target do anything it needs to do before emitting inlineasm.
   /// \p StartInfo - the subtarget info before parsing inline asm
@@ -602,6 +632,19 @@ public:
   ///                or NULL if the value is unknown.
   virtual void emitInlineAsmEnd(const MCSubtargetInfo &StartInfo,
                                 const MCSubtargetInfo *EndInfo) const;
+
+  /// This emits visibility information about symbol, if this is supported by
+  /// the target.
+  void EmitVisibility(MCSymbol *Sym, unsigned Visibility,
+                      bool IsDefinition = true) const;
+
+  /// This emits linkage information about \p GVSym based on \p GV, if this is
+  /// supported by the target.
+  void EmitLinkage(const GlobalValue *GV, MCSymbol *GVSym) const;
+
+  /// Return the alignment for the specified \p GV.
+  static Align getGVAlignment(const GlobalValue *GV, const DataLayout &DL,
+                              Align InAlign = Align::None());
 
 private:
   /// Private state for PrintSpecial()
@@ -624,26 +667,26 @@ private:
   /// inline asm.
   void EmitInlineAsm(const MachineInstr *MI) const;
 
+  /// Add inline assembly info to the diagnostics machinery, so we can
+  /// emit file and position info. Returns SrcMgr memory buffer position.
+  unsigned addInlineAsmDiagBuffer(StringRef AsmStr,
+                                  const MDNode *LocMDNode) const;
+
   //===------------------------------------------------------------------===//
   // Internal Implementation Details
   //===------------------------------------------------------------------===//
-
-  /// This emits visibility information about symbol, if this is supported by
-  /// the target.
-  void EmitVisibility(MCSymbol *Sym, unsigned Visibility,
-                      bool IsDefinition = true) const;
-
-  void EmitLinkage(const GlobalValue *GV, MCSymbol *GVSym) const;
 
   void EmitJumpTableEntry(const MachineJumpTableInfo *MJTI,
                           const MachineBasicBlock *MBB, unsigned uid) const;
   void EmitLLVMUsedList(const ConstantArray *InitList);
   /// Emit llvm.ident metadata in an '.ident' directive.
   void EmitModuleIdents(Module &M);
+  /// Emit bytes for llvm.commandline metadata.
+  void EmitModuleCommandLines(Module &M);
   void EmitXXStructorList(const DataLayout &DL, const Constant *List,
                           bool isCtor);
 
-  GCMetadataPrinter *GetOrCreateGCPrinter(GCStrategy &C);
+  GCMetadataPrinter *GetOrCreateGCPrinter(GCStrategy &S);
   /// Emit GlobalAlias or GlobalIFunc.
   void emitGlobalIndirectSymbol(Module &M, const GlobalIndirectSymbol &GIS);
   void setupCodePaddingContext(const MachineBasicBlock &MBB,

@@ -1,9 +1,8 @@
 //===- LowerEmuTLS.cpp - Add __emutls_[vt].* variables --------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -143,7 +142,7 @@ bool LowerEmuTLS::addEmuTlsVar(Module &M, const GlobalVariable *GV) {
     assert(EmuTlsTmplVar && "Failed to create emualted TLS initializer");
     EmuTlsTmplVar->setConstant(true);
     EmuTlsTmplVar->setInitializer(const_cast<Constant*>(InitValue));
-    EmuTlsTmplVar->setAlignment(GVAlignment);
+    EmuTlsTmplVar->setAlignment(Align(GVAlignment));
     copyLinkageVisibility(M, GV, EmuTlsTmplVar);
   }
 
@@ -156,9 +155,8 @@ bool LowerEmuTLS::addEmuTlsVar(Module &M, const GlobalVariable *GV) {
   ArrayRef<Constant*> ElementValueArray(ElementValues, 4);
   EmuTlsVar->setInitializer(
       ConstantStruct::get(EmuTlsVarType, ElementValueArray));
-  unsigned MaxAlignment = std::max(
-      DL.getABITypeAlignment(WordType),
-      DL.getABITypeAlignment(VoidPtrType));
+  Align MaxAlignment(std::max(DL.getABITypeAlignment(WordType),
+                              DL.getABITypeAlignment(VoidPtrType)));
   EmuTlsVar->setAlignment(MaxAlignment);
   return true;
 }

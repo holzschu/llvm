@@ -1,5 +1,5 @@
-# RUN: llc -mtriple=x86_64-linux-gnu -mattr=+avx                -global-isel -run-pass=instruction-select -verify-machineinstrs %s -o - | FileCheck %s --check-prefix=ALL --check-prefix=AVX
-# RUN: llc -mtriple=x86_64-linux-gnu -mattr=+avx512f,+avx512vl  -global-isel -run-pass=instruction-select -verify-machineinstrs %s -o - | FileCheck %s --check-prefix=ALL --check-prefix=AVX512VL
+# RUN: llc -mtriple=x86_64-linux-gnu -mattr=+avx                -run-pass=instruction-select -verify-machineinstrs %s -o - | FileCheck %s --check-prefix=ALL --check-prefix=AVX
+# RUN: llc -mtriple=x86_64-linux-gnu -mattr=+avx512f,+avx512vl  -run-pass=instruction-select -verify-machineinstrs %s -o - | FileCheck %s --check-prefix=ALL --check-prefix=AVX512VL
 --- |
   define void @test_insert_128_idx0() {
     ret void
@@ -21,7 +21,7 @@
 ---
 name:            test_insert_128_idx0
 # ALL-LABEL: name:  test_insert_128_idx0
-alignment:       4
+alignment:       16
 legalized:       true
 regBankSelected: true
 registers:
@@ -53,7 +53,7 @@ body:             |
 ---
 name:            test_insert_128_idx0_undef
 # ALL-LABEL: name:  test_insert_128_idx0_undef
-alignment:       4
+alignment:       16
 legalized:       true
 regBankSelected: true
 registers:
@@ -83,7 +83,7 @@ body:             |
 ---
 name:            test_insert_128_idx1
 # ALL-LABEL: name:  test_insert_128_idx1
-alignment:       4
+alignment:       16
 legalized:       true
 regBankSelected: true
 registers:
@@ -114,7 +114,7 @@ body:             |
 ---
 name:            test_insert_128_idx1_undef
 # ALL-LABEL: name:  test_insert_128_idx1_undef
-alignment:       4
+alignment:       16
 legalized:       true
 regBankSelected: true
 registers:

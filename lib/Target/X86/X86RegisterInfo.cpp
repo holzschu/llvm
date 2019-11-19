@@ -1,9 +1,8 @@
 //===-- X86RegisterInfo.cpp - X86 Register Information --------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -164,6 +163,7 @@ X86RegisterInfo::getLargestLegalSuperClass(const TargetRegisterClass *RC,
     case X86::RFP32RegClassID:
     case X86::RFP64RegClassID:
     case X86::RFP80RegClassID:
+    case X86::VR512_0_15RegClassID:
     case X86::VR512RegClassID:
       // Don't return a super-class that would shrink the spill size.
       // That can happen with the vector and float classes.
@@ -214,6 +214,21 @@ X86RegisterInfo::getPointerRegClass(const MachineFunction &MF,
   case 4: // Available for tailcall (not callee-saved GPRs).
     return getGPRsForTailCall(MF);
   }
+}
+
+bool X86RegisterInfo::shouldRewriteCopySrc(const TargetRegisterClass *DefRC,
+                                           unsigned DefSubReg,
+                                           const TargetRegisterClass *SrcRC,
+                                           unsigned SrcSubReg) const {
+  // Prevent rewriting a copy where the destination size is larger than the
+  // input size. See PR41619.
+  // FIXME: Should this be factored into the base implementation somehow.
+  if (DefRC->hasSuperClassEq(&X86::GR64RegClass) && DefSubReg == 0 &&
+      SrcRC->hasSuperClassEq(&X86::GR64RegClass) && SrcSubReg == X86::sub_32bit)
+    return false;
+
+  return TargetRegisterInfo::shouldRewriteCopySrc(DefRC, DefSubReg,
+                                                  SrcRC, SrcSubReg);
 }
 
 const TargetRegisterClass *
@@ -497,6 +512,9 @@ BitVector X86RegisterInfo::getReservedRegs(const MachineFunction &MF) const {
   BitVector Reserved(getNumRegs());
   const X86FrameLowering *TFI = getFrameLowering(MF);
 
+  // Set the floating point control register as reserved.
+  Reserved.set(X86::FPCW);
+
   // Set the stack-pointer register and its aliases as reserved.
   for (MCSubRegIterator I(X86::RSP, this, /*IncludeSelf=*/true); I.isValid();
        ++I)
@@ -526,7 +544,7 @@ BitVector X86RegisterInfo::getReservedRegs(const MachineFunction &MF) const {
         "Stack realignment in presence of dynamic allocas is not supported with"
         "this calling convention.");
 
-    unsigned BasePtr = getX86SubSuperRegister(getBaseRegister(), 64);
+    Register BasePtr = getX86SubSuperRegister(getBaseRegister(), 64);
     for (MCSubRegIterator I(BasePtr, this, /*IncludeSelf=*/true);
          I.isValid(); ++I)
       Reserved.set(*I);
@@ -552,6 +570,10 @@ BitVector X86RegisterInfo::getReservedRegs(const MachineFunction &MF) const {
     Reserved.set(X86::DIL);
     Reserved.set(X86::BPL);
     Reserved.set(X86::SPL);
+    Reserved.set(X86::SIH);
+    Reserved.set(X86::DIH);
+    Reserved.set(X86::BPH);
+    Reserved.set(X86::SPH);
 
     for (unsigned n = 0; n != 8; ++n) {
       // R8, R9, ...
@@ -571,7 +593,8 @@ BitVector X86RegisterInfo::getReservedRegs(const MachineFunction &MF) const {
   }
 
   assert(checkAllSuperRegsMarked(Reserved,
-                                 {X86::SIL, X86::DIL, X86::BPL, X86::SPL}));
+                                 {X86::SIL, X86::DIL, X86::BPL, X86::SPL,
+                                  X86::SIH, X86::DIH, X86::BPH, X86::SPH}));
   return Reserved;
 }
 
@@ -654,13 +677,13 @@ static bool tryOptimizeLEAtoMOV(MachineBasicBlock::iterator II) {
       MI.getOperand(4).getImm() != 0 ||
       MI.getOperand(5).getReg() != X86::NoRegister)
     return false;
-  unsigned BasePtr = MI.getOperand(1).getReg();
+  Register BasePtr = MI.getOperand(1).getReg();
   // In X32 mode, ensure the base-pointer is a 32-bit operand, so the LEA will
   // be replaced with a 32-bit operand MOV which will zero extend the upper
   // 32-bits of the super register.
   if (Opc == X86::LEA64_32r)
     BasePtr = getX86SubSuperRegister(BasePtr, 32);
-  unsigned NewDestReg = MI.getOperand(0).getReg();
+  Register NewDestReg = MI.getOperand(0).getReg();
   const X86InstrInfo *TII =
       MI.getParent()->getParent()->getSubtarget<X86Subtarget>().getInstrInfo();
   TII->copyPhysReg(*MI.getParent(), II, MI.getDebugLoc(), NewDestReg, BasePtr,
@@ -669,12 +692,27 @@ static bool tryOptimizeLEAtoMOV(MachineBasicBlock::iterator II) {
   return true;
 }
 
+static bool isFuncletReturnInstr(MachineInstr &MI) {
+  switch (MI.getOpcode()) {
+  case X86::CATCHRET:
+  case X86::CLEANUPRET:
+    return true;
+  default:
+    return false;
+  }
+  llvm_unreachable("impossible");
+}
+
 void
 X86RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
                                      int SPAdj, unsigned FIOperandNum,
                                      RegScavenger *RS) const {
   MachineInstr &MI = *II;
-  MachineFunction &MF = *MI.getParent()->getParent();
+  MachineBasicBlock &MBB = *MI.getParent();
+  MachineFunction &MF = *MBB.getParent();
+  MachineBasicBlock::iterator MBBI = MBB.getFirstTerminator();
+  bool IsEHFuncletEpilogue = MBBI == MBB.end() ? false
+                                               : isFuncletReturnInstr(*MBBI);
   const X86FrameLowering *TFI = getFrameLowering(MF);
   int FrameIndex = MI.getOperand(FIOperandNum).getIndex();
 
@@ -686,6 +724,8 @@ X86RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
            MF.getFrameInfo().isFixedObjectIndex(FrameIndex)) &&
            "Return instruction can only reference SP relative frame objects");
     FIOffset = TFI->getFrameIndexReferenceSP(MF, FrameIndex, BasePtr, 0);
+  } else if (TFI->Is64Bit && (MBB.isEHFuncletEntry() || IsEHFuncletEpilogue)) {
+    FIOffset = TFI->getWin64EHFrameIndexRef(MF, FrameIndex, BasePtr);
   } else {
     FIOffset = TFI->getFrameIndexReference(MF, FrameIndex, BasePtr);
   }
@@ -706,7 +746,7 @@ X86RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   // register as source operand, semantic is the same and destination is
   // 32-bits. It saves one byte per lea in code since 0x67 prefix is avoided.
   // Don't change BasePtr since it is used later for stack adjustment.
-  unsigned MachineBasePtr = BasePtr;
+  Register MachineBasePtr = BasePtr;
   if (Opc == X86::LEA64_32r && X86::GR32RegClass.contains(BasePtr))
     MachineBasePtr = getX86SubSuperRegister(BasePtr, 64);
 
@@ -742,7 +782,7 @@ X86RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   }
 }
 
-unsigned X86RegisterInfo::getFrameRegister(const MachineFunction &MF) const {
+Register X86RegisterInfo::getFrameRegister(const MachineFunction &MF) const {
   const X86FrameLowering *TFI = getFrameLowering(MF);
   return TFI->hasFP(MF) ? FramePtr : StackPtr;
 }
@@ -750,8 +790,17 @@ unsigned X86RegisterInfo::getFrameRegister(const MachineFunction &MF) const {
 unsigned
 X86RegisterInfo::getPtrSizedFrameRegister(const MachineFunction &MF) const {
   const X86Subtarget &Subtarget = MF.getSubtarget<X86Subtarget>();
-  unsigned FrameReg = getFrameRegister(MF);
+  Register FrameReg = getFrameRegister(MF);
   if (Subtarget.isTarget64BitILP32())
     FrameReg = getX86SubSuperRegister(FrameReg, 32);
   return FrameReg;
+}
+
+unsigned
+X86RegisterInfo::getPtrSizedStackRegister(const MachineFunction &MF) const {
+  const X86Subtarget &Subtarget = MF.getSubtarget<X86Subtarget>();
+  Register StackReg = getStackRegister();
+  if (Subtarget.isTarget64BitILP32())
+    StackReg = getX86SubSuperRegister(StackReg, 32);
+  return StackReg;
 }

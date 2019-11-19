@@ -1,9 +1,8 @@
 //===- llvm/unittest/ADT/StringRefTest.cpp - StringRef unit tests ---------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -35,10 +34,6 @@ std::ostream &operator<<(std::ostream &OS,
 // Check that we can't accidentally assign a temporary std::string to a
 // StringRef. (Unfortunately we can't make use of the same thing with
 // constructors.)
-//
-// Disable this check under MSVC; even MSVC 2015 isn't consistent between
-// std::is_assignable and actually writing such an assignment.
-#if !defined(_MSC_VER)
 static_assert(
     !std::is_assignable<StringRef&, std::string>::value,
     "Assigning from prvalue std::string");
@@ -57,8 +52,6 @@ static_assert(
 static_assert(
     std::is_assignable<StringRef&, const char * &>::value,
     "Assigning from lvalue C string");
-#endif
-
 
 namespace {
 TEST(StringRefTest, Construction) {
@@ -181,6 +174,17 @@ TEST(StringRefTest, Split) {
             Str.rsplit('l'));
   EXPECT_EQ(std::make_pair(StringRef("hell"), StringRef("")),
             Str.rsplit('o'));
+
+  EXPECT_EQ(std::make_pair(StringRef("he"), StringRef("o")),
+		    Str.rsplit("ll"));
+  EXPECT_EQ(std::make_pair(StringRef(""), StringRef("ello")),
+		    Str.rsplit("h"));
+  EXPECT_EQ(std::make_pair(StringRef("hell"), StringRef("")),
+	      Str.rsplit("o"));
+  EXPECT_EQ(std::make_pair(StringRef("hello"), StringRef("")),
+		    Str.rsplit("::"));
+  EXPECT_EQ(std::make_pair(StringRef("hel"), StringRef("o")),
+		    Str.rsplit("l"));
 }
 
 TEST(StringRefTest, Split2) {
@@ -1046,9 +1050,21 @@ TEST(StringRefTest, DropWhileUntil) {
 }
 
 TEST(StringRefTest, StringLiteral) {
+  constexpr StringRef StringRefs[] = {"Foo", "Bar"};
+  EXPECT_EQ(StringRef("Foo"), StringRefs[0]);
+  EXPECT_EQ(StringRef("Bar"), StringRefs[1]);
+
   constexpr StringLiteral Strings[] = {"Foo", "Bar"};
   EXPECT_EQ(StringRef("Foo"), Strings[0]);
   EXPECT_EQ(StringRef("Bar"), Strings[1]);
 }
+
+// Check gtest prints StringRef as a string instead of a container of chars.
+// The code is in utils/unittest/googletest/internal/custom/gtest-printers.h
+TEST(StringRefTest, GTestPrinter) {
+  EXPECT_EQ(R"("foo")", ::testing::PrintToString(StringRef("foo")));
+}
+
+static_assert(is_trivially_copyable<StringRef>::value, "trivially copyable");
 
 } // end anonymous namespace

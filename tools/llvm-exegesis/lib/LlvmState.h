@@ -1,15 +1,21 @@
 //===-- LlvmState.h ---------------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
-//
+//===----------------------------------------------------------------------===//
+///
+/// \file
+/// A class to set up and access common LLVM objects.
+///
 //===----------------------------------------------------------------------===//
 
 #ifndef LLVM_TOOLS_LLVM_EXEGESIS_LLVMSTATE_H
 #define LLVM_TOOLS_LLVM_EXEGESIS_LLVMSTATE_H
 
+#include "MCInstrDescView.h"
+#include "RegisterAliasing.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCInstrInfo.h"
@@ -19,41 +25,55 @@
 #include <memory>
 #include <string>
 
+namespace llvm {
 namespace exegesis {
+
+class ExegesisTarget;
+struct PfmCountersInfo;
 
 // An object to initialize LLVM and prepare objects needed to run the
 // measurements.
 class LLVMState {
 public:
-  LLVMState();
+  // Uses the host triple. If CpuName is empty, uses the host CPU.
+  LLVMState(const std::string &CpuName);
 
-  llvm::StringRef getTriple() const { return TheTriple; }
-  llvm::StringRef getCpuName() const { return CpuName; }
-  llvm::StringRef getFeatures() const { return Features; }
+  LLVMState(const std::string &Triple,
+            const std::string &CpuName,
+            const std::string &Features = ""); // For tests.
 
-  const llvm::MCInstrInfo &getInstrInfo() const { return *InstrInfo; }
+  const TargetMachine &getTargetMachine() const { return *TheTargetMachine; }
+  std::unique_ptr<LLVMTargetMachine> createTargetMachine() const;
 
-  const llvm::MCRegisterInfo &getRegInfo() const { return *RegInfo; }
+  const ExegesisTarget &getExegesisTarget() const { return *TheExegesisTarget; }
 
-  const llvm::MCSubtargetInfo &getSubtargetInfo() const {
-    return *SubtargetInfo;
+  bool canAssemble(const MCInst &mc_inst) const;
+
+  // For convenience:
+  const MCInstrInfo &getInstrInfo() const {
+    return *TheTargetMachine->getMCInstrInfo();
+  }
+  const MCRegisterInfo &getRegInfo() const {
+    return *TheTargetMachine->getMCRegisterInfo();
+  }
+  const MCSubtargetInfo &getSubtargetInfo() const {
+    return *TheTargetMachine->getMCSubtargetInfo();
   }
 
-  std::unique_ptr<llvm::LLVMTargetMachine> createTargetMachine() const;
+  const RegisterAliasingTrackerCache &getRATC() const { return *RATC; }
+  const InstructionsCache &getIC() const { return *IC; }
 
-  bool canAssemble(const llvm::MCInst &mc_inst) const;
+  const PfmCountersInfo &getPfmCounters() const { return *PfmCounters; }
 
 private:
-  std::string TheTriple;
-  std::string CpuName;
-  std::string Features;
-  const llvm::Target *TheTarget = nullptr;
-  std::unique_ptr<const llvm::MCSubtargetInfo> SubtargetInfo;
-  std::unique_ptr<const llvm::MCInstrInfo> InstrInfo;
-  std::unique_ptr<const llvm::MCRegisterInfo> RegInfo;
-  std::unique_ptr<const llvm::MCAsmInfo> AsmInfo;
+  const ExegesisTarget *TheExegesisTarget;
+  std::unique_ptr<const TargetMachine> TheTargetMachine;
+  std::unique_ptr<const RegisterAliasingTrackerCache> RATC;
+  std::unique_ptr<const InstructionsCache> IC;
+  const PfmCountersInfo *PfmCounters;
 };
 
 } // namespace exegesis
+} // namespace llvm
 
 #endif // LLVM_TOOLS_LLVM_EXEGESIS_LLVMSTATE_H

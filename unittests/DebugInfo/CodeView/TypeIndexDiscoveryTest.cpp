@@ -1,9 +1,8 @@
 //===- llvm/unittest/DebugInfo/CodeView/TypeIndexDiscoveryTest.cpp --------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -26,8 +25,8 @@ public:
 
   void SetUp() override {
     Refs.clear();
-    TTB = make_unique<AppendingTypeTableBuilder>(Storage);
-    CRB = make_unique<ContinuationRecordBuilder>();
+    TTB = std::make_unique<AppendingTypeTableBuilder>(Storage);
+    CRB = std::make_unique<ContinuationRecordBuilder>();
     Symbols.clear();
   }
 
@@ -600,4 +599,11 @@ TEST_F(TypeIndexIteratorTest, VariableSizeIntegers) {
   BaseClassRecord BaseClass2(MemberAccess::Public, TypeIndex(48), 1);
   writeFieldList(BaseClass1, BaseClass2);
   checkTypeReferences(0, TypeIndex(47), TypeIndex(48));
+}
+
+TEST_F(TypeIndexIteratorTest, UsingNamespace) {
+  UsingNamespaceSym UN(SymbolRecordKind::UsingNamespaceSym);
+  UN.Name = "std";
+  writeSymbolRecords(UN);
+  checkTypeReferences(0);
 }

@@ -1,5 +1,5 @@
 ; RUN: llc < %s | FileCheck %s --check-prefix=ASM
-; RUN: llc < %s -filetype=obj | llvm-readobj -codeview - | FileCheck %s --check-prefix=OBJ
+; RUN: llc < %s -filetype=obj | llvm-readobj --codeview - | FileCheck %s --check-prefix=OBJ
 
 ; Generated from:
 ; volatile int x;
@@ -24,9 +24,9 @@
 ; ASM: f:                                      # @f
 ; ASM: .Lfunc_begin0:
 ; ASM: # %bb.0:                                 # %entry
+; ASM:         #DEBUG_VALUE: f:p <- $ecx
 ; ASM:         pushq   %rsi
 ; ASM:         subq    $32, %rsp
-; ASM:         #DEBUG_VALUE: f:p <- $ecx
 ; ASM:         movl    %ecx, %esi
 ; ASM: [[p_ecx_esi:\.Ltmp.*]]:
 ; ASM:         #DEBUG_VALUE: f:p <- $esi
@@ -58,25 +58,25 @@
 
 ; ASM:         .short  4414                    # Record kind: S_LOCAL
 ; ASM:         .asciz  "p"
-; ASM:         .cv_def_range    .Lfunc_begin0 [[p_ecx_esi]], "A\021\022\000\000\000"
-; ASM:         .cv_def_range    [[p_ecx_esi]] [[func_end]], "A\021\027\000\000\000"
+; ASM:         .cv_def_range    .Lfunc_begin0 [[p_ecx_esi]], reg, 18
+; ASM:         .cv_def_range    [[p_ecx_esi]] [[func_end]], reg, 23
 ; ASM:         .short  4414                    # Record kind: S_LOCAL
 ; ASM:         .asciz  "c"
-; ASM:         .cv_def_range    [[after_getint]] [[after_je]], "A\021\021\000\000\000"
+; ASM:         .cv_def_range    [[after_getint]] [[after_je]], reg, 17
 ; ASM:         .short  4414                    # Record kind: S_LOCAL
 ; ASM:         .asciz  "a"
-; ASM:         .cv_def_range    [[after_getint]] [[after_inc_eax]], "A\021\021\000\000\000"
+; ASM:         .cv_def_range    [[after_getint]] [[after_inc_eax]], reg, 17
 ; ASM:         .short  4414                    # Record kind: S_LOCAL
 ; ASM:         .asciz  "b"
-; ASM:         .cv_def_range    [[after_inc_eax]] [[after_if]], "A\021\021\000\000\000"
+; ASM:         .cv_def_range    [[after_inc_eax]] [[after_if]], reg, 17
 
 ; ASM:         .short  4429                    # Record kind: S_INLINESITE
 ; ASM:         .short  4414                    # Record kind: S_LOCAL
 ; ASM:         .asciz  "a"
-; ASM:         .cv_def_range    [[after_getint]] [[after_inc_eax]], "A\021\021\000\000\000"
+; ASM:         .cv_def_range    [[after_getint]] [[after_inc_eax]], reg, 17
 ; ASM:         .short  4414                    # Record kind: S_LOCAL
 ; ASM:         .asciz  "b"
-; ASM:         .cv_def_range    [[after_inc_eax]] [[after_if]], "A\021\021\000\000\000"
+; ASM:         .cv_def_range    [[after_inc_eax]] [[after_if]], reg, 17
 ; ASM:         .short  4430                    # Record kind: S_INLINESITE_END
 
 ; OBJ: Subsection [
@@ -252,7 +252,7 @@ attributes #3 = { nounwind }
 !9 = !{i32 2, !"Debug Info Version", i32 3}
 !10 = !{i32 1, !"PIC Level", i32 2}
 !11 = !{!"clang version 3.9.0 (trunk 260617) (llvm/trunk 260619)"}
-!12 = distinct !DISubprogram(name: "f", scope: !3, file: !3, line: 9, type: !13, isLocal: false, isDefinition: true, scopeLine: 9, flags: DIFlagPrototyped, isOptimized: true, unit: !2, variables: !15)
+!12 = distinct !DISubprogram(name: "f", scope: !3, file: !3, line: 9, type: !13, isLocal: false, isDefinition: true, scopeLine: 9, flags: DIFlagPrototyped, isOptimized: true, unit: !2, retainedNodes: !15)
 !13 = !DISubroutineType(types: !14)
 !14 = !{null, !7}
 !15 = !{!16, !17, !20, !21}
@@ -270,7 +270,7 @@ attributes #3 = { nounwind }
 !27 = !DILocation(line: 10, column: 7, scope: !12)
 !28 = !DILocation(line: 11, column: 9, scope: !18)
 !29 = !DILocalVariable(name: "a", arg: 1, scope: !30, file: !3, line: 4, type: !7)
-!30 = distinct !DISubprogram(name: "inlineinc", scope: !3, file: !3, line: 4, type: !31, isLocal: true, isDefinition: true, scopeLine: 4, flags: DIFlagPrototyped, isOptimized: true, unit: !2, variables: !33)
+!30 = distinct !DISubprogram(name: "inlineinc", scope: !3, file: !3, line: 4, type: !31, isLocal: true, isDefinition: true, scopeLine: 4, flags: DIFlagPrototyped, isOptimized: true, unit: !2, retainedNodes: !33)
 !31 = !DISubroutineType(types: !32)
 !32 = !{!7, !7}
 !33 = !{!29, !34}

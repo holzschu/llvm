@@ -152,8 +152,8 @@ supported include:
 ``foreach <var> = [ <list> ] in <def>``
     Replicate <body> or <def>, replacing instances of <var> with each value
     in <list>.  <var> is scoped at the level of the ``foreach`` loop and must
-    not conflict with any other object introduced in <body> or <def>.  Currently
-    only ``def``\s are expanded within <body>.
+    not conflict with any other object introduced in <body> or <def>.  Only
+    ``def``\s and ``defm``\s are expanded within <body>.
 
 ``foreach <var> = 0-15 in ...``
 
@@ -188,6 +188,10 @@ supported include:
     The lists must have the same element type.
     More than two arguments are accepted with the result being the concatenation
     of all the lists given.
+
+``!listsplat(a, size)``
+    A list value that contains the value ``a`` ``size`` times.
+    Example: ``!listsplat(0, 2)`` results in ``[0, 0]``.
 
 ``!strconcat(a, b, ...)``
     A string value that is the result of concatenating the 'a' and 'b' strings.
@@ -258,6 +262,16 @@ supported include:
 ``!if(a,b,c)``
   'b' if the result of 'int' or 'bit' operator 'a' is nonzero, 'c' otherwise.
 
+``!cond(condition_1 : val1, condition_2 : val2, ..., condition_n : valn)``
+    Instead of embedding !if inside !if which can get cumbersome,
+    one can use !cond. !cond returns 'val1' if the result of 'int' or 'bit'
+    operator 'condition1' is nonzero. Otherwise, it checks 'condition2'.
+    If 'condition2' is nonzero, returns 'val2', and so on.
+    If all conditions are zero, it reports an error.  
+
+    For example, to convert an integer 'x' into a string:
+      !cond(!lt(x,0) : "negative", !eq(x,0) : "zero", 1 : "positive")
+
 ``!eq(a,b)``
     'bit 1' if string a is equal to string b, 0 otherwise.  This only operates
     on string, int and bit objects.  Use !cast<string> to compare other types of
@@ -274,7 +288,7 @@ supported include:
     The usual shift operators. Operations are on 64-bit integers, the result
     is undefined for shift counts outside [0, 63].
 
-``!add(a,b,...)`` ``!and(a,b,...)`` ``!or(a,b,...)``
+``!add(a,b,...)`` ``!mul(a,b,...)`` ``!and(a,b,...)`` ``!or(a,b,...)``
     The usual arithmetic and binary operators.
 
 Note that all of the values have rules specifying how they convert to values
@@ -347,6 +361,23 @@ the ``V`` field for all of its subclasses:
 In this case, the ``Z`` definition will have a zero value for its ``V`` value,
 despite the fact that it derives (indirectly) from the ``C`` class, because the
 ``D`` class overrode its value.
+
+References between variables in a record are substituted late, which gives
+``let`` expressions unusual power. Consider this admittedly silly example:
+
+.. code-block:: text
+
+  class A<int x> {
+    int Y = x;
+    int Yplus1 = !add(Y, 1);
+    int xplus1 = !add(x, 1);
+  }
+  def Z : A<5> {
+    let Y = 10;
+  }
+
+The value of ``Z.xplus1`` will be 6, but the value of ``Z.Yplus1`` is 11. Use
+this power wisely.
 
 .. _template arguments:
 

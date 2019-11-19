@@ -1,9 +1,8 @@
 //===-- X86Instr3DNow.td - The 3DNow! Instruction Set ------*- tablegen -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -38,7 +37,7 @@ multiclass I3DNow_binop_rm_int<bits<8> opc, string Mn,
     [(set VR64:$dst, (!cast<Intrinsic>(
       !strconcat("int_x86_3dnow", Ver, "_", Mn)) VR64:$src1,
         (bitconvert (load_mmx addr:$src2))))]>,
-        Sched<[sched.Folded, ReadAfterLd]>;
+        Sched<[sched.Folded, sched.ReadAfterFold]>;
 }
 
 multiclass I3DNow_conv_rm_int<bits<8> opc, string Mn,
@@ -51,11 +50,11 @@ multiclass I3DNow_conv_rm_int<bits<8> opc, string Mn,
     [(set VR64:$dst, (!cast<Intrinsic>(
       !strconcat("int_x86_3dnow", Ver, "_", Mn))
         (bitconvert (load_mmx addr:$src))))]>,
-        Sched<[sched.Folded, ReadAfterLd]>;
+        Sched<[sched.Folded, sched.ReadAfterFold]>;
 }
 
-defm PAVGUSB  : I3DNow_binop_rm_int<0xBF, "pavgusb", WriteVecIMul, 1>;
-defm PF2ID    : I3DNow_conv_rm_int<0x1D, "pf2id", WriteCvtF2I>;
+defm PAVGUSB  : I3DNow_binop_rm_int<0xBF, "pavgusb", SchedWriteVecALU.MMX, 1>;
+defm PF2ID    : I3DNow_conv_rm_int<0x1D, "pf2id", WriteCvtPS2I>;
 defm PFACC    : I3DNow_binop_rm_int<0xAE, "pfacc", WriteFAdd>;
 defm PFADD    : I3DNow_binop_rm_int<0x9E, "pfadd", WriteFAdd, 1>;
 defm PFCMPEQ  : I3DNow_binop_rm_int<0xB0, "pfcmpeq", WriteFAdd, 1>;
@@ -71,11 +70,12 @@ defm PFRSQIT1 : I3DNow_binop_rm_int<0xA7, "pfrsqit1", WriteFAdd>;
 defm PFRSQRT  : I3DNow_conv_rm_int<0x97, "pfrsqrt", WriteFAdd>;
 defm PFSUB    : I3DNow_binop_rm_int<0x9A, "pfsub", WriteFAdd, 1>;
 defm PFSUBR   : I3DNow_binop_rm_int<0xAA, "pfsubr", WriteFAdd, 1>;
-defm PI2FD    : I3DNow_conv_rm_int<0x0D, "pi2fd", WriteCvtI2F>;
-defm PMULHRW  : I3DNow_binop_rm_int<0xB7, "pmulhrw", WriteVecIMul, 1>;
+defm PI2FD    : I3DNow_conv_rm_int<0x0D, "pi2fd", WriteCvtI2PS>;
+defm PMULHRW  : I3DNow_binop_rm_int<0xB7, "pmulhrw", SchedWriteVecIMul.MMX, 1>;
 
-// FIXME: Is there a better scheduler class for EMMS/FEMMS?
-let SchedRW = [WriteMicrocoded] in
+let SchedRW = [WriteEMMS],
+    Defs = [MM0, MM1, MM2, MM3, MM4, MM5, MM6, MM7,
+            ST0, ST1, ST2, ST3, ST4, ST5, ST6, ST7] in
 def FEMMS : I3DNow<0x0E, RawFrm, (outs), (ins), "femms",
                    [(int_x86_mmx_femms)]>, TB;
 
@@ -105,8 +105,8 @@ def PREFETCHWT1 : I<0x0D, MRM2m, (outs), (ins i8mem:$addr), "prefetchwt1\t$addr"
 }
 
 // "3DNowA" instructions
-defm PF2IW    : I3DNow_conv_rm_int<0x1C, "pf2iw", WriteCvtF2I, "a">;
-defm PI2FW    : I3DNow_conv_rm_int<0x0C, "pi2fw", WriteCvtI2F, "a">;
+defm PF2IW    : I3DNow_conv_rm_int<0x1C, "pf2iw", WriteCvtPS2I, "a">;
+defm PI2FW    : I3DNow_conv_rm_int<0x0C, "pi2fw", WriteCvtI2PS, "a">;
 defm PFNACC   : I3DNow_binop_rm_int<0x8A, "pfnacc", WriteFAdd, 0, "a">;
 defm PFPNACC  : I3DNow_binop_rm_int<0x8E, "pfpnacc", WriteFAdd, 0, "a">;
-defm PSWAPD   : I3DNow_conv_rm_int<0xBB, "pswapd", WriteShuffle, "a">;
+defm PSWAPD   : I3DNow_conv_rm_int<0xBB, "pswapd", SchedWriteShuffle.MMX, "a">;

@@ -1,9 +1,8 @@
 //===- CodeGen/ValueTypes.h - Low-Level Target independ. types --*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -82,7 +81,7 @@ namespace llvm {
 
     /// Returns the EVT that represents a vector EC.Min elements in length,
     /// where each element is of type VT.
-    static EVT getVectorVT(LLVMContext &Context, EVT VT, MVT::ElementCount EC) {
+    static EVT getVectorVT(LLVMContext &Context, EVT VT, ElementCount EC) {
       MVT M = MVT::getVectorVT(VT.V, EC);
       if (M.SimpleTy != MVT::INVALID_SIMPLE_VALUE_TYPE)
         return M;
@@ -278,7 +277,7 @@ namespace llvm {
     }
 
     // Given a (possibly scalable) vector type, return the ElementCount
-    MVT::ElementCount getVectorElementCount() const {
+    ElementCount getVectorElementCount() const {
       assert((isVector()) && "Invalid vector type!");
       if (isSimple())
         return V.getVectorElementCount();

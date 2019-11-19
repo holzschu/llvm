@@ -1,7 +1,7 @@
 # This test succeeds but produces an invalid relocation. This test
 # documents this behavoir.
 # RUN: yaml2obj %s > %t
-# RUN: llvm-readobj -relocations %t | FileCheck %s
+# RUN: llvm-readobj -r %t | FileCheck %s
 
 !ELF
 FileHeader:
@@ -16,7 +16,6 @@ Sections:
     Content:         "00000000"
   - Name:            .rel.text
     Type:            SHT_REL
-    Link:            .symtab
     Info:            .text
     Relocations:
       - Offset: 0x1000

@@ -1,15 +1,15 @@
 //===- llvm/Analysis/TargetTransformInfo.cpp ------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Analysis/TargetTransformInfoImpl.h"
 #include "llvm/IR/CallSite.h"
+#include "llvm/IR/CFG.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
@@ -19,6 +19,8 @@
 #include "llvm/IR/PatternMatch.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Analysis/CFG.h"
+#include "llvm/Analysis/LoopIterator.h"
 #include <utility>
 
 using namespace llvm;
@@ -31,7 +33,7 @@ static cl::opt<bool> EnableReduxCost("costmodel-reduxcost", cl::init(false),
                                      cl::desc("Recognize reduction patterns."));
 
 namespace {
-/// \brief No-op implementation of the TTI interface using the utility base
+/// No-op implementation of the TTI interface using the utility base
 /// classes.
 ///
 /// This is used when no target specific information is available.
@@ -39,6 +41,95 @@ struct NoTTIImpl : TargetTransformInfoImplCRTPBase<NoTTIImpl> {
   explicit NoTTIImpl(const DataLayout &DL)
       : TargetTransformInfoImplCRTPBase<NoTTIImpl>(DL) {}
 };
+}
+
+bool HardwareLoopInfo::canAnalyze(LoopInfo &LI) {
+  // If the loop has irreducible control flow, it can not be converted to
+  // Hardware loop.
+  LoopBlocksRPO RPOT(L);  
+  RPOT.perform(&LI);
+  if (containsIrreducibleCFG<const BasicBlock *>(RPOT, LI))
+    return false;
+  return true;
+}
+
+bool HardwareLoopInfo::isHardwareLoopCandidate(ScalarEvolution &SE,
+                                               LoopInfo &LI, DominatorTree &DT,
+                                               bool ForceNestedLoop,
+                                               bool ForceHardwareLoopPHI) {
+  SmallVector<BasicBlock *, 4> ExitingBlocks;
+  L->getExitingBlocks(ExitingBlocks);
+
+  for (BasicBlock *BB : ExitingBlocks) {
+    // If we pass the updated counter back through a phi, we need to know
+    // which latch the updated value will be coming from.
+    if (!L->isLoopLatch(BB)) {
+      if (ForceHardwareLoopPHI || CounterInReg)
+        continue;
+    }
+
+    const SCEV *EC = SE.getExitCount(L, BB);
+    if (isa<SCEVCouldNotCompute>(EC))
+      continue;
+    if (const SCEVConstant *ConstEC = dyn_cast<SCEVConstant>(EC)) {
+      if (ConstEC->getValue()->isZero())
+        continue;
+    } else if (!SE.isLoopInvariant(EC, L))
+      continue;
+
+    if (SE.getTypeSizeInBits(EC->getType()) > CountType->getBitWidth())
+      continue;
+
+    // If this exiting block is contained in a nested loop, it is not eligible
+    // for insertion of the branch-and-decrement since the inner loop would
+    // end up messing up the value in the CTR.
+    if (!IsNestingLegal && LI.getLoopFor(BB) != L && !ForceNestedLoop)
+      continue;
+
+    // We now have a loop-invariant count of loop iterations (which is not the
+    // constant zero) for which we know that this loop will not exit via this
+    // existing block.
+
+    // We need to make sure that this block will run on every loop iteration.
+    // For this to be true, we must dominate all blocks with backedges. Such
+    // blocks are in-loop predecessors to the header block.
+    bool NotAlways = false;
+    for (BasicBlock *Pred : predecessors(L->getHeader())) {
+      if (!L->contains(Pred))
+        continue;
+
+      if (!DT.dominates(BB, Pred)) {
+        NotAlways = true;
+        break;
+      }
+    }
+
+    if (NotAlways)
+      continue;
+
+    // Make sure this blocks ends with a conditional branch.
+    Instruction *TI = BB->getTerminator();
+    if (!TI)
+      continue;
+
+    if (BranchInst *BI = dyn_cast<BranchInst>(TI)) {
+      if (!BI->isConditional())
+        continue;
+
+      ExitBranch = BI;
+    } else
+      continue;
+
+    // Note that this block may not be the loop latch block, even if the loop
+    // has a latch block.
+    ExitBlock = BB;
+    ExitCount = EC;
+    break;
+  }
+
+  if (!ExitBlock)
+    return false;
+  return true;
 }
 
 TargetTransformInfo::TargetTransformInfo(const DataLayout &DL)
@@ -61,21 +152,27 @@ int TargetTransformInfo::getOperationCost(unsigned Opcode, Type *Ty,
   return Cost;
 }
 
-int TargetTransformInfo::getCallCost(FunctionType *FTy, int NumArgs) const {
-  int Cost = TTIImpl->getCallCost(FTy, NumArgs);
+int TargetTransformInfo::getCallCost(FunctionType *FTy, int NumArgs,
+                                     const User *U) const {
+  int Cost = TTIImpl->getCallCost(FTy, NumArgs, U);
   assert(Cost >= 0 && "TTI should not produce negative costs!");
   return Cost;
 }
 
 int TargetTransformInfo::getCallCost(const Function *F,
-                                     ArrayRef<const Value *> Arguments) const {
-  int Cost = TTIImpl->getCallCost(F, Arguments);
+                                     ArrayRef<const Value *> Arguments,
+                                     const User *U) const {
+  int Cost = TTIImpl->getCallCost(F, Arguments, U);
   assert(Cost >= 0 && "TTI should not produce negative costs!");
   return Cost;
 }
 
 unsigned TargetTransformInfo::getInliningThresholdMultiplier() const {
   return TTIImpl->getInliningThresholdMultiplier();
+}
+
+int TargetTransformInfo::getInlinerVectorBonusPercent() const {
+  return TTIImpl->getInlinerVectorBonusPercent();
 }
 
 int TargetTransformInfo::getGEPCost(Type *PointeeType, const Value *Ptr,
@@ -89,8 +186,9 @@ int TargetTransformInfo::getExtCost(const Instruction *I,
 }
 
 int TargetTransformInfo::getIntrinsicCost(
-    Intrinsic::ID IID, Type *RetTy, ArrayRef<const Value *> Arguments) const {
-  int Cost = TTIImpl->getIntrinsicCost(IID, RetTy, Arguments);
+    Intrinsic::ID IID, Type *RetTy, ArrayRef<const Value *> Arguments,
+    const User *U) const {
+  int Cost = TTIImpl->getIntrinsicCost(IID, RetTy, Arguments, U);
   assert(Cost >= 0 && "TTI should not produce negative costs!");
   return Cost;
 }
@@ -124,8 +222,24 @@ unsigned TargetTransformInfo::getFlatAddressSpace() const {
   return TTIImpl->getFlatAddressSpace();
 }
 
+bool TargetTransformInfo::collectFlatAddressOperands(
+  SmallVectorImpl<int> &OpIndexes, Intrinsic::ID IID) const  {
+  return TTIImpl->collectFlatAddressOperands(OpIndexes, IID);
+}
+
+bool TargetTransformInfo::rewriteIntrinsicWithAddressSpace(
+  IntrinsicInst *II, Value *OldV, Value *NewV) const {
+  return TTIImpl->rewriteIntrinsicWithAddressSpace(II, OldV, NewV);
+}
+
 bool TargetTransformInfo::isLoweredToCall(const Function *F) const {
   return TTIImpl->isLoweredToCall(F);
+}
+
+bool TargetTransformInfo::isHardwareLoopProfitable(
+  Loop *L, ScalarEvolution &SE, AssumptionCache &AC,
+  TargetLibraryInfo *LibInfo, HardwareLoopInfo &HWLoopInfo) const {
+  return TTIImpl->isHardwareLoopProfitable(L, SE, AC, LibInfo, HWLoopInfo);
 }
 
 void TargetTransformInfo::getUnrollingPreferences(
@@ -159,16 +273,38 @@ bool TargetTransformInfo::canMacroFuseCmp() const {
   return TTIImpl->canMacroFuseCmp();
 }
 
+bool TargetTransformInfo::canSaveCmp(Loop *L, BranchInst **BI,
+                                     ScalarEvolution *SE, LoopInfo *LI,
+                                     DominatorTree *DT, AssumptionCache *AC,
+                                     TargetLibraryInfo *LibInfo) const {
+  return TTIImpl->canSaveCmp(L, BI, SE, LI, DT, AC, LibInfo);
+}
+
 bool TargetTransformInfo::shouldFavorPostInc() const {
   return TTIImpl->shouldFavorPostInc();
 }
 
-bool TargetTransformInfo::isLegalMaskedStore(Type *DataType) const {
-  return TTIImpl->isLegalMaskedStore(DataType);
+bool TargetTransformInfo::shouldFavorBackedgeIndex(const Loop *L) const {
+  return TTIImpl->shouldFavorBackedgeIndex(L);
 }
 
-bool TargetTransformInfo::isLegalMaskedLoad(Type *DataType) const {
-  return TTIImpl->isLegalMaskedLoad(DataType);
+bool TargetTransformInfo::isLegalMaskedStore(Type *DataType,
+                                             MaybeAlign Alignment) const {
+  return TTIImpl->isLegalMaskedStore(DataType, Alignment);
+}
+
+bool TargetTransformInfo::isLegalMaskedLoad(Type *DataType,
+                                            MaybeAlign Alignment) const {
+  return TTIImpl->isLegalMaskedLoad(DataType, Alignment);
+}
+
+bool TargetTransformInfo::isLegalNTStore(Type *DataType,
+                                         Align Alignment) const {
+  return TTIImpl->isLegalNTStore(DataType, Alignment);
+}
+
+bool TargetTransformInfo::isLegalNTLoad(Type *DataType, Align Alignment) const {
+  return TTIImpl->isLegalNTLoad(DataType, Alignment);
 }
 
 bool TargetTransformInfo::isLegalMaskedGather(Type *DataType) const {
@@ -177,6 +313,14 @@ bool TargetTransformInfo::isLegalMaskedGather(Type *DataType) const {
 
 bool TargetTransformInfo::isLegalMaskedScatter(Type *DataType) const {
   return TTIImpl->isLegalMaskedScatter(DataType);
+}
+
+bool TargetTransformInfo::isLegalMaskedCompressStore(Type *DataType) const {
+  return TTIImpl->isLegalMaskedCompressStore(DataType);
+}
+
+bool TargetTransformInfo::isLegalMaskedExpandLoad(Type *DataType) const {
+  return TTIImpl->isLegalMaskedExpandLoad(DataType);
 }
 
 bool TargetTransformInfo::hasDivRemOp(Type *DataType, bool IsSigned) const {
@@ -221,14 +365,6 @@ bool TargetTransformInfo::isTypeLegal(Type *Ty) const {
   return TTIImpl->isTypeLegal(Ty);
 }
 
-unsigned TargetTransformInfo::getJumpBufAlignment() const {
-  return TTIImpl->getJumpBufAlignment();
-}
-
-unsigned TargetTransformInfo::getJumpBufSize() const {
-  return TTIImpl->getJumpBufSize();
-}
-
 bool TargetTransformInfo::shouldBuildLookupTables() const {
   return TTIImpl->shouldBuildLookupTables();
 }
@@ -259,13 +395,17 @@ bool TargetTransformInfo::enableAggressiveInterleaving(bool LoopHasReductions) c
   return TTIImpl->enableAggressiveInterleaving(LoopHasReductions);
 }
 
-const TargetTransformInfo::MemCmpExpansionOptions *
-TargetTransformInfo::enableMemCmpExpansion(bool IsZeroCmp) const {
-  return TTIImpl->enableMemCmpExpansion(IsZeroCmp);
+TargetTransformInfo::MemCmpExpansionOptions
+TargetTransformInfo::enableMemCmpExpansion(bool OptSize, bool IsZeroCmp) const {
+  return TTIImpl->enableMemCmpExpansion(OptSize, IsZeroCmp);
 }
 
 bool TargetTransformInfo::enableInterleavedAccessVectorization() const {
   return TTIImpl->enableInterleavedAccessVectorization();
+}
+
+bool TargetTransformInfo::enableMaskedInterleavedAccessVectorization() const {
+  return TTIImpl->enableMaskedInterleavedAccessVectorization();
 }
 
 bool TargetTransformInfo::isFPVectorizationPotentiallyUnsafe() const {
@@ -328,8 +468,16 @@ int TargetTransformInfo::getIntImmCost(Intrinsic::ID IID, unsigned Idx,
   return Cost;
 }
 
-unsigned TargetTransformInfo::getNumberOfRegisters(bool Vector) const {
-  return TTIImpl->getNumberOfRegisters(Vector);
+unsigned TargetTransformInfo::getNumberOfRegisters(unsigned ClassID) const {
+  return TTIImpl->getNumberOfRegisters(ClassID);
+}
+
+unsigned TargetTransformInfo::getRegisterClassForType(bool Vector, Type *Ty) const {
+  return TTIImpl->getRegisterClassForType(Vector, Ty);
+}
+
+const char* TargetTransformInfo::getRegisterClassName(unsigned ClassID) const {
+  return TTIImpl->getRegisterClassName(ClassID);
 }
 
 unsigned TargetTransformInfo::getRegisterBitWidth(bool Vector) const {
@@ -382,6 +530,55 @@ unsigned TargetTransformInfo::getMaxPrefetchIterationsAhead() const {
 
 unsigned TargetTransformInfo::getMaxInterleaveFactor(unsigned VF) const {
   return TTIImpl->getMaxInterleaveFactor(VF);
+}
+
+TargetTransformInfo::OperandValueKind
+TargetTransformInfo::getOperandInfo(Value *V, OperandValueProperties &OpProps) {
+  OperandValueKind OpInfo = OK_AnyValue;
+  OpProps = OP_None;
+
+  if (auto *CI = dyn_cast<ConstantInt>(V)) {
+    if (CI->getValue().isPowerOf2())
+      OpProps = OP_PowerOf2;
+    return OK_UniformConstantValue;
+  }
+
+  // A broadcast shuffle creates a uniform value.
+  // TODO: Add support for non-zero index broadcasts.
+  // TODO: Add support for different source vector width.
+  if (auto *ShuffleInst = dyn_cast<ShuffleVectorInst>(V))
+    if (ShuffleInst->isZeroEltSplat())
+      OpInfo = OK_UniformValue;
+
+  const Value *Splat = getSplatValue(V);
+
+  // Check for a splat of a constant or for a non uniform vector of constants
+  // and check if the constant(s) are all powers of two.
+  if (isa<ConstantVector>(V) || isa<ConstantDataVector>(V)) {
+    OpInfo = OK_NonUniformConstantValue;
+    if (Splat) {
+      OpInfo = OK_UniformConstantValue;
+      if (auto *CI = dyn_cast<ConstantInt>(Splat))
+        if (CI->getValue().isPowerOf2())
+          OpProps = OP_PowerOf2;
+    } else if (auto *CDS = dyn_cast<ConstantDataSequential>(V)) {
+      OpProps = OP_PowerOf2;
+      for (unsigned I = 0, E = CDS->getNumElements(); I != E; ++I) {
+        if (auto *CI = dyn_cast<ConstantInt>(CDS->getElementAsConstant(I)))
+          if (CI->getValue().isPowerOf2())
+            continue;
+        OpProps = OP_None;
+        break;
+      }
+    }
+  }
+
+  // Check for a splat of a uniform value. This is not loop aware, so return
+  // true only for the obviously uniform cases (argument, globalvalue)
+  if (Splat && (isa<Argument>(Splat) || isa<GlobalValue>(Splat)))
+    OpInfo = OK_UniformValue;
+
+  return OpInfo;
 }
 
 int TargetTransformInfo::getArithmeticInstrCost(
@@ -472,9 +669,12 @@ int TargetTransformInfo::getGatherScatterOpCost(unsigned Opcode, Type *DataTy,
 
 int TargetTransformInfo::getInterleavedMemoryOpCost(
     unsigned Opcode, Type *VecTy, unsigned Factor, ArrayRef<unsigned> Indices,
-    unsigned Alignment, unsigned AddressSpace) const {
+    unsigned Alignment, unsigned AddressSpace, bool UseMaskForCond,
+    bool UseMaskForGaps) const {
   int Cost = TTIImpl->getInterleavedMemoryOpCost(Opcode, VecTy, Factor, Indices,
-                                                 Alignment, AddressSpace);
+                                                 Alignment, AddressSpace,
+                                                 UseMaskForCond,
+                                                 UseMaskForGaps);
   assert(Cost >= 0 && "TTI should not produce negative costs!");
   return Cost;
 }
@@ -510,6 +710,12 @@ int TargetTransformInfo::getAddressComputationCost(Type *Tp,
                                                    ScalarEvolution *SE,
                                                    const SCEV *Ptr) const {
   int Cost = TTIImpl->getAddressComputationCost(Tp, SE, Ptr);
+  assert(Cost >= 0 && "TTI should not produce negative costs!");
+  return Cost;
+}
+
+int TargetTransformInfo::getMemcpyCost(const Instruction *I) const {
+  int Cost = TTIImpl->getMemcpyCost(I);
   assert(Cost >= 0 && "TTI should not produce negative costs!");
   return Cost;
 }
@@ -569,6 +775,12 @@ bool TargetTransformInfo::areInlineCompatible(const Function *Caller,
   return TTIImpl->areInlineCompatible(Caller, Callee);
 }
 
+bool TargetTransformInfo::areFunctionArgsABICompatible(
+    const Function *Caller, const Function *Callee,
+    SmallPtrSetImpl<Argument *> &Args) const {
+  return TTIImpl->areFunctionArgsABICompatible(Caller, Callee, Args);
+}
+
 bool TargetTransformInfo::isIndexedLoadLegal(MemIndexedMode Mode,
                                              Type *Ty) const {
   return TTIImpl->isIndexedLoadLegal(Mode, Ty);
@@ -626,141 +838,12 @@ bool TargetTransformInfo::shouldExpandReduction(const IntrinsicInst *II) const {
   return TTIImpl->shouldExpandReduction(II);
 }
 
+unsigned TargetTransformInfo::getGISelRematGlobalCost() const {
+  return TTIImpl->getGISelRematGlobalCost();
+}
+
 int TargetTransformInfo::getInstructionLatency(const Instruction *I) const {
   return TTIImpl->getInstructionLatency(I);
-}
-
-static bool isReverseVectorMask(ArrayRef<int> Mask) {
-  for (unsigned i = 0, MaskSize = Mask.size(); i < MaskSize; ++i)
-    if (Mask[i] >= 0 && Mask[i] != (int)(MaskSize - 1 - i))
-      return false;
-  return true;
-}
-
-static bool isSingleSourceVectorMask(ArrayRef<int> Mask) {
-  bool Vec0 = false;
-  bool Vec1 = false;
-  for (unsigned i = 0, NumVecElts = Mask.size(); i < NumVecElts; ++i) {
-    if (Mask[i] >= 0) {
-      if ((unsigned)Mask[i] >= NumVecElts)
-        Vec1 = true;
-      else
-        Vec0 = true;
-    }
-  }
-  return !(Vec0 && Vec1);
-}
-
-static bool isZeroEltBroadcastVectorMask(ArrayRef<int> Mask) {
-  for (unsigned i = 0; i < Mask.size(); ++i)
-    if (Mask[i] > 0)
-      return false;
-  return true;
-}
-
-static bool isAlternateVectorMask(ArrayRef<int> Mask) {
-  bool isAlternate = true;
-  unsigned MaskSize = Mask.size();
-
-  // Example: shufflevector A, B, <0,5,2,7>
-  for (unsigned i = 0; i < MaskSize && isAlternate; ++i) {
-    if (Mask[i] < 0)
-      continue;
-    isAlternate = Mask[i] == (int)((i & 1) ? MaskSize + i : i);
-  }
-
-  if (isAlternate)
-    return true;
-
-  isAlternate = true;
-  // Example: shufflevector A, B, <4,1,6,3>
-  for (unsigned i = 0; i < MaskSize && isAlternate; ++i) {
-    if (Mask[i] < 0)
-      continue;
-    isAlternate = Mask[i] == (int)((i & 1) ? i : MaskSize + i);
-  }
-
-  return isAlternate;
-}
-
-static bool isTransposeVectorMask(ArrayRef<int> Mask) {
-  // Transpose vector masks transpose a 2xn matrix. They read corresponding
-  // even- or odd-numbered vector elements from two n-dimensional source
-  // vectors and write each result into consecutive elements of an
-  // n-dimensional destination vector. Two shuffles are necessary to complete
-  // the transpose, one for the even elements and another for the odd elements.
-  // This description closely follows how the TRN1 and TRN2 AArch64
-  // instructions operate.
-  //
-  // For example, a simple 2x2 matrix can be transposed with:
-  //
-  //   ; Original matrix
-  //   m0 = <a, b>
-  //   m1 = <c, d>
-  //
-  //   ; Transposed matrix
-  //   t0 = <a, c> = shufflevector m0, m1, <0, 2>
-  //   t1 = <b, d> = shufflevector m0, m1, <1, 3>
-  //
-  // For matrices having greater than n columns, the resulting nx2 transposed
-  // matrix is stored in two result vectors such that one vector contains
-  // interleaved elements from all the even-numbered rows and the other vector
-  // contains interleaved elements from all the odd-numbered rows. For example,
-  // a 2x4 matrix can be transposed with:
-  //
-  //   ; Original matrix
-  //   m0 = <a, b, c, d>
-  //   m1 = <e, f, g, h>
-  //
-  //   ; Transposed matrix
-  //   t0 = <a, e, c, g> = shufflevector m0, m1 <0, 4, 2, 6>
-  //   t1 = <b, f, d, h> = shufflevector m0, m1 <1, 5, 3, 7>
-  //
-  // The above explanation places limitations on what valid transpose masks can
-  // look like. These limitations are defined by the checks below.
-  //
-  // 1. The number of elements in the mask must be a power of two.
-  if (!isPowerOf2_32(Mask.size()))
-    return false;
-
-  // 2. The first element of the mask must be either a zero (for the
-  // even-numbered vector elements) or a one (for the odd-numbered vector
-  // elements).
-  if (Mask[0] != 0 && Mask[0] != 1)
-    return false;
-
-  // 3. The difference between the first two elements must be equal to the
-  // number of elements in the mask.
-  if (Mask[1] - Mask[0] != (int)Mask.size())
-    return false;
-
-  // 4. The difference between consecutive even-numbered and odd-numbered
-  // elements must be equal to two.
-  for (int I = 2; I < (int)Mask.size(); ++I)
-    if (Mask[I] - Mask[I - 2] != 2)
-      return false;
-
-  return true;
-}
-
-static TargetTransformInfo::OperandValueKind getOperandInfo(Value *V) {
-  TargetTransformInfo::OperandValueKind OpInfo =
-      TargetTransformInfo::OK_AnyValue;
-
-  // Check for a splat of a constant or for a non uniform vector of constants.
-  if (isa<ConstantVector>(V) || isa<ConstantDataVector>(V)) {
-    OpInfo = TargetTransformInfo::OK_NonUniformConstantValue;
-    if (cast<Constant>(V)->getSplatValue() != nullptr)
-      OpInfo = TargetTransformInfo::OK_UniformConstantValue;
-  }
-
-  // Check for a splat of a uniform value. This is not loop aware, so return
-  // true only for the obviously uniform cases (argument, globalvalue)
-  const Value *Splat = getSplatValue(V);
-  if (Splat && (isa<Argument>(Splat) || isa<GlobalValue>(Splat)))
-    OpInfo = TargetTransformInfo::OK_UniformValue;
-
-  return OpInfo;
 }
 
 static bool matchPairwiseShuffleMask(ShuffleVectorInst *SI, bool IsLeft,
@@ -811,7 +894,7 @@ struct ReductionData {
 static Optional<ReductionData> getReductionData(Instruction *I) {
   Value *L, *R;
   if (m_BinOp(m_Value(L), m_Value(R)).match(I))
-    return ReductionData(RK_Arithmetic, I->getOpcode(), L, R); 
+    return ReductionData(RK_Arithmetic, I->getOpcode(), L, R);
   if (auto *SI = dyn_cast<SelectInst>(I)) {
     if (m_SMin(m_Value(L), m_Value(R)).match(SI) ||
         m_SMax(m_Value(L), m_Value(R)).match(SI) ||
@@ -820,8 +903,8 @@ static Optional<ReductionData> getReductionData(Instruction *I) {
         m_UnordFMin(m_Value(L), m_Value(R)).match(SI) ||
         m_UnordFMax(m_Value(L), m_Value(R)).match(SI)) {
       auto *CI = cast<CmpInst>(SI->getCondition());
-      return ReductionData(RK_MinMax, CI->getOpcode(), L, R); 
-    }   
+      return ReductionData(RK_MinMax, CI->getOpcode(), L, R);
+    }
     if (m_UMin(m_Value(L), m_Value(R)).match(SI) ||
         m_UMax(m_Value(L), m_Value(R)).match(SI)) {
       auto *CI = cast<CmpInst>(SI->getCondition());
@@ -941,11 +1024,11 @@ static ReductionKind matchPairwiseReduction(const ExtractElementInst *ReduxRoot,
 
   // We look for a sequence of shuffle,shuffle,add triples like the following
   // that builds a pairwise reduction tree.
-  //  
+  //
   //  (X0, X1, X2, X3)
   //   (X0 + X1, X2 + X3, undef, undef)
   //    ((X0 + X1) + (X2 + X3), undef, undef, undef)
-  //  
+  //
   // %rdx.shuf.0.0 = shufflevector <4 x float> %rdx, <4 x float> undef,
   //       <4 x i32> <i32 0, i32 2 , i32 undef, i32 undef>
   // %rdx.shuf.0.1 = shufflevector <4 x float> %rdx, <4 x float> undef,
@@ -1006,7 +1089,7 @@ matchVectorSplittingReduction(const ExtractElementInst *ReduxRoot,
 
   // We look for a sequence of shuffles and adds like the following matching one
   // fadd, shuffle vector pair at a time.
-  //  
+  //
   // %rdx.shuf = shufflevector <4 x float> %rdx, <4 x float> undef,
   //                           <4 x i32> <i32 2, i32 3, i32 undef, i32 undef>
   // %bin.rdx = fadd <4 x float> %rdx, %rdx.shuf
@@ -1017,7 +1100,7 @@ matchVectorSplittingReduction(const ExtractElementInst *ReduxRoot,
 
   unsigned MaskStart = 1;
   Instruction *RdxOp = RdxStart;
-  SmallVector<int, 32> ShuffleMask(NumVecElems, 0); 
+  SmallVector<int, 32> ShuffleMask(NumVecElems, 0);
   unsigned NumVecElemsRemain = NumVecElems;
   while (NumVecElemsRemain - 1) {
     // Check for the right reduction operation.
@@ -1086,15 +1169,23 @@ int TargetTransformInfo::getInstructionThroughput(const Instruction *I) const {
   case Instruction::And:
   case Instruction::Or:
   case Instruction::Xor: {
-    TargetTransformInfo::OperandValueKind Op1VK =
-      getOperandInfo(I->getOperand(0));
-    TargetTransformInfo::OperandValueKind Op2VK =
-      getOperandInfo(I->getOperand(1));
-    SmallVector<const Value*, 2> Operands(I->operand_values());
-    return getArithmeticInstrCost(I->getOpcode(), I->getType(), Op1VK,
-                                       Op2VK, TargetTransformInfo::OP_None,
-                                       TargetTransformInfo::OP_None,
-                                       Operands);
+    TargetTransformInfo::OperandValueKind Op1VK, Op2VK;
+    TargetTransformInfo::OperandValueProperties Op1VP, Op2VP;
+    Op1VK = getOperandInfo(I->getOperand(0), Op1VP);
+    Op2VK = getOperandInfo(I->getOperand(1), Op2VP);
+    SmallVector<const Value *, 2> Operands(I->operand_values());
+    return getArithmeticInstrCost(I->getOpcode(), I->getType(), Op1VK, Op2VK,
+                                  Op1VP, Op2VP, Operands);
+  }
+  case Instruction::FNeg: {
+    TargetTransformInfo::OperandValueKind Op1VK, Op2VK;
+    TargetTransformInfo::OperandValueProperties Op1VP, Op2VP;
+    Op1VK = getOperandInfo(I->getOperand(0), Op1VP);
+    Op2VK = OK_AnyValue;
+    Op2VP = OP_None;
+    SmallVector<const Value *, 2> Operands(I->operand_values());
+    return getArithmeticInstrCost(I->getOpcode(), I->getType(), Op1VK, Op2VK,
+                                  Op1VP, Op2VP, Operands);
   }
   case Instruction::Select: {
     const SelectInst *SI = cast<SelectInst>(I);
@@ -1185,43 +1276,46 @@ int TargetTransformInfo::getInstructionThroughput(const Instruction *I) const {
   case Instruction::InsertElement: {
     const InsertElementInst * IE = cast<InsertElementInst>(I);
     ConstantInt *CI = dyn_cast<ConstantInt>(IE->getOperand(2));
-    unsigned Idx = -1; 
+    unsigned Idx = -1;
     if (CI)
       Idx = CI->getZExtValue();
     return getVectorInstrCost(I->getOpcode(),
                                    IE->getType(), Idx);
   }
+  case Instruction::ExtractValue:
+    return 0; // Model all ExtractValue nodes as free.
   case Instruction::ShuffleVector: {
     const ShuffleVectorInst *Shuffle = cast<ShuffleVectorInst>(I);
-    Type *VecTypOp0 = Shuffle->getOperand(0)->getType();
-    unsigned NumVecElems = VecTypOp0->getVectorNumElements();
-    SmallVector<int, 16> Mask = Shuffle->getShuffleMask();
+    Type *Ty = Shuffle->getType();
+    Type *SrcTy = Shuffle->getOperand(0)->getType();
 
-    if (NumVecElems == Mask.size()) {
-      if (isReverseVectorMask(Mask))
-        return TTIImpl->getShuffleCost(TargetTransformInfo::SK_Reverse,
-                                       VecTypOp0, 0, nullptr);
-      if (isAlternateVectorMask(Mask))
-        return TTIImpl->getShuffleCost(TargetTransformInfo::SK_Alternate,
-                                       VecTypOp0, 0, nullptr);
+    // TODO: Identify and add costs for insert subvector, etc.
+    int SubIndex;
+    if (Shuffle->isExtractSubvectorMask(SubIndex))
+      return TTIImpl->getShuffleCost(SK_ExtractSubvector, SrcTy, SubIndex, Ty);
 
-      if (isTransposeVectorMask(Mask))
-        return TTIImpl->getShuffleCost(TargetTransformInfo::SK_Transpose,
-                                       VecTypOp0, 0, nullptr);
+    if (Shuffle->changesLength())
+      return -1;
 
-      if (isZeroEltBroadcastVectorMask(Mask))
-        return TTIImpl->getShuffleCost(TargetTransformInfo::SK_Broadcast,
-                                       VecTypOp0, 0, nullptr);
+    if (Shuffle->isIdentity())
+      return 0;
 
-      if (isSingleSourceVectorMask(Mask))
-        return TTIImpl->getShuffleCost(TargetTransformInfo::SK_PermuteSingleSrc,
-                                       VecTypOp0, 0, nullptr);
+    if (Shuffle->isReverse())
+      return TTIImpl->getShuffleCost(SK_Reverse, Ty, 0, nullptr);
 
-      return TTIImpl->getShuffleCost(TargetTransformInfo::SK_PermuteTwoSrc,
-                                     VecTypOp0, 0, nullptr);
-    }
+    if (Shuffle->isSelect())
+      return TTIImpl->getShuffleCost(SK_Select, Ty, 0, nullptr);
 
-    return -1;
+    if (Shuffle->isTranspose())
+      return TTIImpl->getShuffleCost(SK_Transpose, Ty, 0, nullptr);
+
+    if (Shuffle->isZeroEltSplat())
+      return TTIImpl->getShuffleCost(SK_Broadcast, Ty, 0, nullptr);
+
+    if (Shuffle->isSingleSource())
+      return TTIImpl->getShuffleCost(SK_PermuteSingleSrc, Ty, 0, nullptr);
+
+    return TTIImpl->getShuffleCost(SK_PermuteTwoSrc, Ty, 0, nullptr);
   }
   case Instruction::Call:
     if (const IntrinsicInst *II = dyn_cast<IntrinsicInst>(I)) {

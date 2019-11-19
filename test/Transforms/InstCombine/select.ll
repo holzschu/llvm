@@ -385,6 +385,31 @@ define i32 @test16_neg2(i1 %C, i32 addrspace(1)* %P) {
   ret i32 %V
 }
 
+;; It may be legal to load from a null address with null pointer valid attribute.
+define i32 @test16_no_null_opt(i1 %C, i32* %P) #0 {
+; CHECK-LABEL: @test16_no_null_opt(
+; CHECK-NEXT:    [[P2:%.*]] = select i1 [[C:%.*]], i32* [[P:%.*]], i32* null
+; CHECK-NEXT:    [[V:%.*]] = load i32, i32* [[P2]], align 4
+; CHECK-NEXT:    ret i32 [[V]]
+;
+  %P2 = select i1 %C, i32* %P, i32* null
+  %V = load i32, i32* %P2
+  ret i32 %V
+}
+
+define i32 @test16_no_null_opt_2(i1 %C, i32* %P) #0 {
+; CHECK-LABEL: @test16_no_null_opt_2(
+; CHECK-NEXT:    [[P2:%.*]] = select i1 [[C:%.*]], i32* null, i32* [[P:%.*]]
+; CHECK-NEXT:    [[V:%.*]] = load i32, i32* [[P2]], align 4
+; CHECK-NEXT:    ret i32 [[V]]
+;
+  %P2 = select i1 %C, i32* null, i32* %P
+  %V = load i32, i32* %P2
+  ret i32 %V
+}
+
+attributes #0 = { "null-pointer-is-valid"="true" }
+
 define i1 @test17(i32* %X, i1 %C) {
 ; CHECK-LABEL: @test17(
 ; CHECK-NEXT:    [[RV1:%.*]] = icmp eq i32* [[X:%.*]], null
@@ -669,8 +694,8 @@ define i32 @test41(i1 %cond, i32 %x, i32 %y) {
 define i32 @test42(i32 %x, i32 %y) {
 ; CHECK-LABEL: @test42(
 ; CHECK-NEXT:    [[COND:%.*]] = icmp eq i32 [[X:%.*]], 0
-; CHECK-NEXT:    [[B:%.*]] = sext i1 [[COND]] to i32
-; CHECK-NEXT:    [[C:%.*]] = add i32 [[B]], [[Y:%.*]]
+; CHECK-NEXT:    [[TMP1:%.*]] = zext i1 [[COND]] to i32
+; CHECK-NEXT:    [[C:%.*]] = sub i32 [[Y:%.*]], [[TMP1]]
 ; CHECK-NEXT:    ret i32 [[C]]
 ;
   %b = add i32 %y, -1
@@ -682,8 +707,8 @@ define i32 @test42(i32 %x, i32 %y) {
 define <2 x i32> @test42vec(<2 x i32> %x, <2 x i32> %y) {
 ; CHECK-LABEL: @test42vec(
 ; CHECK-NEXT:    [[COND:%.*]] = icmp eq <2 x i32> [[X:%.*]], zeroinitializer
-; CHECK-NEXT:    [[B:%.*]] = sext <2 x i1> [[COND]] to <2 x i32>
-; CHECK-NEXT:    [[C:%.*]] = add <2 x i32> [[B]], [[Y:%.*]]
+; CHECK-NEXT:    [[TMP1:%.*]] = zext <2 x i1> [[COND]] to <2 x i32>
+; CHECK-NEXT:    [[C:%.*]] = sub <2 x i32> [[Y:%.*]], [[TMP1]]
 ; CHECK-NEXT:    ret <2 x i32> [[C]]
 ;
   %b = add <2 x i32> %y, <i32 -1, i32 -1>
@@ -1116,7 +1141,7 @@ define i32 @test82(i1 %flag) {
 ; CHECK-NEXT:    [[Y:%.*]] = alloca i32, align 4
 ; CHECK-NEXT:    [[X1:%.*]] = bitcast float* [[X]] to i32*
 ; CHECK-NEXT:    [[Y1:%.*]] = bitcast i32* [[Y]] to float*
-; CHECK-NEXT:    call void @scribble_on_i32(i32* [[X1]])
+; CHECK-NEXT:    call void @scribble_on_i32(i32* nonnull [[X1]])
 ; CHECK-NEXT:    call void @scribble_on_i32(i32* nonnull [[Y]])
 ; CHECK-NEXT:    [[TMP:%.*]] = load float, float* [[X]], align 4
 ; CHECK-NEXT:    store float [[TMP]], float* [[Y1]], align 4
@@ -1147,8 +1172,8 @@ define i8* @test83(i1 %flag) {
 ; CHECK-NEXT:    [[Y:%.*]] = alloca i8*, align 8
 ; CHECK-NEXT:    [[TMPCAST:%.*]] = bitcast i8** [[Y]] to i64*
 ; CHECK-NEXT:    [[X1:%.*]] = bitcast i8** [[X]] to i64*
-; CHECK-NEXT:    call void @scribble_on_i64(i64* [[X1]])
-; CHECK-NEXT:    call void @scribble_on_i64(i64* [[TMPCAST]])
+; CHECK-NEXT:    call void @scribble_on_i64(i64* nonnull [[X1]])
+; CHECK-NEXT:    call void @scribble_on_i64(i64* nonnull [[TMPCAST]])
 ; CHECK-NEXT:    [[TMP:%.*]] = load i64, i64* [[X1]], align 8
 ; CHECK-NEXT:    store i64 [[TMP]], i64* [[TMPCAST]], align 8
 ; CHECK-NEXT:    [[V:%.*]] = inttoptr i64 [[TMP]] to i8*
@@ -1175,8 +1200,8 @@ define i64 @test84(i1 %flag) {
 ; CHECK-NEXT:    [[Y:%.*]] = alloca i8*, align 8
 ; CHECK-NEXT:    [[TMPCAST:%.*]] = bitcast i8** [[Y]] to i64*
 ; CHECK-NEXT:    [[X1:%.*]] = bitcast i8** [[X]] to i64*
-; CHECK-NEXT:    call void @scribble_on_i64(i64* [[X1]])
-; CHECK-NEXT:    call void @scribble_on_i64(i64* [[TMPCAST]])
+; CHECK-NEXT:    call void @scribble_on_i64(i64* nonnull [[X1]])
+; CHECK-NEXT:    call void @scribble_on_i64(i64* nonnull [[TMPCAST]])
 ; CHECK-NEXT:    [[TMP:%.*]] = load i8*, i8** [[X]], align 8
 ; CHECK-NEXT:    store i8* [[TMP]], i8** [[Y]], align 8
 ; CHECK-NEXT:    [[V:%.*]] = ptrtoint i8* [[TMP]] to i64
@@ -1205,7 +1230,7 @@ define i8* @test85(i1 %flag) {
 ; CHECK-NEXT:    [[X1_SUB:%.*]] = getelementptr inbounds [2 x i8*], [2 x i8*]* [[X1]], i64 0, i64 0
 ; CHECK-NEXT:    [[X2:%.*]] = bitcast [2 x i8*]* [[X1]] to i128*
 ; CHECK-NEXT:    [[Y1:%.*]] = bitcast i128* [[Y]] to i8**
-; CHECK-NEXT:    call void @scribble_on_i128(i128* [[X2]])
+; CHECK-NEXT:    call void @scribble_on_i128(i128* nonnull [[X2]])
 ; CHECK-NEXT:    call void @scribble_on_i128(i128* nonnull [[Y]])
 ; CHECK-NEXT:    [[TMP:%.*]] = load i128, i128* [[X2]], align 8
 ; CHECK-NEXT:    store i128 [[TMP]], i128* [[Y]], align 8
@@ -1238,7 +1263,7 @@ define i128 @test86(i1 %flag) {
 ; CHECK-NEXT:    [[X1_SUB:%.*]] = getelementptr inbounds [2 x i8*], [2 x i8*]* [[X1]], i64 0, i64 0
 ; CHECK-NEXT:    [[X2:%.*]] = bitcast [2 x i8*]* [[X1]] to i128*
 ; CHECK-NEXT:    [[Y1:%.*]] = bitcast i128* [[Y]] to i8**
-; CHECK-NEXT:    call void @scribble_on_i128(i128* [[X2]])
+; CHECK-NEXT:    call void @scribble_on_i128(i128* nonnull [[X2]])
 ; CHECK-NEXT:    call void @scribble_on_i128(i128* nonnull [[Y]])
 ; CHECK-NEXT:    [[TMP:%.*]] = load i8*, i8** [[X1_SUB]], align 8
 ; CHECK-NEXT:    store i8* [[TMP]], i8** [[Y1]], align 8
@@ -1293,10 +1318,8 @@ define i32 @test_select_select1(i32 %a, i32 %r0, i32 %r1, i32 %v1, i32 %v2) {
 
 define i32 @PR23757(i32 %x) {
 ; CHECK-LABEL: @PR23757(
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i32 [[X:%.*]], 2147483647
-; CHECK-NEXT:    [[ADD:%.*]] = add nsw i32 [[X]], 1
-; CHECK-NEXT:    [[SEL:%.*]] = select i1 [[CMP]], i32 -2147483648, i32 [[ADD]]
-; CHECK-NEXT:    ret i32 [[SEL]]
+; CHECK-NEXT:    [[ADD:%.*]] = add i32 [[X:%.*]], 1
+; CHECK-NEXT:    ret i32 [[ADD]]
 ;
   %cmp = icmp eq i32 %x, 2147483647
   %add = add nsw i32 %x, 1
@@ -1304,13 +1327,50 @@ define i32 @PR23757(i32 %x) {
   ret i32 %sel
 }
 
-; max(max(~a, -1), -1) --> max(~a, -1)
+define i32 @PR23757_swapped(i32 %x) {
+; CHECK-LABEL: @PR23757_swapped(
+; CHECK-NEXT:    ret i32 -2147483648
+;
+  %cmp = icmp eq i32 %x, 2147483647
+  %add = add nsw i32 %x, 1
+  %sel = select i1 %cmp, i32 %add, i32 -2147483648
+  ret i32 %sel
+}
+
+define i32 @PR23757_ne(i32 %x, i1* %p) {
+; CHECK-LABEL: @PR23757_ne(
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ne i32 [[X:%.*]], 2147483647
+; CHECK-NEXT:    store i1 [[CMP]], i1* [[P:%.*]], align 1
+; CHECK-NEXT:    ret i32 -2147483648
+;
+  %cmp = icmp ne i32 %x, 2147483647
+  store i1 %cmp, i1* %p ; thwart predicate canonicalization
+  %add = add nsw i32 %x, 1
+  %sel = select i1 %cmp, i32 -2147483648, i32 %add
+  ret i32 %sel
+}
+
+define i32 @PR23757_ne_swapped(i32 %x, i1* %p) {
+; CHECK-LABEL: @PR23757_ne_swapped(
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ne i32 [[X:%.*]], 2147483647
+; CHECK-NEXT:    store i1 [[CMP]], i1* [[P:%.*]], align 1
+; CHECK-NEXT:    [[ADD:%.*]] = add i32 [[X]], 1
+; CHECK-NEXT:    ret i32 [[ADD]]
+;
+  %cmp = icmp ne i32 %x, 2147483647
+  store i1 %cmp, i1* %p ; thwart predicate canonicalization
+  %add = add nsw i32 %x, 1
+  %sel = select i1 %cmp, i32 %add, i32 -2147483648
+  ret i32 %sel
+}
+
+; max(max(~a, -1), -1) --> ~min(a, 0)
 
 define i32 @PR27137(i32 %a) {
 ; CHECK-LABEL: @PR27137(
-; CHECK-NEXT:    [[NOT_A:%.*]] = xor i32 [[A:%.*]], -1
-; CHECK-NEXT:    [[TMP1:%.*]] = icmp sgt i32 [[NOT_A]], -1
-; CHECK-NEXT:    [[S1:%.*]] = select i1 [[TMP1]], i32 [[NOT_A]], i32 -1
+; CHECK-NEXT:    [[TMP1:%.*]] = icmp slt i32 [[A:%.*]], 0
+; CHECK-NEXT:    [[TMP2:%.*]] = select i1 [[TMP1]], i32 [[A]], i32 0
+; CHECK-NEXT:    [[S1:%.*]] = xor i32 [[TMP2]], -1
 ; CHECK-NEXT:    ret i32 [[S1]]
 ;
   %not_a = xor i32 %a, -1
@@ -1479,3 +1539,29 @@ define i8 @test90(i1 %cond, i8 %w, i8 %x, i8 %y, i8 %z) {
   ret i8 %c
 }
 
+define i32 @test_shl_zext_bool(i1 %t) {
+; CHECK-LABEL: @test_shl_zext_bool(
+; CHECK-NEXT:    [[R:%.*]] = select i1 [[T:%.*]], i32 4, i32 0
+; CHECK-NEXT:    ret i32 [[R]]
+;
+  %r = select i1 %t, i32 4, i32 0
+  ret i32 %r
+}
+
+define <2 x i32> @test_shl_zext_bool_splat(<2 x i1> %t) {
+; CHECK-LABEL: @test_shl_zext_bool_splat(
+; CHECK-NEXT:    [[R:%.*]] = select <2 x i1> [[T:%.*]], <2 x i32> <i32 8, i32 8>, <2 x i32> zeroinitializer
+; CHECK-NEXT:    ret <2 x i32> [[R]]
+;
+  %r = select <2 x i1> %t, <2 x i32> <i32 8, i32 8>, <2 x i32> zeroinitializer
+  ret <2 x i32> %r
+}
+
+define <2 x i32> @test_shl_zext_bool_vec(<2 x i1> %t) {
+; CHECK-LABEL: @test_shl_zext_bool_vec(
+; CHECK-NEXT:    [[R:%.*]] = select <2 x i1> [[T:%.*]], <2 x i32> <i32 4, i32 8>, <2 x i32> zeroinitializer
+; CHECK-NEXT:    ret <2 x i32> [[R]]
+;
+  %r = select <2 x i1> %t, <2 x i32> <i32 4, i32 8>, <2 x i32> zeroinitializer
+  ret <2 x i32> %r
+}

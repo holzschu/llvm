@@ -1,9 +1,8 @@
 //===-- SystemZPatterns.td - SystemZ-specific pattern rules ---*- tblgen-*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -101,12 +100,12 @@ multiclass CondStores64<Instruction insn, Instruction insninv,
                         SDPatternOperator store, SDPatternOperator load,
                         AddressingMode mode> {
   def : Pat<(store (z_select_ccmask GR64:$new, (load mode:$addr),
-                                    imm32zx4:$valid, imm32zx4:$cc),
+                                    imm32zx4_timm:$valid, imm32zx4_timm:$cc),
                    mode:$addr),
             (insn (EXTRACT_SUBREG GR64:$new, subreg_l32), mode:$addr,
                   imm32zx4:$valid, imm32zx4:$cc)>;
   def : Pat<(store (z_select_ccmask (load mode:$addr), GR64:$new,
-                                    imm32zx4:$valid, imm32zx4:$cc),
+                                    imm32zx4_timm:$valid, imm32zx4_timm:$cc),
                    mode:$addr),
             (insninv (EXTRACT_SUBREG GR64:$new, subreg_l32), mode:$addr,
                      imm32zx4:$valid, imm32zx4:$cc)>;

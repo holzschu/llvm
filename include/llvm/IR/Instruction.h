@@ -1,9 +1,8 @@
 //===-- llvm/Instruction.h - Instruction class definition -------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -127,10 +126,18 @@ public:
 
   const char *getOpcodeName() const { return getOpcodeName(getOpcode()); }
   bool isTerminator() const { return isTerminator(getOpcode()); }
+  bool isUnaryOp() const { return isUnaryOp(getOpcode()); }
   bool isBinaryOp() const { return isBinaryOp(getOpcode()); }
+  bool isIntDivRem() const { return isIntDivRem(getOpcode()); }
   bool isShift() { return isShift(getOpcode()); }
   bool isCast() const { return isCast(getOpcode()); }
   bool isFuncletPad() const { return isFuncletPad(getOpcode()); }
+  bool isExceptionalTerminator() const {
+    return isExceptionalTerminator(getOpcode());
+  }
+  bool isIndirectTerminator() const {
+    return isIndirectTerminator(getOpcode());
+  }
 
   static const char* getOpcodeName(unsigned OpCode);
 
@@ -138,8 +145,15 @@ public:
     return OpCode >= TermOpsBegin && OpCode < TermOpsEnd;
   }
 
+  static inline bool isUnaryOp(unsigned Opcode) {
+    return Opcode >= UnaryOpsBegin && Opcode < UnaryOpsEnd;
+  }
   static inline bool isBinaryOp(unsigned Opcode) {
     return Opcode >= BinaryOpsBegin && Opcode < BinaryOpsEnd;
+  }
+
+  static inline bool isIntDivRem(unsigned Opcode) {
+    return Opcode == UDiv || Opcode == SDiv || Opcode == URem || Opcode == SRem;
   }
 
   /// Determine if the Opcode is one of the shift instructions.
@@ -177,6 +191,31 @@ public:
     return OpCode >= FuncletPadOpsBegin && OpCode < FuncletPadOpsEnd;
   }
 
+  /// Returns true if the OpCode is a terminator related to exception handling.
+  static inline bool isExceptionalTerminator(unsigned OpCode) {
+    switch (OpCode) {
+    case Instruction::CatchSwitch:
+    case Instruction::CatchRet:
+    case Instruction::CleanupRet:
+    case Instruction::Invoke:
+    case Instruction::Resume:
+      return true;
+    default:
+      return false;
+    }
+  }
+
+  /// Returns true if the OpCode is a terminator with indirect targets.
+  static inline bool isIndirectTerminator(unsigned OpCode) {
+    switch (OpCode) {
+    case Instruction::IndirectBr:
+    case Instruction::CallBr:
+      return true;
+    default:
+      return false;
+    }
+  }
+
   //===--------------------------------------------------------------------===//
   // Metadata manipulation.
   //===--------------------------------------------------------------------===//
@@ -188,6 +227,16 @@ public:
   /// debug location.
   bool hasMetadataOtherThanDebugLoc() const {
     return hasMetadataHashEntry();
+  }
+
+  /// Return true if this instruction has the given type of metadata attached.
+  bool hasMetadata(unsigned KindID) const {
+    return getMetadata(KindID) != nullptr;
+  }
+
+  /// Return true if this instruction has the given type of metadata attached.
+  bool hasMetadata(StringRef Kind) const {
+    return getMetadata(Kind) != nullptr;
   }
 
   /// Get the metadata of given kind attached to this Instruction.
@@ -272,9 +321,6 @@ public:
   /// Returns false if no metadata was found.
   bool extractProfTotalWeight(uint64_t &TotalVal) const;
 
-  /// Updates branch_weights metadata by scaling it by \p S / \p T.
-  void updateProfWeight(uint64_t S, uint64_t T);
-
   /// Sets the branch_weights metadata to \p W for CallInst.
   void setProfWeight(uint64_t W);
 
@@ -284,7 +330,7 @@ public:
   /// Return the debug location for this node as a DebugLoc.
   const DebugLoc &getDebugLoc() const { return DbgLoc; }
 
-  /// Set or clear the nsw flag on this instruction, which must be an operator
+  /// Set or clear the nuw flag on this instruction, which must be an operator
   /// which supports this flag. See LangRef.html for the meaning of this flag.
   void setHasNoUnsignedWrap(bool b = true);
 
@@ -542,7 +588,7 @@ public:
   /// may have side effects cannot be removed without semantically changing the
   /// generated program.
   bool isSafeToRemove() const;
-  
+
   /// Return true if the instruction is a variety of EH-block.
   bool isEHPad() const {
     switch (getOpcode()) {
@@ -554,6 +600,26 @@ public:
     default:
       return false;
     }
+  }
+
+  /// Return true if the instruction is a llvm.lifetime.start or
+  /// llvm.lifetime.end marker.
+  bool isLifetimeStartOrEnd() const;
+
+  /// Return a pointer to the next non-debug instruction in the same basic
+  /// block as 'this', or nullptr if no such instruction exists.
+  const Instruction *getNextNonDebugInstruction() const;
+  Instruction *getNextNonDebugInstruction() {
+    return const_cast<Instruction *>(
+        static_cast<const Instruction *>(this)->getNextNonDebugInstruction());
+  }
+
+  /// Return a pointer to the previous non-debug instruction in the same basic
+  /// block as 'this', or nullptr if no such instruction exists.
+  const Instruction *getPrevNonDebugInstruction() const;
+  Instruction *getPrevNonDebugInstruction() {
+    return const_cast<Instruction *>(
+        static_cast<const Instruction *>(this)->getPrevNonDebugInstruction());
   }
 
   /// Create a copy of 'this' instruction that is identical in all ways except
@@ -590,7 +656,7 @@ public:
   /// be identical.
   /// @returns true if the specified instruction is the same operation as
   /// the current one.
-  /// @brief Determine if one instruction is the same operation as another.
+  /// Determine if one instruction is the same operation as another.
   bool isSameOperationAs(const Instruction *I, unsigned flags = 0) const;
 
   /// Return true if there are any uses of this instruction in blocks other than
@@ -598,6 +664,20 @@ public:
   /// operands in the corresponding predecessor block.
   bool isUsedOutsideOfBlock(const BasicBlock *BB) const;
 
+  /// Return the number of successors that this instruction has. The instruction
+  /// must be a terminator.
+  unsigned getNumSuccessors() const;
+
+  /// Return the specified successor. This instruction must be a terminator.
+  BasicBlock *getSuccessor(unsigned Idx) const;
+
+  /// Update the specified successor to point at the provided block. This
+  /// instruction must be a terminator.
+  void setSuccessor(unsigned Idx, BasicBlock *BB);
+
+  /// Replace specified successor OldBB to point at the provided block.
+  /// This instruction must be a terminator.
+  void replaceSuccessorWith(BasicBlock *OldBB, BasicBlock *NewBB);
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast:
   static bool classof(const Value *V) {
@@ -611,6 +691,13 @@ public:
 #define  FIRST_TERM_INST(N)             TermOpsBegin = N,
 #define HANDLE_TERM_INST(N, OPC, CLASS) OPC = N,
 #define   LAST_TERM_INST(N)             TermOpsEnd = N+1
+#include "llvm/IR/Instruction.def"
+  };
+
+  enum UnaryOps {
+#define  FIRST_UNARY_INST(N)             UnaryOpsBegin = N,
+#define HANDLE_UNARY_INST(N, OPC, CLASS) OPC = N,
+#define   LAST_UNARY_INST(N)             UnaryOpsEnd = N+1
 #include "llvm/IR/Instruction.def"
   };
 

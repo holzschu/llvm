@@ -1,6 +1,6 @@
 ; RUN: llc -filetype=obj %s -o - | obj2yaml | FileCheck %s
 
-target triple = "wasm32-unknown-unknown-wasm"
+target triple = "wasm32-unknown-unknown"
 
 define hidden void @call_memcpy(i8* align 4 %a, i8* align 4 %b) {
 entry:
@@ -17,14 +17,15 @@ declare void @llvm.memcpy.p0i8.p0i8.i32(i8* nocapture writeonly, i8* nocapture r
 ; CHECK-NEXT:   - Type:            TYPE
 ; CHECK-NEXT:     Signatures:
 ; CHECK-NEXT:       - Index:           0
-; CHECK-NEXT:         ReturnType:      NORESULT
 ; CHECK-NEXT:         ParamTypes:
 ; CHECK-NEXT:           - I32
 ; CHECK-NEXT:           - I32
+; CHECK-NEXT:         ReturnTypes:     []
 ; CHECK-NEXT:       - Index:           1
-; CHECK-NEXT:         ReturnType:      I32
 ; CHECK-NEXT:         ParamTypes:
 ; CHECK-NEXT:           - I32
 ; CHECK-NEXT:           - I32
+; CHECK-NEXT:           - I32
+; CHECK-NEXT:         ReturnTypes:
 ; CHECK-NEXT:           - I32
 ; CHECK-NEXT:   - Type:            IMPORT

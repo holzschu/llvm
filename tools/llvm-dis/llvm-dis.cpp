@@ -1,9 +1,8 @@
 //===-- llvm-dis.cpp - The low-level LLVM disassembler --------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -157,19 +156,6 @@ struct LLVMDisDiagnosticHandler : public DiagnosticHandler {
 
 static ExitOnError ExitOnErr;
 
-static std::unique_ptr<Module> openInputFile(LLVMContext &Context) {
-  std::unique_ptr<MemoryBuffer> MB =
-      ExitOnErr(errorOrToExpected(MemoryBuffer::getFileOrSTDIN(InputFilename)));
-  std::unique_ptr<Module> M = ExitOnErr(getOwningLazyBitcodeModule(
-      std::move(MB), Context,
-      /*ShouldLazyLoadMetadata=*/true, SetImporting));
-  if (MaterializeMetadata)
-    ExitOnErr(M->materializeMetadata());
-  else
-    ExitOnErr(M->materializeAll());
-  return M;
-}
-
 int main(int argc, char **argv) {
   InitLLVM X(argc, argv);
 
@@ -177,10 +163,22 @@ int main(int argc, char **argv) {
 
   LLVMContext Context;
   Context.setDiagnosticHandler(
-      llvm::make_unique<LLVMDisDiagnosticHandler>(argv[0]));
+      std::make_unique<LLVMDisDiagnosticHandler>(argv[0]));
   cl::ParseCommandLineOptions(argc, argv, "llvm .bc -> .ll disassembler\n");
 
-  std::unique_ptr<Module> M = openInputFile(Context);
+  std::unique_ptr<MemoryBuffer> MB =
+      ExitOnErr(errorOrToExpected(MemoryBuffer::getFileOrSTDIN(InputFilename)));
+  std::unique_ptr<Module> M = ExitOnErr(getLazyBitcodeModule(
+      *MB, Context, /*ShouldLazyLoadMetadata=*/true, SetImporting));
+  if (MaterializeMetadata)
+    ExitOnErr(M->materializeMetadata());
+  else
+    ExitOnErr(M->materializeAll());
+
+  BitcodeLTOInfo LTOInfo = ExitOnErr(getBitcodeLTOInfo(*MB));
+  std::unique_ptr<ModuleSummaryIndex> Index;
+  if (LTOInfo.HasSummary)
+    Index = ExitOnErr(getModuleSummaryIndex(*MB));
 
   // Just use stdout.  We won't actually print anything on it.
   if (DontPrint)
@@ -198,7 +196,7 @@ int main(int argc, char **argv) {
 
   std::error_code EC;
   std::unique_ptr<ToolOutputFile> Out(
-      new ToolOutputFile(OutputFilename, EC, sys::fs::F_None));
+      new ToolOutputFile(OutputFilename, EC, sys::fs::OF_Text));
   if (EC) {
     errs() << EC.message() << '\n';
     return 1;
@@ -209,8 +207,11 @@ int main(int argc, char **argv) {
     Annotator.reset(new CommentWriter());
 
   // All that llvm-dis does is write the assembly to a file.
-  if (!DontPrint)
+  if (!DontPrint) {
     M->print(Out->os(), Annotator.get(), PreserveAssemblyUseListOrder);
+    if (Index)
+      Index->print(Out->os());
+  }
 
   // Declare success.
   Out->keep();

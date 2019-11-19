@@ -1,9 +1,8 @@
 //===- Mips16InstrInfo.cpp - Mips16 Instruction Information ---------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -95,6 +94,17 @@ void Mips16InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
 
   if (SrcReg)
     MIB.addReg(SrcReg, getKillRegState(KillSrc));
+}
+
+bool Mips16InstrInfo::isCopyInstrImpl(const MachineInstr &MI,
+                                      const MachineOperand *&Src,
+                                      const MachineOperand *&Dest) const {
+  if (MI.isMoveReg()) {
+    Dest = &MI.getOperand(0);
+    Src = &MI.getOperand(1);
+    return true;
+  }
+  return false;
 }
 
 void Mips16InstrInfo::storeRegToStack(MachineBasicBlock &MBB,
@@ -348,7 +358,7 @@ unsigned Mips16InstrInfo::loadImmediate(unsigned FrameReg, int64_t Imm,
   for (unsigned i = 0, e = II->getNumOperands(); i != e; ++i) {
     MachineOperand &MO = II->getOperand(i);
     if (MO.isReg() && MO.getReg() != 0 && !MO.isDef() &&
-        !TargetRegisterInfo::isVirtualRegister(MO.getReg()))
+        !Register::isVirtualRegister(MO.getReg()))
       Candidates.reset(MO.getReg());
   }
 

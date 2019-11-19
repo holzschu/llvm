@@ -1,9 +1,8 @@
 //===-- ARMBaseInstrInfo.h - ARM Base Instruction Information ---*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -100,6 +99,12 @@ protected:
   MachineInstr *commuteInstructionImpl(MachineInstr &MI, bool NewMI,
                                        unsigned OpIdx1,
                                        unsigned OpIdx2) const override;
+
+  /// If the specific machine instruction is a instruction that moves/copies
+  /// value from one register to another register return true along with
+  /// @Source machine operand and @Destination machine operand.
+  bool isCopyInstrImpl(const MachineInstr &MI, const MachineOperand *&Source,
+                       const MachineOperand *&Destination) const override;
 
 public:
   // Return whether the target has an explicit NOP encoding.
@@ -271,6 +276,10 @@ public:
     return NumCycles == 1;
   }
 
+  unsigned extraSizeToPredicateInstructions(const MachineFunction &MF,
+                                            unsigned NumInsts) const override;
+  unsigned predictBranchSizeForIfCvt(MachineInstr &MI) const override;
+
   bool isProfitableToUnpredicate(MachineBasicBlock &TMBB,
                                  MachineBasicBlock &FMBB) const override;
 
@@ -327,6 +336,13 @@ public:
 
   /// Get the number of addresses by LDM or VLDM or zero for unknown.
   unsigned getNumLDMAddresses(const MachineInstr &MI) const;
+
+  std::pair<unsigned, unsigned>
+  decomposeMachineOperandsTargetFlags(unsigned TF) const override;
+  ArrayRef<std::pair<unsigned, const char *>>
+  getSerializableDirectMachineOperandTargetFlags() const override;
+  ArrayRef<std::pair<unsigned, const char *>>
+  getSerializableBitmaskMachineOperandTargetFlags() const override;
 
 private:
   unsigned getInstBundleLength(const MachineInstr &MI) const;
@@ -385,6 +401,11 @@ private:
   virtual void expandLoadStackGuard(MachineBasicBlock::iterator MI) const = 0;
 
   void expandMEMCPY(MachineBasicBlock::iterator) const;
+
+  /// Identify instructions that can be folded into a MOVCC instruction, and
+  /// return the defining instruction.
+  MachineInstr *canFoldIntoMOVCC(unsigned Reg, const MachineRegisterInfo &MRI,
+                                 const TargetInstrInfo *TII) const;
 
 private:
   /// Modeling special VFP / NEON fp MLA / MLS hazards.
@@ -465,6 +486,21 @@ bool isUncondBranchOpcode(int Opc) {
   return Opc == ARM::B || Opc == ARM::tB || Opc == ARM::t2B;
 }
 
+static inline bool isVPTOpcode(int Opc) {
+  return Opc == ARM::MVE_VPTv16i8 || Opc == ARM::MVE_VPTv16u8 ||
+         Opc == ARM::MVE_VPTv16s8 || Opc == ARM::MVE_VPTv8i16 ||
+         Opc == ARM::MVE_VPTv8u16 || Opc == ARM::MVE_VPTv8s16 ||
+         Opc == ARM::MVE_VPTv4i32 || Opc == ARM::MVE_VPTv4u32 ||
+         Opc == ARM::MVE_VPTv4s32 || Opc == ARM::MVE_VPTv4f32 ||
+         Opc == ARM::MVE_VPTv8f16 || Opc == ARM::MVE_VPTv16i8r ||
+         Opc == ARM::MVE_VPTv16u8r || Opc == ARM::MVE_VPTv16s8r ||
+         Opc == ARM::MVE_VPTv8i16r || Opc == ARM::MVE_VPTv8u16r ||
+         Opc == ARM::MVE_VPTv8s16r || Opc == ARM::MVE_VPTv4i32r ||
+         Opc == ARM::MVE_VPTv4u32r || Opc == ARM::MVE_VPTv4s32r ||
+         Opc == ARM::MVE_VPTv4f32r || Opc == ARM::MVE_VPTv8f16r ||
+         Opc == ARM::MVE_VPST;
+}
+
 static inline
 bool isCondBranchOpcode(int Opc) {
   return Opc == ARM::Bcc || Opc == ARM::tBcc || Opc == ARM::t2Bcc;
@@ -492,18 +528,34 @@ static inline bool isPushOpcode(int Opc) {
          Opc == ARM::STMDB_UPD || Opc == ARM::VSTMDDB_UPD;
 }
 
+/// isValidCoprocessorNumber - decide whether an explicit coprocessor
+/// number is legal in generic instructions like CDP. The answer can
+/// vary with the subtarget.
+static inline bool isValidCoprocessorNumber(unsigned Num,
+                                            const FeatureBitset& featureBits) {
+  // Armv8-A disallows everything *other* than 111x (CP14 and CP15).
+  if (featureBits[ARM::HasV8Ops] && (Num & 0xE) != 0xE)
+    return false;
+
+  // Armv7 disallows 101x (CP10 and CP11), which clash with VFP/NEON.
+  if (featureBits[ARM::HasV7Ops] && (Num & 0xE) == 0xA)
+    return false;
+
+  // Armv8.1-M also disallows 100x (CP8,CP9) and 111x (CP14,CP15)
+  // which clash with MVE.
+  if (featureBits[ARM::HasV8_1MMainlineOps] &&
+      ((Num & 0xE) == 0x8 || (Num & 0xE) == 0xE))
+    return false;
+
+  return true;
+}
+
 /// getInstrPredicate - If instruction is predicated, returns its predicate
 /// condition, otherwise returns AL. It also returns the condition code
 /// register by reference.
 ARMCC::CondCodes getInstrPredicate(const MachineInstr &MI, unsigned &PredReg);
 
 unsigned getMatchingCondBranchOpcode(unsigned Opc);
-
-/// Determine if MI can be folded into an ARM MOVCC instruction, and return the
-/// opcode of the SSA instruction representing the conditional MI.
-unsigned canFoldARMInstrIntoMOVCC(unsigned Reg,
-                                  MachineInstr *&MI,
-                                  const MachineRegisterInfo &MRI);
 
 /// Map pseudo instructions that imply an 'S' bit onto real opcodes. Whether
 /// the instruction is encoded with an 'S' bit is determined by the optional
@@ -553,7 +605,39 @@ bool rewriteARMFrameIndex(MachineInstr &MI, unsigned FrameRegIdx,
 
 bool rewriteT2FrameIndex(MachineInstr &MI, unsigned FrameRegIdx,
                          unsigned FrameReg, int &Offset,
-                         const ARMBaseInstrInfo &TII);
+                         const ARMBaseInstrInfo &TII,
+                         const TargetRegisterInfo *TRI);
+
+/// Return true if Reg is defd between From and To
+bool registerDefinedBetween(unsigned Reg, MachineBasicBlock::iterator From,
+                            MachineBasicBlock::iterator To,
+                            const TargetRegisterInfo *TRI);
+
+/// Search backwards from a tBcc to find a tCMPi8 against 0, meaning
+/// we can convert them to a tCBZ or tCBNZ. Return nullptr if not found.
+MachineInstr *findCMPToFoldIntoCBZ(MachineInstr *Br,
+                                   const TargetRegisterInfo *TRI);
+
+void addUnpredicatedMveVpredNOp(MachineInstrBuilder &MIB);
+void addUnpredicatedMveVpredROp(MachineInstrBuilder &MIB, unsigned DestReg);
+
+void addPredicatedMveVpredNOp(MachineInstrBuilder &MIB, unsigned Cond);
+void addPredicatedMveVpredROp(MachineInstrBuilder &MIB, unsigned Cond,
+                              unsigned Inactive);
+
+/// Returns the number of instructions required to materialize the given
+/// constant in a register, or 3 if a literal pool load is needed.
+/// If ForCodesize is specified, an approximate cost in bytes is returned.
+unsigned ConstantMaterializationCost(unsigned Val,
+                                     const ARMSubtarget *Subtarget,
+                                     bool ForCodesize = false);
+
+/// Returns true if Val1 has a lower Constant Materialization Cost than Val2.
+/// Uses the cost from ConstantMaterializationCost, first with ForCodesize as
+/// specified. If the scores are equal, return the comparison for !ForCodesize.
+bool HasLowerConstantMaterializationCost(unsigned Val1, unsigned Val2,
+                                         const ARMSubtarget *Subtarget,
+                                         bool ForCodesize = false);
 
 } // end namespace llvm
 

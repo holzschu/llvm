@@ -1,9 +1,8 @@
 //===- llvm/CodeGen/VirtRegMap.cpp - Virtual Register Map -----------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -35,6 +34,7 @@
 #include "llvm/CodeGen/TargetOpcodes.h"
 #include "llvm/CodeGen/TargetRegisterInfo.h"
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
+#include "llvm/Config/llvm-config.h"
 #include "llvm/MC/LaneBitmask.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Compiler.h"
@@ -80,15 +80,14 @@ void VirtRegMap::grow() {
   Virt2SplitMap.resize(NumRegs);
 }
 
-void VirtRegMap::assignVirt2Phys(unsigned virtReg, MCPhysReg physReg) {
-  assert(TargetRegisterInfo::isVirtualRegister(virtReg) &&
-         TargetRegisterInfo::isPhysicalRegister(physReg));
-  assert(Virt2PhysMap[virtReg] == NO_PHYS_REG &&
+void VirtRegMap::assignVirt2Phys(Register virtReg, MCPhysReg physReg) {
+  assert(virtReg.isVirtual() && Register::isPhysicalRegister(physReg));
+  assert(Virt2PhysMap[virtReg.id()] == NO_PHYS_REG &&
          "attempt to assign physical register to already mapped "
          "virtual register");
   assert(!getRegInfo().isReserved(physReg) &&
          "Attempt to map virtReg to a reserved physReg");
-  Virt2PhysMap[virtReg] = physReg;
+  Virt2PhysMap[virtReg.id()] = physReg;
 }
 
 unsigned VirtRegMap::createSpillSlot(const TargetRegisterClass *RC) {
@@ -99,46 +98,46 @@ unsigned VirtRegMap::createSpillSlot(const TargetRegisterClass *RC) {
   return SS;
 }
 
-bool VirtRegMap::hasPreferredPhys(unsigned VirtReg) {
-  unsigned Hint = MRI->getSimpleHint(VirtReg);
-  if (!Hint)
+bool VirtRegMap::hasPreferredPhys(Register VirtReg) {
+  Register Hint = MRI->getSimpleHint(VirtReg);
+  if (!Hint.isValid())
     return false;
-  if (TargetRegisterInfo::isVirtualRegister(Hint))
+  if (Hint.isVirtual())
     Hint = getPhys(Hint);
   return getPhys(VirtReg) == Hint;
 }
 
-bool VirtRegMap::hasKnownPreference(unsigned VirtReg) {
+bool VirtRegMap::hasKnownPreference(Register VirtReg) {
   std::pair<unsigned, unsigned> Hint = MRI->getRegAllocationHint(VirtReg);
-  if (TargetRegisterInfo::isPhysicalRegister(Hint.second))
+  if (Register::isPhysicalRegister(Hint.second))
     return true;
-  if (TargetRegisterInfo::isVirtualRegister(Hint.second))
+  if (Register::isVirtualRegister(Hint.second))
     return hasPhys(Hint.second);
   return false;
 }
 
-int VirtRegMap::assignVirt2StackSlot(unsigned virtReg) {
-  assert(TargetRegisterInfo::isVirtualRegister(virtReg));
-  assert(Virt2StackSlotMap[virtReg] == NO_STACK_SLOT &&
+int VirtRegMap::assignVirt2StackSlot(Register virtReg) {
+  assert(virtReg.isVirtual());
+  assert(Virt2StackSlotMap[virtReg.id()] == NO_STACK_SLOT &&
          "attempt to assign stack slot to already spilled register");
   const TargetRegisterClass* RC = MF->getRegInfo().getRegClass(virtReg);
-  return Virt2StackSlotMap[virtReg] = createSpillSlot(RC);
+  return Virt2StackSlotMap[virtReg.id()] = createSpillSlot(RC);
 }
 
-void VirtRegMap::assignVirt2StackSlot(unsigned virtReg, int SS) {
-  assert(TargetRegisterInfo::isVirtualRegister(virtReg));
-  assert(Virt2StackSlotMap[virtReg] == NO_STACK_SLOT &&
+void VirtRegMap::assignVirt2StackSlot(Register virtReg, int SS) {
+  assert(virtReg.isVirtual());
+  assert(Virt2StackSlotMap[virtReg.id()] == NO_STACK_SLOT &&
          "attempt to assign stack slot to already spilled register");
   assert((SS >= 0 ||
           (SS >= MF->getFrameInfo().getObjectIndexBegin())) &&
          "illegal fixed frame index");
-  Virt2StackSlotMap[virtReg] = SS;
+  Virt2StackSlotMap[virtReg.id()] = SS;
 }
 
 void VirtRegMap::print(raw_ostream &OS, const Module*) const {
   OS << "********** REGISTER MAP **********\n";
   for (unsigned i = 0, e = MRI->getNumVirtRegs(); i != e; ++i) {
-    unsigned Reg = TargetRegisterInfo::index2VirtReg(i);
+    unsigned Reg = Register::index2VirtReg(i);
     if (Virt2PhysMap[Reg] != (unsigned)VirtRegMap::NO_PHYS_REG) {
       OS << '[' << printReg(Reg, TRI) << " -> "
          << printReg(Virt2PhysMap[Reg], TRI) << "] "
@@ -147,7 +146,7 @@ void VirtRegMap::print(raw_ostream &OS, const Module*) const {
   }
 
   for (unsigned i = 0, e = MRI->getNumVirtRegs(); i != e; ++i) {
-    unsigned Reg = TargetRegisterInfo::index2VirtReg(i);
+    unsigned Reg = Register::index2VirtReg(i);
     if (Virt2StackSlotMap[Reg] != VirtRegMap::NO_STACK_SLOT) {
       OS << '[' << printReg(Reg, TRI) << " -> fi#" << Virt2StackSlotMap[Reg]
          << "] " << TRI->getRegClassName(MRI->getRegClass(Reg)) << "\n";
@@ -185,10 +184,10 @@ class VirtRegRewriter : public MachineFunctionPass {
   void rewrite();
   void addMBBLiveIns();
   bool readsUndefSubreg(const MachineOperand &MO) const;
-  void addLiveInsForSubRanges(const LiveInterval &LI, unsigned PhysReg) const;
+  void addLiveInsForSubRanges(const LiveInterval &LI, Register PhysReg) const;
   void handleIdentityCopy(MachineInstr &MI) const;
   void expandCopyBundle(MachineInstr &MI) const;
-  bool subRegLiveThrough(const MachineInstr &MI, unsigned SuperPhysReg) const;
+  bool subRegLiveThrough(const MachineInstr &MI, Register SuperPhysReg) const;
 
 public:
   static char ID;
@@ -241,10 +240,9 @@ bool VirtRegRewriter::runOnMachineFunction(MachineFunction &fn) {
   Indexes = &getAnalysis<SlotIndexes>();
   LIS = &getAnalysis<LiveIntervals>();
   VRM = &getAnalysis<VirtRegMap>();
-  DEBUG(dbgs() << "********** REWRITE VIRTUAL REGISTERS **********\n"
-               << "********** Function: "
-               << MF->getName() << '\n');
-  DEBUG(VRM->dump());
+  LLVM_DEBUG(dbgs() << "********** REWRITE VIRTUAL REGISTERS **********\n"
+                    << "********** Function: " << MF->getName() << '\n');
+  LLVM_DEBUG(VRM->dump());
 
   // Add kill flags while we still have virtual registers.
   LIS->addKillFlags(VRM);
@@ -266,7 +264,7 @@ bool VirtRegRewriter::runOnMachineFunction(MachineFunction &fn) {
 }
 
 void VirtRegRewriter::addLiveInsForSubRanges(const LiveInterval &LI,
-                                             unsigned PhysReg) const {
+                                             Register PhysReg) const {
   assert(!LI.empty());
   assert(LI.hasSubRanges());
 
@@ -313,7 +311,7 @@ void VirtRegRewriter::addLiveInsForSubRanges(const LiveInterval &LI,
 // assignments.
 void VirtRegRewriter::addMBBLiveIns() {
   for (unsigned Idx = 0, IdxE = MRI->getNumVirtRegs(); Idx != IdxE; ++Idx) {
-    unsigned VirtReg = TargetRegisterInfo::index2VirtReg(Idx);
+    Register VirtReg = Register::index2VirtReg(Idx);
     if (MRI->reg_nodbg_empty(VirtReg))
       continue;
     LiveInterval &LI = LIS->getInterval(VirtReg);
@@ -321,7 +319,7 @@ void VirtRegRewriter::addMBBLiveIns() {
       continue;
     // This is a virtual register that is live across basic blocks. Its
     // assigned PhysReg must be marked as live-in to those blocks.
-    unsigned PhysReg = VRM->getPhys(VirtReg);
+    Register PhysReg = VRM->getPhys(VirtReg);
     assert(PhysReg != VirtRegMap::NO_PHYS_REG && "Unmapped virtual register.");
 
     if (LI.hasSubRanges()) {
@@ -354,7 +352,7 @@ bool VirtRegRewriter::readsUndefSubreg(const MachineOperand &MO) const {
   if (MO.isUndef())
     return true;
 
-  unsigned Reg = MO.getReg();
+  Register Reg = MO.getReg();
   const LiveInterval &LI = LIS->getInterval(Reg);
   const MachineInstr &MI = *MO.getParent();
   SlotIndex BaseIndex = LIS->getInstructionIndex(MI);
@@ -376,7 +374,7 @@ bool VirtRegRewriter::readsUndefSubreg(const MachineOperand &MO) const {
 void VirtRegRewriter::handleIdentityCopy(MachineInstr &MI) const {
   if (!MI.isIdentityCopy())
     return;
-  DEBUG(dbgs() << "Identity copy: " << MI);
+  LLVM_DEBUG(dbgs() << "Identity copy: " << MI);
   ++NumIdCopies;
 
   // Copies like:
@@ -385,16 +383,16 @@ void VirtRegRewriter::handleIdentityCopy(MachineInstr &MI) const {
   // give us additional liveness information: The target (super-)register
   // must not be valid before this point. Replace the COPY with a KILL
   // instruction to maintain this information.
-  if (MI.getOperand(0).isUndef() || MI.getNumOperands() > 2) {
+  if (MI.getOperand(1).isUndef() || MI.getNumOperands() > 2) {
     MI.setDesc(TII->get(TargetOpcode::KILL));
-    DEBUG(dbgs() << "  replace by: " << MI);
+    LLVM_DEBUG(dbgs() << "  replace by: " << MI);
     return;
   }
 
   if (Indexes)
     Indexes->removeSingleMachineInstrFromMaps(MI);
   MI.eraseFromBundle();
-  DEBUG(dbgs() << "  deleted.\n");
+  LLVM_DEBUG(dbgs() << "  deleted.\n");
 }
 
 /// The liverange splitting logic sometimes produces bundles of copies when
@@ -406,6 +404,8 @@ void VirtRegRewriter::expandCopyBundle(MachineInstr &MI) const {
     return;
 
   if (MI.isBundledWithPred() && !MI.isBundledWithSucc()) {
+    SmallVector<MachineInstr *, 2> MIs({&MI});
+
     // Only do this when the complete bundle is made out of COPYs.
     MachineBasicBlock &MBB = *MI.getParent();
     for (MachineBasicBlock::reverse_instr_iterator I =
@@ -413,16 +413,53 @@ void VirtRegRewriter::expandCopyBundle(MachineInstr &MI) const {
          I != E && I->isBundledWithSucc(); ++I) {
       if (!I->isCopy())
         return;
+      MIs.push_back(&*I);
+    }
+    MachineInstr *FirstMI = MIs.back();
+
+    auto anyRegsAlias = [](const MachineInstr *Dst,
+                           ArrayRef<MachineInstr *> Srcs,
+                           const TargetRegisterInfo *TRI) {
+      for (const MachineInstr *Src : Srcs)
+        if (Src != Dst)
+          if (TRI->regsOverlap(Dst->getOperand(0).getReg(),
+                               Src->getOperand(1).getReg()))
+            return true;
+      return false;
+    };
+
+    // If any of the destination registers in the bundle of copies alias any of
+    // the source registers, try to schedule the instructions to avoid any
+    // clobbering.
+    for (int E = MIs.size(), PrevE = E; E > 1; PrevE = E) {
+      for (int I = E; I--; )
+        if (!anyRegsAlias(MIs[I], makeArrayRef(MIs).take_front(E), TRI)) {
+          if (I + 1 != E)
+            std::swap(MIs[I], MIs[E - 1]);
+          --E;
+        }
+      if (PrevE == E) {
+        MF->getFunction().getContext().emitError(
+            "register rewriting failed: cycle in copy bundle");
+        break;
+      }
     }
 
-    for (MachineBasicBlock::reverse_instr_iterator I = MI.getReverseIterator();
-         I->isBundledWithPred(); ) {
-      MachineInstr &MI = *I;
-      ++I;
+    MachineInstr *BundleStart = FirstMI;
+    for (MachineInstr *BundledMI : llvm::reverse(MIs)) {
+      // If instruction is in the middle of the bundle, move it before the
+      // bundle starts, otherwise, just unbundle it. When we get to the last
+      // instruction, the bundle will have been completely undone.
+      if (BundledMI != BundleStart) {
+        BundledMI->removeFromBundle();
+        MBB.insert(FirstMI, BundledMI);
+      } else if (BundledMI->isBundledWithSucc()) {
+        BundledMI->unbundleFromSucc();
+        BundleStart = &*std::next(BundledMI->getIterator());
+      }
 
-      MI.unbundleFromPred();
-      if (Indexes)
-        Indexes->insertMachineInstrInMaps(MI);
+      if (Indexes && BundledMI != FirstMI)
+        Indexes->insertMachineInstrInMaps(*BundledMI);
     }
   }
 }
@@ -431,7 +468,7 @@ void VirtRegRewriter::expandCopyBundle(MachineInstr &MI) const {
 /// \pre \p MI defines a subregister of a virtual register that
 /// has been assigned to \p SuperPhysReg.
 bool VirtRegRewriter::subRegLiveThrough(const MachineInstr &MI,
-                                        unsigned SuperPhysReg) const {
+                                        Register SuperPhysReg) const {
   SlotIndex MIIndex = LIS->getInstructionIndex(MI);
   SlotIndex BeforeMIUses = MIIndex.getBaseIndex();
   SlotIndex AfterMIDefs = MIIndex.getBoundaryIndex();
@@ -455,13 +492,13 @@ bool VirtRegRewriter::subRegLiveThrough(const MachineInstr &MI,
 
 void VirtRegRewriter::rewrite() {
   bool NoSubRegLiveness = !MRI->subRegLivenessEnabled();
-  SmallVector<unsigned, 8> SuperDeads;
-  SmallVector<unsigned, 8> SuperDefs;
-  SmallVector<unsigned, 8> SuperKills;
+  SmallVector<Register, 8> SuperDeads;
+  SmallVector<Register, 8> SuperDefs;
+  SmallVector<Register, 8> SuperKills;
 
   for (MachineFunction::iterator MBBI = MF->begin(), MBBE = MF->end();
        MBBI != MBBE; ++MBBI) {
-    DEBUG(MBBI->print(dbgs(), Indexes));
+    LLVM_DEBUG(MBBI->print(dbgs(), Indexes));
     for (MachineBasicBlock::instr_iterator
            MII = MBBI->instr_begin(), MIE = MBBI->instr_end(); MII != MIE;) {
       MachineInstr *MI = &*MII;
@@ -475,10 +512,10 @@ void VirtRegRewriter::rewrite() {
         if (MO.isRegMask())
           MRI->addPhysRegsUsedFromRegMask(MO.getRegMask());
 
-        if (!MO.isReg() || !TargetRegisterInfo::isVirtualRegister(MO.getReg()))
+        if (!MO.isReg() || !MO.getReg().isVirtual())
           continue;
-        unsigned VirtReg = MO.getReg();
-        unsigned PhysReg = VRM->getPhys(VirtReg);
+        Register VirtReg = MO.getReg();
+        Register PhysReg = VRM->getPhys(VirtReg);
         assert(PhysReg != VirtRegMap::NO_PHYS_REG &&
                "Instruction uses unmapped VirtReg");
         assert(!MRI->isReserved(PhysReg) && "Reserved register assignment");
@@ -486,7 +523,7 @@ void VirtRegRewriter::rewrite() {
         // Preserve semantics of sub-register operands.
         unsigned SubReg = MO.getSubReg();
         if (SubReg != 0) {
-          if (NoSubRegLiveness) {
+          if (NoSubRegLiveness || !MRI->shouldTrackSubRegLiveness(VirtReg)) {
             // A virtual register kill refers to the whole register, so we may
             // have to add implicit killed operands for the super-register.  A
             // partial redef always kills and redefines the super-register.
@@ -524,7 +561,7 @@ void VirtRegRewriter::rewrite() {
 
           // PhysReg operands cannot have subregister indexes.
           PhysReg = TRI->getSubReg(PhysReg, SubReg);
-          assert(PhysReg && "Invalid SubReg for physical register");
+          assert(PhysReg.isValid() && "Invalid SubReg for physical register");
           MO.setSubReg(0);
         }
         // Rewrite. Note we could have used MachineOperand::substPhysReg(), but
@@ -544,7 +581,7 @@ void VirtRegRewriter::rewrite() {
       while (!SuperDefs.empty())
         MI->addRegisterDefined(SuperDefs.pop_back_val(), TRI);
 
-      DEBUG(dbgs() << "> " << *MI);
+      LLVM_DEBUG(dbgs() << "> " << *MI);
 
       expandCopyBundle(*MI);
 

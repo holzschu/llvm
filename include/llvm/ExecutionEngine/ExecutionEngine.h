@@ -1,9 +1,8 @@
 //===- ExecutionEngine.h - Abstract Execution Engine Interface --*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -22,6 +21,7 @@
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ExecutionEngine/JITSymbol.h"
+#include "llvm/ExecutionEngine/OrcV1Deprecation.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Object/Binary.h"
@@ -60,7 +60,7 @@ class ObjectFile;
 
 } // end namespace object
 
-/// \brief Helper class for helping synchronize access to the global address map
+/// Helper class for helping synchronize access to the global address map
 /// table.  Access to this class should be serialized under a mutex.
 class ExecutionEngineState {
 public:
@@ -86,7 +86,7 @@ public:
     return GlobalAddressReverseMap;
   }
 
-  /// \brief Erase an entry from the mapping table.
+  /// Erase an entry from the mapping table.
   ///
   /// \returns The address that \p ToUnmap was happed to.
   uint64_t RemoveMapping(StringRef Name);
@@ -94,7 +94,7 @@ public:
 
 using FunctionCreator = std::function<void *(const std::string &)>;
 
-/// \brief Abstract interface for implementation execution of LLVM modules,
+/// Abstract interface for implementation execution of LLVM modules,
 /// designed to support both interpreter and just-in-time (JIT) compiler
 /// implementations.
 class ExecutionEngine {
@@ -634,8 +634,14 @@ public:
     return *this;
   }
 
-  // \brief Use OrcMCJITReplacement instead of MCJIT. Off by default.
-  void setUseOrcMCJITReplacement(bool UseOrcMCJITReplacement) {
+  // Use OrcMCJITReplacement instead of MCJIT. Off by default.
+  LLVM_ATTRIBUTE_DEPRECATED(
+      inline void setUseOrcMCJITReplacement(bool UseOrcMCJITReplacement),
+      "ORCv1 utilities (including OrcMCJITReplacement) are deprecated. Please "
+      "use ORCv2/LLJIT instead (see docs/ORCv2.rst)");
+
+  void setUseOrcMCJITReplacement(ORCv1DeprecationAcknowledgement,
+                                 bool UseOrcMCJITReplacement) {
     this->UseOrcMCJITReplacement = UseOrcMCJITReplacement;
   }
 
@@ -658,6 +664,10 @@ public:
 
   ExecutionEngine *create(TargetMachine *TM);
 };
+
+void EngineBuilder::setUseOrcMCJITReplacement(bool UseOrcMCJITReplacement) {
+  this->UseOrcMCJITReplacement = UseOrcMCJITReplacement;
+}
 
 // Create wrappers for C Binding types (see CBindingWrapping.h).
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ExecutionEngine, LLVMExecutionEngineRef)

@@ -1,14 +1,15 @@
 //===- NonRelocatableStringpool.h - A simple stringpool  --------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #ifndef LLVM_TOOLS_DSYMUTIL_NONRELOCATABLESTRINGPOOL_H
 #define LLVM_TOOLS_DSYMUTIL_NONRELOCATABLESTRINGPOOL_H
+
+#include "SymbolMap.h"
 
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
@@ -32,7 +33,9 @@ public:
   /// order.
   using MapTy = StringMap<DwarfStringPoolEntry, BumpPtrAllocator>;
 
-  NonRelocatableStringpool() {
+  NonRelocatableStringpool(
+      SymbolMapTranslator Translator = SymbolMapTranslator())
+      : Translator(Translator) {
     // Legacy dsymutil puts an empty string at the start of the line table.
     EmptyString = getEntry("");
   }
@@ -53,14 +56,32 @@ public:
 
   uint64_t getSize() { return CurrentEndOffset; }
 
-  std::vector<DwarfStringPoolEntryRef> getEntries() const;
+  /// Return the list of strings to be emitted. This does not contain the
+  /// strings which were added via internString only.
+  std::vector<DwarfStringPoolEntryRef> getEntriesForEmission() const;
 
 private:
   MapTy Strings;
   uint32_t CurrentEndOffset = 0;
   unsigned NumEntries = 0;
   DwarfStringPoolEntryRef EmptyString;
+  SymbolMapTranslator Translator;
 };
+
+/// Helper for making strong types.
+template <typename T, typename S> class StrongType : public T {
+public:
+  template <typename... Args>
+  explicit StrongType(Args... A) : T(std::forward<Args>(A)...) {}
+};
+
+/// It's very easy to introduce bugs by passing the wrong string pool in the
+/// dwarf linker. By using strong types the interface enforces that the right
+/// kind of pool is used.
+struct UniqueTag {};
+struct OffsetsTag {};
+using UniquingStringPool = StrongType<NonRelocatableStringpool, UniqueTag>;
+using OffsetsStringPool = StrongType<NonRelocatableStringpool, OffsetsTag>;
 
 } // end namespace dsymutil
 } // end namespace llvm

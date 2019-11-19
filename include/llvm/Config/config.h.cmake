@@ -13,6 +13,9 @@
 /* Define to 1 to enable crash overrides, and to 0 otherwise. */
 #cmakedefine01 ENABLE_CRASH_OVERRIDES
 
+/* Define to 1 to enable crash memory dumps, and to 0 otherwise. */
+#cmakedefine01 LLVM_ENABLE_CRASH_DUMPS
+
 /* Define to 1 if you have the `backtrace' function. */
 #cmakedefine HAVE_BACKTRACE ${HAVE_BACKTRACE}
 
@@ -124,9 +127,6 @@
 /* Define to 1 if you have the `mallinfo' function. */
 #cmakedefine HAVE_MALLINFO ${HAVE_MALLINFO}
 
-/* Define to 1 if you have the <malloc.h> header file. */
-#cmakedefine HAVE_MALLOC_H ${HAVE_MALLOC_H}
-
 /* Define to 1 if you have the <malloc/malloc.h> header file. */
 #cmakedefine HAVE_MALLOC_MALLOC_H ${HAVE_MALLOC_MALLOC_H}
 
@@ -153,9 +153,6 @@
 
 /* Have pthread_rwlock_init */
 #cmakedefine HAVE_PTHREAD_RWLOCK_INIT ${HAVE_PTHREAD_RWLOCK_INIT}
-
-/* Define to 1 if you have the `realpath' function. */
-#cmakedefine HAVE_REALPATH ${HAVE_REALPATH}
 
 /* Define to 1 if you have the `sbrk' function. */
 #cmakedefine HAVE_SBRK ${HAVE_SBRK}
@@ -204,6 +201,12 @@
 
 /* Define to 1 if you have the <sys/time.h> header file. */
 #cmakedefine HAVE_SYS_TIME_H ${HAVE_SYS_TIME_H}
+
+/* Define to 1 if stat struct has st_mtimespec member .*/
+#cmakedefine HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC ${HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC}
+
+/* Define to 1 if stat struct has st_mtim member. */
+#cmakedefine HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC ${HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC}
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #cmakedefine HAVE_SYS_TYPES_H ${HAVE_SYS_TYPES_H}
@@ -289,57 +292,21 @@
 /* Linker version detected at compile time. */
 #cmakedefine HOST_LINK_VERSION "${HOST_LINK_VERSION}"
 
-/* Define if we link Polly to the tools */
-#cmakedefine LINK_POLLY_INTO_TOOLS
-
 /* Target triple LLVM will generate code for by default */
 /* Doesn't use `cmakedefine` because it is allowed to be empty. */
 #define LLVM_DEFAULT_TARGET_TRIPLE "${LLVM_DEFAULT_TARGET_TRIPLE}"
 
-/* Define if threads enabled */
-#cmakedefine01 LLVM_ENABLE_THREADS
-
 /* Define if zlib compression is available */
 #cmakedefine01 LLVM_ENABLE_ZLIB
 
-/* Has gcc/MSVC atomic intrinsics */
-#cmakedefine01 LLVM_HAS_ATOMICS
-
-/* Host triple LLVM will be executed on */
-#cmakedefine LLVM_HOST_TRIPLE "${LLVM_HOST_TRIPLE}"
-
-/* Define if this is Unixish platform */
-#cmakedefine LLVM_ON_UNIX ${LLVM_ON_UNIX}
-
-/* Define if this is Win32ish platform */
-#cmakedefine LLVM_ON_WIN32 ${LLVM_ON_WIN32}
-
 /* Define if overriding target triple is enabled */
 #cmakedefine LLVM_TARGET_TRIPLE_ENV "${LLVM_TARGET_TRIPLE_ENV}"
-
-/* Define if we have the Intel JIT API runtime support library */
-#cmakedefine01 LLVM_USE_INTEL_JITEVENTS
-
-/* Define if we have the oprofile JIT-support library */
-#cmakedefine01 LLVM_USE_OPROFILE
 
 /* LLVM version information */
 #cmakedefine LLVM_VERSION_INFO "${LLVM_VERSION_INFO}"
 
 /* Whether tools show host and target info when invoked with --version */
 #cmakedefine01 LLVM_VERSION_PRINTER_SHOW_HOST_TARGET_INFO
-
-/* Major version of the LLVM API */
-#define LLVM_VERSION_MAJOR ${LLVM_VERSION_MAJOR}
-
-/* Minor version of the LLVM API */
-#define LLVM_VERSION_MINOR ${LLVM_VERSION_MINOR}
-
-/* Patch version of the LLVM API */
-#define LLVM_VERSION_PATCH ${LLVM_VERSION_PATCH}
-
-/* LLVM version string */
-#define LLVM_VERSION_STRING "${PACKAGE_VERSION}"
 
 /* Define if libxml2 is supported on this platform. */
 #cmakedefine LLVM_LIBXML2_ENABLED ${LLVM_LIBXML2_ENABLED}
@@ -365,6 +332,9 @@
 /* Define as the return type of signal handlers (`int' or `void'). */
 #cmakedefine RETSIGTYPE ${RETSIGTYPE}
 
+/* Define if std::is_trivially_copyable is supported */
+#cmakedefine HAVE_STD_IS_TRIVIALLY_COPYABLE ${HAVE_STD_IS_TRIVIALLY_COPYABLE}
+
 /* Define to a function implementing stricmp */
 #cmakedefine stricmp ${stricmp}
 
@@ -374,7 +344,13 @@
 /* Whether GlobalISel rule coverage is being collected */
 #cmakedefine01 LLVM_GISEL_COV_ENABLED
 
+/* Define if we have z3 and want to build it */
+#cmakedefine LLVM_WITH_Z3 ${LLVM_WITH_Z3}
+
 /* Define to the default GlobalISel coverage file prefix */
 #cmakedefine LLVM_GISEL_COV_PREFIX "${LLVM_GISEL_COV_PREFIX}"
+
+/* Whether Timers signpost passes in Xcode Instruments */
+#cmakedefine01 LLVM_SUPPORT_XCODE_SIGNPOSTS
 
 #endif

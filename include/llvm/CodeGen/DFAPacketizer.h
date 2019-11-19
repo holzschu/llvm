@@ -1,9 +1,8 @@
 //===- llvm/CodeGen/DFAPacketizer.h - DFA Packetizer for VLIW ---*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 // This class implements a deterministic finite automaton (DFA) based
@@ -29,6 +28,7 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/ScheduleDAGMutation.h"
+#include "llvm/Support/Automaton.h"
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -77,26 +77,26 @@ using DFAStateInput = int64_t;
 
 class DFAPacketizer {
 private:
-  using UnsignPair = std::pair<unsigned, DFAInput>;
-
   const InstrItineraryData *InstrItins;
-  int CurrentState = 0;
-  const DFAStateInput (*DFAStateInputTable)[2];
-  const unsigned *DFAStateEntryTable;
-
-  // CachedTable is a map from <FromState, Input> to ToState.
-  DenseMap<UnsignPair, unsigned> CachedTable;
-
-  // Read the DFA transition table and update CachedTable.
-  void ReadTable(unsigned state);
+  Automaton<DFAInput> A;
 
 public:
-  DFAPacketizer(const InstrItineraryData *I, const DFAStateInput (*SIT)[2],
-                const unsigned *SET);
+  DFAPacketizer(const InstrItineraryData *InstrItins, Automaton<uint64_t> a) :
+      InstrItins(InstrItins), A(std::move(a)) {
+    // Start off with resource tracking disabled.
+    A.enableTranscription(false);
+  }
 
   // Reset the current state to make all resources available.
   void clearResources() {
-    CurrentState = 0;
+    A.reset();
+  }
+
+  // Set whether this packetizer should track not just whether instructions
+  // can be packetized, but also which functional units each instruction ends up
+  // using after packetization.
+  void setTrackResources(bool Track) {
+    A.enableTranscription(Track);
   }
 
   // Return the DFAInput for an instruction class.
@@ -121,6 +121,15 @@ public:
   // current state to reflect that change.
   void reserveResources(MachineInstr &MI);
 
+  // Return the resources used by the InstIdx'th instruction added to this
+  // packet. The resources are returned as a bitvector of functional units.
+  //
+  // Note that a bundle may be packed in multiple valid ways. This function
+  // returns one arbitary valid packing.
+  //
+  // Requires setTrackResources(true) to have been called.
+  unsigned getUsedResources(unsigned InstIdx);
+
   const InstrItineraryData *getInstrItins() const { return InstrItins; }
 };
 
@@ -135,7 +144,7 @@ class VLIWPacketizerList {
 protected:
   MachineFunction &MF;
   const TargetInstrInfo *TII;
-  AliasAnalysis *AA;
+  AAResults *AA;
 
   // The VLIW Scheduler.
   DefaultVLIWScheduler *VLIWScheduler;
@@ -147,9 +156,9 @@ protected:
   std::map<MachineInstr*, SUnit*> MIToSUnit;
 
 public:
-  // The AliasAnalysis parameter can be nullptr.
+  // The AAResults parameter can be nullptr.
   VLIWPacketizerList(MachineFunction &MF, MachineLoopInfo &MLI,
-                     AliasAnalysis *AA);
+                     AAResults *AA);
 
   virtual ~VLIWPacketizerList();
 

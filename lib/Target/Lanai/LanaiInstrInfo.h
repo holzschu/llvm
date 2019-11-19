@@ -1,9 +1,8 @@
 //===- LanaiInstrInfo.h - Lanai Instruction Information ---------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -36,8 +35,8 @@ public:
     return RegisterInfo;
   }
 
-  bool areMemAccessesTriviallyDisjoint(MachineInstr &MIa, MachineInstr &MIb,
-                                       AliasAnalysis *AA) const override;
+  bool areMemAccessesTriviallyDisjoint(const MachineInstr &MIa,
+                                       const MachineInstr &MIb) const override;
 
   unsigned isLoadFromStackSlot(const MachineInstr &MI,
                                int &FrameIndex) const override;
@@ -68,13 +67,15 @@ public:
 
   bool expandPostRAPseudo(MachineInstr &MI) const override;
 
-  bool getMemOpBaseRegImmOfs(MachineInstr &LdSt, unsigned &BaseReg,
-                             int64_t &Offset,
-                             const TargetRegisterInfo *TRI) const override;
+  bool getMemOperandWithOffset(const MachineInstr &LdSt,
+                               const MachineOperand *&BaseOp,
+                               int64_t &Offset,
+                               const TargetRegisterInfo *TRI) const override;
 
-  bool getMemOpBaseRegImmOfsWidth(MachineInstr &LdSt, unsigned &BaseReg,
-                                  int64_t &Offset, unsigned &Width,
-                                  const TargetRegisterInfo *TRI) const;
+  bool getMemOperandWithOffsetWidth(const MachineInstr &LdSt,
+                                    const MachineOperand *&BaseOp,
+                                    int64_t &Offset, unsigned &Width,
+                                    const TargetRegisterInfo *TRI) const;
 
   std::pair<unsigned, unsigned>
   decomposeMachineOperandsTargetFlags(unsigned TF) const override;

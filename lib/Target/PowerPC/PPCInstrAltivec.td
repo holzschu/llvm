@@ -1,9 +1,8 @@
 //===-- PPCInstrAltivec.td - The PowerPC Altivec Extension -*- tablegen -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -216,21 +215,21 @@ def vsldoi_swapped_shuffle : PatFrag<(ops node:$lhs, node:$rhs),
 
 // VSPLT*_get_imm xform function: convert vector_shuffle mask to VSPLT* imm.
 def VSPLTB_get_imm : SDNodeXForm<vector_shuffle, [{
-  return getI32Imm(PPC::getVSPLTImmediate(N, 1, *CurDAG), SDLoc(N));
+  return getI32Imm(PPC::getSplatIdxForPPCMnemonics(N, 1, *CurDAG), SDLoc(N));
 }]>;
 def vspltb_shuffle : PatFrag<(ops node:$lhs, node:$rhs),
                              (vector_shuffle node:$lhs, node:$rhs), [{
   return PPC::isSplatShuffleMask(cast<ShuffleVectorSDNode>(N), 1);
 }], VSPLTB_get_imm>;
 def VSPLTH_get_imm : SDNodeXForm<vector_shuffle, [{
-  return getI32Imm(PPC::getVSPLTImmediate(N, 2, *CurDAG), SDLoc(N));
+  return getI32Imm(PPC::getSplatIdxForPPCMnemonics(N, 2, *CurDAG), SDLoc(N));
 }]>;
 def vsplth_shuffle : PatFrag<(ops node:$lhs, node:$rhs),
                              (vector_shuffle node:$lhs, node:$rhs), [{
   return PPC::isSplatShuffleMask(cast<ShuffleVectorSDNode>(N), 2);
 }], VSPLTH_get_imm>;
 def VSPLTW_get_imm : SDNodeXForm<vector_shuffle, [{
-  return getI32Imm(PPC::getVSPLTImmediate(N, 4, *CurDAG), SDLoc(N));
+  return getI32Imm(PPC::getSplatIdxForPPCMnemonics(N, 4, *CurDAG), SDLoc(N));
 }]>;
 def vspltw_shuffle : PatFrag<(ops node:$lhs, node:$rhs),
                              (vector_shuffle node:$lhs, node:$rhs), [{
@@ -332,7 +331,7 @@ class VXBX_Int_Ty<bits<11> xo, string opc, Intrinsic IntID, ValueType Ty>
 class VXCR_Int_Ty<bits<11> xo, string opc, Intrinsic IntID, ValueType Ty>
   : VXForm_CR<xo, (outs vrrc:$vD), (ins vrrc:$vA, u1imm:$ST, u4imm:$SIX),
               !strconcat(opc, " $vD, $vA, $ST, $SIX"), IIC_VecFP,
-              [(set Ty:$vD, (IntID Ty:$vA, imm:$ST, imm:$SIX))]>;
+              [(set Ty:$vD, (IntID Ty:$vA, timm:$ST, timm:$SIX))]>;
 
 //===----------------------------------------------------------------------===//
 // Instruction Definitions.
@@ -402,10 +401,10 @@ let isCodeGenOnly = 1 in {
 
 def MFVSCR : VXForm_4<1540, (outs vrrc:$vD), (ins),
                       "mfvscr $vD", IIC_LdStStore,
-                      [(set v8i16:$vD, (int_ppc_altivec_mfvscr))]>; 
+                      [(set v8i16:$vD, (int_ppc_altivec_mfvscr))]>;
 def MTVSCR : VXForm_5<1604, (outs), (ins vrrc:$vB),
                       "mtvscr $vB", IIC_LdStLoad,
-                      [(int_ppc_altivec_mtvscr v4i32:$vB)]>; 
+                      [(int_ppc_altivec_mtvscr v4i32:$vB)]>;
 
 let PPC970_Unit = 2, mayLoad = 1, mayStore = 0 in {  // Loads.
 def LVEBX: XForm_1_memOp<31,   7, (outs vrrc:$vD), (ins memrr:$src),
@@ -822,7 +821,9 @@ def VCMPGTSWo : VCMPo<902, "vcmpgtsw. $vD, $vA, $vB", v4i32>;
 def VCMPGTUW  : VCMP <646, "vcmpgtuw $vD, $vA, $vB" , v4i32>;
 def VCMPGTUWo : VCMPo<646, "vcmpgtuw. $vD, $vA, $vB", v4i32>;
 
-let isCodeGenOnly = 1 in {
+let isCodeGenOnly = 1, isMoveImm = 1, isAsCheapAsAMove = 1,
+    isReMaterializable = 1 in {
+
 def V_SET0B : VXForm_setzero<1220, (outs vrrc:$vD), (ins),
                       "vxor $vD, $vD, $vD", IIC_VecFP,
                       [(set v16i8:$vD, (v16i8 immAllZerosV))]>;
@@ -898,6 +899,32 @@ def : Pat<(v1i128 (bitconvert (v8i16 VRRC:$src))), (v1i128 VRRC:$src)>;
 def : Pat<(v1i128 (bitconvert (v4i32 VRRC:$src))), (v1i128 VRRC:$src)>;
 def : Pat<(v1i128 (bitconvert (v4f32 VRRC:$src))), (v1i128 VRRC:$src)>;
 def : Pat<(v1i128 (bitconvert (v2i64 VRRC:$src))), (v1i128 VRRC:$src)>;
+
+// Max/Min
+def : Pat<(v16i8 (umax v16i8:$src1, v16i8:$src2)),
+          (v16i8 (VMAXUB $src1, $src2))>;
+def : Pat<(v16i8 (smax v16i8:$src1, v16i8:$src2)),
+          (v16i8 (VMAXSB $src1, $src2))>;
+def : Pat<(v8i16 (umax v8i16:$src1, v8i16:$src2)),
+          (v8i16 (VMAXUH $src1, $src2))>;
+def : Pat<(v8i16 (smax v8i16:$src1, v8i16:$src2)),
+          (v8i16 (VMAXSH $src1, $src2))>;
+def : Pat<(v4i32 (umax v4i32:$src1, v4i32:$src2)),
+          (v4i32 (VMAXUW $src1, $src2))>;
+def : Pat<(v4i32 (smax v4i32:$src1, v4i32:$src2)),
+          (v4i32 (VMAXSW $src1, $src2))>;
+def : Pat<(v16i8 (umin v16i8:$src1, v16i8:$src2)),
+          (v16i8 (VMINUB $src1, $src2))>;
+def : Pat<(v16i8 (smin v16i8:$src1, v16i8:$src2)),
+          (v16i8 (VMINSB $src1, $src2))>;
+def : Pat<(v8i16 (umin v8i16:$src1, v8i16:$src2)),
+          (v8i16 (VMINUH $src1, $src2))>;
+def : Pat<(v8i16 (smin v8i16:$src1, v8i16:$src2)),
+          (v8i16 (VMINSH $src1, $src2))>;
+def : Pat<(v4i32 (umin v4i32:$src1, v4i32:$src2)),
+          (v4i32 (VMINUW $src1, $src2))>;
+def : Pat<(v4i32 (smin v4i32:$src1, v4i32:$src2)),
+          (v4i32 (VMINSW $src1, $src2))>;
 
 // Shuffles.
 
@@ -1050,6 +1077,20 @@ def : Pat<(v4f32 (ftrunc v4f32:$vA)),
           (VRFIZ $vA)>;
 def : Pat<(v4f32 (fnearbyint v4f32:$vA)),
           (VRFIN $vA)>;
+
+// Vector selection
+def : Pat<(v16i8 (vselect v16i8:$vA, v16i8:$vB, v16i8:$vC)),
+          (VSEL $vC, $vB, $vA)>;
+def : Pat<(v8i16 (vselect v8i16:$vA, v8i16:$vB, v8i16:$vC)),
+          (VSEL $vC, $vB, $vA)>;
+def : Pat<(v4i32 (vselect v4i32:$vA, v4i32:$vB, v4i32:$vC)),
+          (VSEL $vC, $vB, $vA)>;
+def : Pat<(v2i64 (vselect v2i64:$vA, v2i64:$vB, v2i64:$vC)),
+          (VSEL $vC, $vB, $vA)>;
+def : Pat<(v4f32 (vselect v4i32:$vA, v4f32:$vB, v4f32:$vC)),
+          (VSEL $vC, $vB, $vA)>;
+def : Pat<(v2f64 (vselect v2i64:$vA, v2f64:$vB, v2f64:$vC)),
+          (VSEL $vC, $vB, $vA)>;
 
 } // end HasAltivec
 

@@ -1,9 +1,8 @@
 //===- UnifyFunctionExitNodes.cpp - Make all functions have a single exit -===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -61,7 +60,7 @@ bool UnifyFunctionExitNodes::runOnFunction(Function &F) {
   } else if (UnreachableBlocks.size() == 1) {
     UnreachableBlock = UnreachableBlocks.front();
   } else {
-    UnreachableBlock = BasicBlock::Create(F.getContext(), 
+    UnreachableBlock = BasicBlock::Create(F.getContext(),
                                           "UnifiedUnreachableBlock", &F);
     new UnreachableInst(F.getContext(), UnreachableBlock);
 

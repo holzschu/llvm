@@ -966,7 +966,7 @@ define i32 @load_i32_by_i8_base_offset_index_2(i8* %arg, i32 %i) {
 ; CHECK64-LABEL: load_i32_by_i8_base_offset_index_2:
 ; CHECK64:       # %bb.0:
 ; CHECK64-NEXT:    movl %esi, %eax
-; CHECK64-NEXT:    movl 13(%rdi,%rax), %eax
+; CHECK64-NEXT:    movl 13(%rax,%rdi), %eax
 ; CHECK64-NEXT:    retq
   %tmp = add nuw nsw i32 %i, 4
   %tmp2 = add nuw nsw i32 %i, 3

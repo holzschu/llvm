@@ -1,14 +1,13 @@
 //=- WebAssemblyInstrInfo.h - WebAssembly Instruction Information -*- C++ -*-=//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief This file contains the WebAssembly implementation of the
+/// This file contains the WebAssembly implementation of the
 /// TargetInstrInfo class.
 ///
 //===----------------------------------------------------------------------===//
@@ -22,7 +21,16 @@
 #define GET_INSTRINFO_HEADER
 #include "WebAssemblyGenInstrInfo.inc"
 
+#define GET_INSTRINFO_OPERAND_ENUM
+#include "WebAssemblyGenInstrInfo.inc"
+
 namespace llvm {
+
+namespace WebAssembly {
+
+int16_t getNamedOperandIdx(uint16_t Opcode, uint16_t NamedIndex);
+
+}
 
 class WebAssemblySubtarget;
 
@@ -35,7 +43,7 @@ public:
   const WebAssemblyRegisterInfo &getRegisterInfo() const { return RI; }
 
   bool isReallyTriviallyReMaterializable(const MachineInstr &MI,
-                                         AliasAnalysis *AA) const override;
+                                         AAResults *AA) const override;
 
   void copyPhysReg(MachineBasicBlock &MBB, MachineBasicBlock::iterator MI,
                    const DebugLoc &DL, unsigned DestReg, unsigned SrcReg,

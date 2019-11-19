@@ -3,6 +3,7 @@ set(LLVM_TARGET_DEFINITIONS WebAssembly.td)
 tablegen(LLVM WebAssemblyGenAsmMatcher.inc -gen-asm-matcher)
 tablegen(LLVM WebAssemblyGenAsmWriter.inc -gen-asm-writer)
 tablegen(LLVM WebAssemblyGenDAGISel.inc -gen-dag-isel)
+tablegen(LLVM WebAssemblyGenDisassemblerTables.inc -gen-disassembler)
 tablegen(LLVM WebAssemblyGenFastISel.inc -gen-fast-isel)
 tablegen(LLVM WebAssemblyGenInstrInfo.inc -gen-instr-info)
 tablegen(LLVM WebAssemblyGenMCCodeEmitter.inc -gen-emitter)
@@ -12,11 +13,15 @@ tablegen(LLVM WebAssemblyGenSubtargetInfo.inc -gen-subtarget)
 add_public_tablegen_target(WebAssemblyCommonTableGen)
 
 add_llvm_target(WebAssemblyCodeGen
+  WebAssemblyAddMissingPrototypes.cpp
   WebAssemblyArgumentMove.cpp
   WebAssemblyAsmPrinter.cpp
   WebAssemblyCallIndirectFixup.cpp
   WebAssemblyCFGStackify.cpp
   WebAssemblyCFGSort.cpp
+  WebAssemblyDebugValueManager.cpp
+  WebAssemblyLateEHPrepare.cpp
+  WebAssemblyExceptionInfo.cpp
   WebAssemblyExplicitLocals.cpp
   WebAssemblyFastISel.cpp
   WebAssemblyFixIrreducibleControlFlow.cpp
@@ -42,7 +47,7 @@ add_llvm_target(WebAssemblyCodeGen
   WebAssemblyRuntimeLibcallSignatures.cpp
   WebAssemblySelectionDAGInfo.cpp
   WebAssemblySetP2AlignOperands.cpp
-  WebAssemblyStoreResults.cpp
+  WebAssemblyMemIntrinsicResults.cpp
   WebAssemblySubtarget.cpp
   WebAssemblyTargetMachine.cpp
   WebAssemblyTargetObjectFile.cpp
@@ -55,6 +60,5 @@ add_llvm_target(WebAssemblyCodeGen
 
 add_subdirectory(AsmParser)
 add_subdirectory(Disassembler)
-add_subdirectory(InstPrinter)
 add_subdirectory(MCTargetDesc)
 add_subdirectory(TargetInfo)

@@ -1,9 +1,8 @@
 //===-- CommandFlags.h - Command Line Flags Interface -----------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -74,7 +73,8 @@ static cl::opt<ThreadModel::Model> TMModel(
 
 static cl::opt<llvm::CodeModel::Model> CMModel(
     "code-model", cl::desc("Choose code model"),
-    cl::values(clEnumValN(CodeModel::Small, "small", "Small code model"),
+    cl::values(clEnumValN(CodeModel::Tiny, "tiny", "Tiny code model"),
+               clEnumValN(CodeModel::Small, "small", "Small code model"),
                clEnumValN(CodeModel::Kernel, "kernel", "Kernel code model"),
                clEnumValN(CodeModel::Medium, "medium", "Medium code model"),
                clEnumValN(CodeModel::Large, "large", "Large code model")));
@@ -113,10 +113,16 @@ static cl::opt<TargetMachine::CodeGenFileType> FileType(
                clEnumValN(TargetMachine::CGFT_Null, "null",
                           "Emit nothing, for performance testing")));
 
-static cl::opt<bool>
-    DisableFPElim("disable-fp-elim",
-                  cl::desc("Disable frame pointer elimination optimization"),
-                  cl::init(false));
+static cl::opt<llvm::FramePointer::FP> FramePointerUsage(
+    "frame-pointer", cl::desc("Specify frame pointer elimination optimization"),
+    cl::init(llvm::FramePointer::None),
+    cl::values(
+        clEnumValN(llvm::FramePointer::All, "all",
+                   "Disable frame pointer elimination"),
+        clEnumValN(llvm::FramePointer::NonLeaf, "non-leaf",
+                   "Disable frame pointer elimination for non-leaf frame"),
+        clEnumValN(llvm::FramePointer::None, "none",
+                   "Enable frame pointer elimination")));
 
 static cl::opt<bool> EnableUnsafeFPMath(
     "enable-unsafe-fp-math",
@@ -261,6 +267,15 @@ static cl::opt<bool> EnableStackSizeSection(
     "stack-size-section",
     cl::desc("Emit a section containing stack size metadata"), cl::init(false));
 
+static cl::opt<bool>
+    EnableAddrsig("addrsig", cl::desc("Emit an address-significance table"),
+                  cl::init(false));
+
+static cl::opt<bool>
+    EnableDebugEntryValues("debug-entry-values",
+                           cl::desc("Emit debug info about parameter's entry values"),
+                           cl::init(false));
+
 // Common utility function tightly tied to the options listed here. Initializes
 // a TargetOptions object with CodeGen flags and returns it.
 static TargetOptions InitTargetOptionsFromCodeGenFlags() {
@@ -289,6 +304,8 @@ static TargetOptions InitTargetOptionsFromCodeGenFlags() {
   Options.ExplicitEmulatedTLS = EmulatedTLS.getNumOccurrences() > 0;
   Options.ExceptionModel = ExceptionModel;
   Options.EmitStackSizeSection = EnableStackSizeSection;
+  Options.EmitAddrsig = EnableAddrsig;
+  Options.EnableDebugEntryValues = EnableDebugEntryValues;
 
   Options.MCOptions = InitMCTargetOptionsFromFlags();
 
@@ -349,7 +366,7 @@ LLVM_ATTRIBUTE_UNUSED static std::vector<std::string> getFeatureList() {
   return Features.getFeatures();
 }
 
-/// \brief Set function attributes of functions in Module M based on CPU,
+/// Set function attributes of functions in Module M based on CPU,
 /// Features, and command line flags.
 LLVM_ATTRIBUTE_UNUSED static void
 setFunctionAttributes(StringRef CPU, StringRef Features, Module &M) {
@@ -362,9 +379,14 @@ setFunctionAttributes(StringRef CPU, StringRef Features, Module &M) {
       NewAttrs.addAttribute("target-cpu", CPU);
     if (!Features.empty())
       NewAttrs.addAttribute("target-features", Features);
-    if (DisableFPElim.getNumOccurrences() > 0)
-      NewAttrs.addAttribute("no-frame-pointer-elim",
-                            DisableFPElim ? "true" : "false");
+    if (FramePointerUsage.getNumOccurrences() > 0) {
+      if (FramePointerUsage == llvm::FramePointer::All)
+        NewAttrs.addAttribute("frame-pointer", "all");
+      else if (FramePointerUsage == llvm::FramePointer::NonLeaf)
+        NewAttrs.addAttribute("frame-pointer", "non-leaf");
+      else if (FramePointerUsage == llvm::FramePointer::None)
+        NewAttrs.addAttribute("frame-pointer", "none");
+    }
     if (DisableTailCalls.getNumOccurrences() > 0)
       NewAttrs.addAttribute("disable-tail-calls",
                             toStringRef(DisableTailCalls));

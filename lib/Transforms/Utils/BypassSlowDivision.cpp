@@ -1,9 +1,8 @@
 //===- BypassSlowDivision.cpp - Bypass slow division ----------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -21,7 +20,7 @@
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallPtrSet.h"
-#include "llvm/Analysis/Utils/Local.h"
+#include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constants.h"
@@ -173,7 +172,7 @@ Value *FastDivInsertionTask::getReplacement(DivCacheTy &Cache) {
   return isDivisionOp() ? Value.Quotient : Value.Remainder;
 }
 
-/// \brief Check if a value looks like a hash.
+/// Check if a value looks like a hash.
 ///
 /// The routine is expected to detect values computed using the most common hash
 /// algorithms. Typically, hash computations end with one of the following
@@ -388,6 +387,15 @@ Optional<QuotRemPair> FastDivInsertionTask::insertFastDivAndRem() {
     return None;
   }
 
+  // After Constant Hoisting pass, long constants may be represented as
+  // bitcast instructions. As a result, some constants may look like an
+  // instruction at first, and an additional check is necessary to find out if
+  // an operand is actually a constant.
+  if (auto *BCI = dyn_cast<BitCastInst>(Divisor))
+    if (BCI->getParent() == SlowDivOrRem->getParent() &&
+        isa<ConstantInt>(BCI->getOperand(0)))
+      return None;
+
   if (DividendShort && !isSignedOp()) {
     // If the division is unsigned and Dividend is known to be short, then
     // either
@@ -440,12 +448,16 @@ bool llvm::bypassSlowDivision(BasicBlock *BB,
   DivCacheTy PerBBDivCache;
 
   bool MadeChange = false;
-  Instruction* Next = &*BB->begin();
+  Instruction *Next = &*BB->begin();
   while (Next != nullptr) {
     // We may add instructions immediately after I, but we want to skip over
     // them.
-    Instruction* I = Next;
+    Instruction *I = Next;
     Next = Next->getNextNode();
+
+    // Ignore dead code to save time and avoid bugs.
+    if (I->hasNUses(0))
+      continue;
 
     FastDivInsertionTask Task(I, BypassWidths);
     if (Value *Replacement = Task.getReplacement(PerBBDivCache)) {

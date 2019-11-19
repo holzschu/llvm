@@ -1,9 +1,8 @@
 //===- MipsOptionRecord.cpp - Abstraction for storing information ---------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -38,7 +37,7 @@ void MipsRegInfoRecord::EmitMipsOptionRecord() {
         Context.getELFSection(".MIPS.options", ELF::SHT_MIPS_OPTIONS,
                               ELF::SHF_ALLOC | ELF::SHF_MIPS_NOSTRIP, 1, "");
     MCA.registerSection(*Sec);
-    Sec->setAlignment(8);
+    Sec->setAlignment(Align(8));
     Streamer->SwitchSection(Sec);
 
     Streamer->EmitIntValue(ELF::ODK_REGINFO, 1);  // kind
@@ -56,7 +55,7 @@ void MipsRegInfoRecord::EmitMipsOptionRecord() {
     MCSectionELF *Sec = Context.getELFSection(".reginfo", ELF::SHT_MIPS_REGINFO,
                                               ELF::SHF_ALLOC, 24, "");
     MCA.registerSection(*Sec);
-    Sec->setAlignment(MTS->getABI().IsN32() ? 8 : 4);
+    Sec->setAlignment(MTS->getABI().IsN32() ? Align(8) : Align(4));
     Streamer->SwitchSection(Sec);
 
     Streamer->EmitIntValue(ri_gprmask, 4);

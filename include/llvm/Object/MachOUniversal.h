@@ -1,9 +1,8 @@
 //===- MachOUniversal.h - Mach-O universal binaries -------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -32,11 +31,13 @@ class MachOUniversalBinary : public Binary {
   uint32_t Magic;
   uint32_t NumberOfObjects;
 public:
+  static constexpr uint32_t MaxSectionAlignment = 15; /* 2**15 or 0x8000 */
+
   class ObjectForArch {
     const MachOUniversalBinary *Parent;
-    /// \brief Index of object in the universal binary.
+    /// Index of object in the universal binary.
     uint32_t Index;
-    /// \brief Descriptor of the object.
+    /// Descriptor of the object.
     MachO::fat_arch Header;
     MachO::fat_arch_64 Header64;
 
@@ -65,13 +66,13 @@ public:
       else // Parent->getMagic() == MachO::FAT_MAGIC_64
         return Header64.cpusubtype;
     }
-    uint32_t getOffset() const {
+    uint64_t getOffset() const {
       if (Parent->getMagic() == MachO::FAT_MAGIC)
         return Header.offset;
       else // Parent->getMagic() == MachO::FAT_MAGIC_64
         return Header64.offset;
     }
-    uint32_t getSize() const {
+    uint64_t getSize() const {
       if (Parent->getMagic() == MachO::FAT_MAGIC)
         return Header.size;
       else // Parent->getMagic() == MachO::FAT_MAGIC_64
@@ -158,8 +159,14 @@ public:
     return V->isMachOUniversalBinary();
   }
 
-  Expected<std::unique_ptr<MachOObjectFile>>
+  Expected<ObjectForArch>
   getObjectForArch(StringRef ArchName) const;
+
+  Expected<std::unique_ptr<MachOObjectFile>>
+  getMachOObjectForArch(StringRef ArchName) const;
+
+  Expected<std::unique_ptr<Archive>>
+  getArchiveForArch(StringRef ArchName) const;
 };
 
 }

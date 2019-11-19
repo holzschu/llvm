@@ -13,7 +13,7 @@
 ; Only llvm-lto2 adds the dso_local keyword, hence the {{.*}}
 ; CHECK: define available_externally{{.*}} void @_ZN4CFVSD2Ev
 
-target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-scei-ps4"
 
 %class.C = type <{ i32 (...)**, %class.A, %struct.CFVS, [6 x i8] }>
@@ -45,7 +45,7 @@ declare dereferenceable(1) %struct.S* @_Z3Getv()
 !4 = !{i32 2, !"Debug Info Version", i32 3}
 !5 = !{i32 1, !"wchar_size", i32 2}
 !6 = !{i32 7, !"PIC Level", i32 2}
-!8 = distinct !DISubprogram(name: "~C", linkageName: "_ZN1CD2Ev", scope: !9, file: !1, line: 9, type: !47, isLocal: false, isDefinition: true, scopeLine: 9, flags: DIFlagPrototyped, isOptimized: false, unit: !0, declaration: !46, variables: !2)
+!8 = distinct !DISubprogram(name: "~C", linkageName: "_ZN1CD2Ev", scope: !9, file: !1, line: 9, type: !47, isLocal: false, isDefinition: true, scopeLine: 9, flags: DIFlagPrototyped, isOptimized: false, unit: !0, declaration: !46, retainedNodes: !2)
 !9 = distinct !DICompositeType(tag: DW_TAG_class_type, name: "C", file: !1, line: 5, size: 128, elements: !10, vtableHolder: !9, identifier: "_ZTS1C")
 !10 = !{!38, !46}
 !15 = distinct !DICompositeType(tag: DW_TAG_structure_type, name: "Vec<&Get>", file: !16, line: 4, size: 8, elements: !17, templateParams: !22, identifier: "_ZTS3VecIXadL_Z3GetvEEE")

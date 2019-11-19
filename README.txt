@@ -1,5 +1,5 @@
-Low Level Virtual Machine  for iOS (LLVM)
-=========================================
+The LLVM Compiler Infrastructure
+================================
 
 This directory and its subdirectories contain a forked source code 
 for LLVM, a toolkit for the construction of highly optimized compilers,

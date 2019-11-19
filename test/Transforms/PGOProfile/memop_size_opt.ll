@@ -1,12 +1,12 @@
-; RUN: opt < %s -pgo-memop-opt -pgo-memop-count-threshold=90 -pgo-memop-percent-threshold=15 -S | FileCheck %s --check-prefix=MEMOP_OPT
-; RUN: opt < %s -passes=pgo-memop-opt -pgo-memop-count-threshold=90 -pgo-memop-percent-threshold=15 -S | FileCheck %s --check-prefix=MEMOP_OPT
-; RUN: opt < %s -pgo-memop-opt -pgo-memop-count-threshold=90 -pgo-memop-percent-threshold=15 -pass-remarks-with-hotness -pass-remarks-output=%t.opt.yaml -S | FileCheck %s --check-prefix=MEMOP_OPT
+; RUN: opt < %s -pgo-memop-opt -verify-dom-info -pgo-memop-count-threshold=90 -pgo-memop-percent-threshold=15 -S | FileCheck %s --check-prefix=MEMOP_OPT
+; RUN: opt < %s -passes=pgo-memop-opt -verify-dom-info -pgo-memop-count-threshold=90 -pgo-memop-percent-threshold=15 -S | FileCheck %s --check-prefix=MEMOP_OPT
+; RUN: opt < %s -pgo-memop-opt -verify-dom-info -pgo-memop-count-threshold=90 -pgo-memop-percent-threshold=15 -pass-remarks-with-hotness -pass-remarks-output=%t.opt.yaml -S | FileCheck %s --check-prefix=MEMOP_OPT
 ; RUN: FileCheck %s -input-file=%t.opt.yaml --check-prefix=YAML
-; RUN: opt < %s -passes=pgo-memop-opt -pgo-memop-count-threshold=90 -pgo-memop-percent-threshold=15 -pass-remarks-with-hotness -pass-remarks-output=%t.opt.yaml -S | FileCheck %s --check-prefix=MEMOP_OPT
+; RUN: opt < %s -passes=pgo-memop-opt -verify-dom-info -pgo-memop-count-threshold=90 -pgo-memop-percent-threshold=15 -pass-remarks-with-hotness -pass-remarks-output=%t.opt.yaml -S | FileCheck %s --check-prefix=MEMOP_OPT
 ; RUN: FileCheck %s -input-file=%t.opt.yaml --check-prefix=YAML
 
 
-target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-unknown-linux-gnu"
 
 define void @foo(i8* %dst, i8* %src, i8* %dst2, i8* %src2, i32* %a, i32 %n) !prof !27 {

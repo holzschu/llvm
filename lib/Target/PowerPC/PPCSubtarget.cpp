@@ -1,9 +1,8 @@
 //===-- PowerPCSubtarget.cpp - PPC Subtarget Information ------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -40,6 +39,11 @@ static cl::opt<bool> QPXStackUnaligned("qpx-stack-unaligned",
   cl::desc("Even when QPX is enabled the stack is not 32-byte aligned"),
   cl::Hidden);
 
+static cl::opt<bool>
+    EnableMachinePipeliner("ppc-enable-pipeliner",
+                           cl::desc("Enable Machine Pipeliner for PPC"),
+                           cl::init(false), cl::Hidden);
+
 PPCSubtarget &PPCSubtarget::initializeSubtargetDependencies(StringRef CPU,
                                                             StringRef FS) {
   initializeEnvironment();
@@ -56,7 +60,7 @@ PPCSubtarget::PPCSubtarget(const Triple &TT, const std::string &CPU,
       InstrInfo(*this), TLInfo(TM, *this) {}
 
 void PPCSubtarget::initializeEnvironment() {
-  StackAlignment = 16;
+  StackAlignment = Align(16);
   DarwinDirective = PPC::DIR_NONE;
   HasMFOCRF = false;
   Has64BitSupport = false;
@@ -65,8 +69,10 @@ void PPCSubtarget::initializeEnvironment() {
   HasHardFloat = false;
   HasAltivec = false;
   HasSPE = false;
+  HasFPU = false;
   HasQPX = false;
   HasVSX = false;
+  NeedsTwoConstNR = false;
   HasP8Vector = false;
   HasP8Altivec = false;
   HasP8Crypto = false;
@@ -102,11 +108,13 @@ void PPCSubtarget::initializeEnvironment() {
   HasDirectMove = false;
   IsQPXStackUnaligned = false;
   HasHTM = false;
-  HasFusion = false;
   HasFloat128 = false;
   IsISA3_0 = false;
   UseLongCalls = false;
   SecurePlt = false;
+  VectorsUseTwoUnits = false;
+  UsePPCPreRASchedStrategy = false;
+  UsePPCPostRASchedStrategy = false;
 
   HasPOPCNTD = POPCNTD_Unavailable;
 }
@@ -137,6 +145,21 @@ void PPCSubtarget::initSubtargetFeatures(StringRef CPU, StringRef FS) {
   if (isDarwin())
     HasLazyResolverStubs = true;
 
+  if ((TargetTriple.isOSFreeBSD() && TargetTriple.getOSMajorVersion() >= 13) ||
+      TargetTriple.isOSNetBSD() || TargetTriple.isOSOpenBSD() ||
+      TargetTriple.isMusl())
+    SecurePlt = true;
+
+  if (HasSPE && IsPPC64)
+    report_fatal_error( "SPE is only supported for 32-bit targets.\n", false);
+  if (HasSPE && (HasAltivec || HasQPX || HasVSX || HasFPU))
+    report_fatal_error(
+        "SPE and traditional floating point cannot both be enabled.\n", false);
+
+  // If not SPE, set standard FPU
+  if (!HasSPE)
+    HasFPU = true;
+
   // QPX requires a 32-byte aligned stack. Note that we need to do this if
   // we're compiling for a BG/Q system regardless of whether or not QPX
   // is enabled because external functions will assume this alignment.
@@ -164,28 +187,13 @@ bool PPCSubtarget::hasLazyResolverStub(const GlobalValue *GV) const {
   return false;
 }
 
-// Embedded cores need aggressive scheduling (and some others also benefit).
-static bool needsAggressiveScheduling(unsigned Directive) {
-  switch (Directive) {
-  default: return false;
-  case PPC::DIR_440:
-  case PPC::DIR_A2:
-  case PPC::DIR_E500mc:
-  case PPC::DIR_E5500:
-  case PPC::DIR_PWR7:
-  case PPC::DIR_PWR8:
-  // FIXME: Same as P8 until POWER9 scheduling info is available
-  case PPC::DIR_PWR9:
-    return true;
-  }
+bool PPCSubtarget::enableMachineScheduler() const { return true; }
+
+bool PPCSubtarget::enableMachinePipeliner() const {
+  return (DarwinDirective == PPC::DIR_PWR9) && EnableMachinePipeliner;
 }
 
-bool PPCSubtarget::enableMachineScheduler() const {
-  // Enable MI scheduling for the embedded cores.
-  // FIXME: Enable this for all cores (some additional modeling
-  // may be necessary).
-  return needsAggressiveScheduling(DarwinDirective);
-}
+bool PPCSubtarget::useDFAforSMS() const { return false; }
 
 // This overrides the PostRAScheduler bit in the SchedModel for each CPU.
 bool PPCSubtarget::enablePostRAScheduler() const { return true; }
@@ -202,37 +210,32 @@ void PPCSubtarget::getCriticalPathRCs(RegClassVector &CriticalPathRCs) const {
 
 void PPCSubtarget::overrideSchedPolicy(MachineSchedPolicy &Policy,
                                        unsigned NumRegionInstrs) const {
-  if (needsAggressiveScheduling(DarwinDirective)) {
-    Policy.OnlyTopDown = false;
-    Policy.OnlyBottomUp = false;
-  }
-
+  // The GenericScheduler that we use defaults to scheduling bottom up only.
+  // We want to schedule from both the top and the bottom and so we set
+  // OnlyBottomUp to false.
+  // We want to do bi-directional scheduling since it provides a more balanced
+  // schedule leading to better performance.
+  Policy.OnlyBottomUp = false;
   // Spilling is generally expensive on all PPC cores, so always enable
   // register-pressure tracking.
   Policy.ShouldTrackPressure = true;
 }
 
 bool PPCSubtarget::useAA() const {
-  // Use AA during code generation for the embedded cores.
-  return needsAggressiveScheduling(DarwinDirective);
+  return true;
 }
 
 bool PPCSubtarget::enableSubRegLiveness() const {
   return UseSubRegLiveness;
 }
 
-unsigned char
-PPCSubtarget::classifyGlobalReference(const GlobalValue *GV) const {
-  // Note that currently we don't generate non-pic references.
-  // If a caller wants that, this will have to be updated.
-
+bool PPCSubtarget::isGVIndirectSymbol(const GlobalValue *GV) const {
   // Large code model always uses the TOC even for local symbols.
   if (TM.getCodeModel() == CodeModel::Large)
-    return PPCII::MO_PIC_FLAG | PPCII::MO_NLP_FLAG;
-
+    return true;
   if (TM.shouldAssumeDSOLocal(*GV->getParent(), GV))
-    return PPCII::MO_PIC_FLAG;
-  return PPCII::MO_PIC_FLAG | PPCII::MO_NLP_FLAG;
+    return false;
+  return true;
 }
 
 bool PPCSubtarget::isELFv2ABI() const { return TM.isELFv2ABI(); }

@@ -69,10 +69,9 @@ define float @test5(float %p) #0 {
 ; ALL-NEXT:  ## %bb.2: ## %return
 ; ALL-NEXT:    retq
 ; ALL-NEXT:  LBB3_1: ## %if.end
-; ALL-NEXT:    seta %al
-; ALL-NEXT:    movzbl %al, %eax
-; ALL-NEXT:    leaq {{.*}}(%rip), %rcx
+; ALL-NEXT:    vcmpltss %xmm0, %xmm1, %k1
 ; ALL-NEXT:    vmovss {{.*#+}} xmm0 = mem[0],zero,zero,zero
+; ALL-NEXT:    vmovss {{.*}}(%rip), %xmm0 {%k1}
 ; ALL-NEXT:    retq
 entry:
   %cmp = fcmp oeq float %p, 0.000000e+00

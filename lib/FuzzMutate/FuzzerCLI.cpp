@@ -1,9 +1,8 @@
 //===-- FuzzerCLI.cpp -----------------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -102,7 +101,7 @@ void llvm::handleExecNameEncodedOptimizerOpts(StringRef ExecName) {
       Args.push_back("-passes=gvn");
     } else if (Opt == "sccp") {
       Args.push_back("-passes=sccp");
-    
+
     } else if (Opt == "loop_predication") {
       Args.push_back("-passes=loop-predication");
     } else if (Opt == "guard_widening") {
@@ -123,7 +122,7 @@ void llvm::handleExecNameEncodedOptimizerOpts(StringRef ExecName) {
       Args.push_back("-passes=strength-reduce");
     } else if (Opt == "irce") {
       Args.push_back("-passes=irce");
-      
+
     } else if (Triple(Opt).getArch()) {
       Args.push_back("-mtriple=" + Opt.str());
     } else {
@@ -181,7 +180,7 @@ std::unique_ptr<Module> llvm::parseModule(
 
   if (Size <= 1)
     // We get bogus data given an empty corpus - just create a new module.
-    return llvm::make_unique<Module>("M", Context);
+    return std::make_unique<Module>("M", Context);
 
   auto Buffer = MemoryBuffer::getMemBuffer(
       StringRef(reinterpret_cast<const char *>(Data), Size), "Fuzzer input",
@@ -213,6 +212,6 @@ std::unique_ptr<Module> llvm::parseAndVerify(const uint8_t *Data, size_t Size,
   auto M = parseModule(Data, Size, Context);
   if (!M || verifyModule(*M, &errs()))
     return nullptr;
-  
+
   return M;
 }

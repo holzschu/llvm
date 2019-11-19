@@ -20,7 +20,7 @@
 ; CHECK: DICompositeType
 ; CHECK-NOT: DICompositeType
 
-target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-scei-ps4"
 
 %class.C = type <{ i32 (...)**, %class.A, %struct.CFVS, [6 x i8] }>
@@ -54,7 +54,7 @@ declare dereferenceable(1) %struct.S* @_Z3Getv()
 !4 = !{i32 2, !"Debug Info Version", i32 3}
 !5 = !{i32 1, !"wchar_size", i32 2}
 !6 = !{i32 7, !"PIC Level", i32 2}
-!8 = distinct !DISubprogram(name: "~C", linkageName: "_ZN1CD2Ev", scope: !1, file: !1, line: 9, type: !47, isLocal: false, isDefinition: true, scopeLine: 9, flags: DIFlagPrototyped, isOptimized: false, unit: !0, variables: !2)
+!8 = distinct !DISubprogram(name: "~C", linkageName: "_ZN1CD2Ev", scope: !1, file: !1, line: 9, type: !47, isLocal: false, isDefinition: true, scopeLine: 9, flags: DIFlagPrototyped, isOptimized: false, unit: !0, retainedNodes: !2)
 !47 = !DISubroutineType(types: !48)
 !48 = !{!55}
 !50 = !DILocation(line: 9, scope: !51)

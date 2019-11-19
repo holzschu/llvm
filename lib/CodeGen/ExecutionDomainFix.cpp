@@ -1,15 +1,15 @@
 //===- ExecutionDomainFix.cpp - Fix execution domain issues ----*- C++ -*--===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #include "llvm/CodeGen/ExecutionDomainFix.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/TargetInstrInfo.h"
+#include "llvm/Support/Debug.h"
 
 using namespace llvm;
 
@@ -161,7 +161,7 @@ void ExecutionDomainFix::enterBasicBlock(
 
   // This is the entry block.
   if (MBB->pred_empty()) {
-    DEBUG(dbgs() << printMBBReference(*MBB) << ": entry\n");
+    LLVM_DEBUG(dbgs() << printMBBReference(*MBB) << ": entry\n");
     return;
   }
 
@@ -200,9 +200,9 @@ void ExecutionDomainFix::enterBasicBlock(
         force(rx, pdv->getFirstDomain());
     }
   }
-  DEBUG(dbgs() << printMBBReference(*MBB)
-               << (!TraversedMBB.IsDone ? ": incomplete\n"
-                                        : ": all preds known\n"));
+  LLVM_DEBUG(dbgs() << printMBBReference(*MBB)
+                    << (!TraversedMBB.IsDone ? ": incomplete\n"
+                                             : ": all preds known\n"));
 }
 
 void ExecutionDomainFix::leaveBasicBlock(
@@ -233,7 +233,7 @@ bool ExecutionDomainFix::visitInstr(MachineInstr *MI) {
 }
 
 void ExecutionDomainFix::processDefs(MachineInstr *MI, bool Kill) {
-  assert(!MI->isDebugValue() && "Won't process debug values");
+  assert(!MI->isDebugInstr() && "Won't process debug values");
   const MCInstrDesc &MCID = MI->getDesc();
   for (unsigned i = 0,
                 e = MI->isVariadic() ? MI->getNumOperands() : MCID.getNumDefs();
@@ -245,7 +245,7 @@ void ExecutionDomainFix::processDefs(MachineInstr *MI, bool Kill) {
       continue;
     for (int rx : regIndices(MO.getReg())) {
       // This instruction explicitly defines rx.
-      DEBUG(dbgs() << printReg(RC->getRegister(rx), TRI) << ":\t" << *MI);
+      LLVM_DEBUG(dbgs() << printReg(RC->getRegister(rx), TRI) << ":\t" << *MI);
 
       // Kill off domains redefined by generic instructions.
       if (Kill)
@@ -337,11 +337,10 @@ void ExecutionDomainFix::visitSoftInstr(MachineInstr *mi, unsigned mask) {
     }
     // Sorted insertion.
     // Enables giving priority to the latest domains during merging.
-    auto I = std::upper_bound(
-        Regs.begin(), Regs.end(), rx, [&](int LHS, const int RHS) {
-          return RDA->getReachingDef(mi, RC->getRegister(LHS)) <
-                 RDA->getReachingDef(mi, RC->getRegister(RHS));
-        });
+    const int Def = RDA->getReachingDef(mi, RC->getRegister(rx));
+    auto I = partition_point(Regs, [&](int I) {
+      return RDA->getReachingDef(mi, RC->getRegister(I)) <= Def;
+    });
     Regs.insert(I, rx);
   }
 
@@ -401,7 +400,7 @@ void ExecutionDomainFix::processBasicBlock(
   // and by then we'll have better information, so we can avoid doing the work
   // to try and break dependencies now.
   for (MachineInstr &MI : *TraversedMBB.MBB) {
-    if (!MI.isDebugValue()) {
+    if (!MI.isDebugInstr()) {
       bool Kill = false;
       if (TraversedMBB.PrimaryPass)
         Kill = visitInstr(&MI);
@@ -420,8 +419,8 @@ bool ExecutionDomainFix::runOnMachineFunction(MachineFunction &mf) {
   LiveRegs.clear();
   assert(NumRegs == RC->getNumRegs() && "Bad regclass");
 
-  DEBUG(dbgs() << "********** FIX EXECUTION DOMAIN: "
-               << TRI->getRegClassName(RC) << " **********\n");
+  LLVM_DEBUG(dbgs() << "********** FIX EXECUTION DOMAIN: "
+                    << TRI->getRegClassName(RC) << " **********\n");
 
   // If no relevant registers are used in the function, we can skip it
   // completely.

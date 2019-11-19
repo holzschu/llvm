@@ -1,9 +1,8 @@
 //===- llvm/Transforms/IPO.h - Interprocedural Transformations --*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -183,6 +182,10 @@ ModulePass *createBlockExtractorPass();
 ModulePass *
 createBlockExtractorPass(const SmallVectorImpl<BasicBlock *> &BlocksToExtract,
                          bool EraseFunctions);
+ModulePass *
+createBlockExtractorPass(const SmallVectorImpl<SmallVector<BasicBlock *, 16>>
+                             &GroupsOfBlocksToExtract,
+                         bool EraseFunctions);
 
 /// createStripDeadPrototypesPass - This pass removes any function declarations
 /// (prototypes) that are not used.
@@ -200,6 +203,11 @@ Pass *createReversePostOrderFunctionAttrsPass();
 /// collapses them.
 ///
 ModulePass *createMergeFunctionsPass();
+
+//===----------------------------------------------------------------------===//
+/// createHotColdSplittingPass - This pass outlines cold blocks into a separate
+/// function(s).
+ModulePass *createHotColdSplittingPass();
 
 //===----------------------------------------------------------------------===//
 /// createPartialInliningPass - This pass inlines parts of functions.
@@ -222,7 +230,7 @@ enum class PassSummaryAction {
   Export, ///< Export information to summary.
 };
 
-/// \brief This pass lowers type metadata and the llvm.type.test intrinsic to
+/// This pass lowers type metadata and the llvm.type.test intrinsic to
 /// bitsets.
 ///
 /// The behavior depends on the summary arguments:
@@ -235,10 +243,10 @@ enum class PassSummaryAction {
 ModulePass *createLowerTypeTestsPass(ModuleSummaryIndex *ExportSummary,
                                      const ModuleSummaryIndex *ImportSummary);
 
-/// \brief This pass export CFI checks for use by external modules.
+/// This pass export CFI checks for use by external modules.
 ModulePass *createCrossDSOCFIPass();
 
-/// \brief This pass implements whole-program devirtualization using type
+/// This pass implements whole-program devirtualization using type
 /// metadata.
 ///
 /// The behavior depends on the summary arguments:

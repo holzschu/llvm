@@ -1,9 +1,8 @@
 //===- MipsMSAInstrInfo.td - MSA ASE instructions -*- tablegen ------------*-=//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -61,6 +60,11 @@ def immZExt2Ptr : ImmLeaf<iPTR, [{return isUInt<2>(Imm);}]>;
 def immZExt3Ptr : ImmLeaf<iPTR, [{return isUInt<3>(Imm);}]>;
 def immZExt4Ptr : ImmLeaf<iPTR, [{return isUInt<4>(Imm);}]>;
 
+def timmZExt1Ptr : TImmLeaf<iPTR, [{return isUInt<1>(Imm);}]>;
+def timmZExt2Ptr : TImmLeaf<iPTR, [{return isUInt<2>(Imm);}]>;
+def timmZExt3Ptr : TImmLeaf<iPTR, [{return isUInt<3>(Imm);}]>;
+def timmZExt4Ptr : TImmLeaf<iPTR, [{return isUInt<4>(Imm);}]>;
+
 // Operands
 
 def immZExt2Lsa : ImmLeaf<i32, [{return isUInt<2>(Imm - 1);}]>;
@@ -107,6 +111,18 @@ class vfsetcc_type<ValueType ResTy, ValueType OpTy, CondCode CC> :
           (ResTy (vfsetcc (OpTy node:$lhs), (OpTy node:$rhs), CC))>;
 
 // ISD::SETFALSE cannot occur
+def vfseteq_v4f32 : vfsetcc_type<v4i32, v4f32, SETEQ>;
+def vfseteq_v2f64 : vfsetcc_type<v2i64, v2f64, SETEQ>;
+def vfsetge_v4f32 : vfsetcc_type<v4i32, v4f32, SETGE>;
+def vfsetge_v2f64 : vfsetcc_type<v2i64, v2f64, SETGE>;
+def vfsetgt_v4f32 : vfsetcc_type<v4i32, v4f32, SETGT>;
+def vfsetgt_v2f64 : vfsetcc_type<v2i64, v2f64, SETGT>;
+def vfsetle_v4f32 : vfsetcc_type<v4i32, v4f32, SETLE>;
+def vfsetle_v2f64 : vfsetcc_type<v2i64, v2f64, SETLE>;
+def vfsetlt_v4f32 : vfsetcc_type<v4i32, v4f32, SETLT>;
+def vfsetlt_v2f64 : vfsetcc_type<v2i64, v2f64, SETLT>;
+def vfsetne_v4f32 : vfsetcc_type<v4i32, v4f32, SETNE>;
+def vfsetne_v2f64 : vfsetcc_type<v2i64, v2f64, SETNE>;
 def vfsetoeq_v4f32 : vfsetcc_type<v4i32, v4f32, SETOEQ>;
 def vfsetoeq_v2f64 : vfsetcc_type<v2i64, v2f64, SETOEQ>;
 def vfsetoge_v4f32 : vfsetcc_type<v4i32, v4f32, SETOGE>;
@@ -181,8 +197,28 @@ def vsplati16 : PatFrag<(ops node:$e0),
 def vsplati32 : PatFrag<(ops node:$e0),
                         (v4i32 (build_vector node:$e0, node:$e0,
                                              node:$e0, node:$e0))>;
+
+def vsplati64_imm_eq_1 : PatLeaf<(bitconvert (v4i32 (build_vector))), [{
+  APInt Imm;
+  SDNode *BV = N->getOperand(0).getNode();
+  EVT EltTy = N->getValueType(0).getVectorElementType();
+
+  return selectVSplat(BV, Imm, EltTy.getSizeInBits()) &&
+         Imm.getBitWidth() == EltTy.getSizeInBits() && Imm == 1;
+}]>;
+
 def vsplati64 : PatFrag<(ops node:$e0),
                         (v2i64 (build_vector node:$e0, node:$e0))>;
+
+def vsplati64_splat_d : PatFrag<(ops node:$e0),
+                                (v2i64 (bitconvert
+                                         (v4i32 (and
+                                           (v4i32 (build_vector node:$e0,
+                                                                node:$e0,
+                                                                node:$e0,
+                                                                node:$e0)),
+                                           vsplati64_imm_eq_1))))>;
+
 def vsplatf32 : PatFrag<(ops node:$e0),
                         (v4f32 (build_vector node:$e0, node:$e0,
                                              node:$e0, node:$e0))>;
@@ -196,7 +232,8 @@ def vsplati16_elt : PatFrag<(ops node:$v, node:$i),
 def vsplati32_elt : PatFrag<(ops node:$v, node:$i),
                             (MipsVSHF (vsplati32 node:$i), node:$v, node:$v)>;
 def vsplati64_elt : PatFrag<(ops node:$v, node:$i),
-                            (MipsVSHF (vsplati64 node:$i), node:$v, node:$v)>;
+                            (MipsVSHF (vsplati64_splat_d node:$i),
+                                      node:$v, node:$v)>;
 
 class SplatPatLeaf<Operand opclass, dag frag, code pred = [{}],
                    SDNodeXForm xform = NOOP_SDNodeXForm>
@@ -324,15 +361,6 @@ def vsplat_imm_eq_1 : PatLeaf<(build_vector), [{
   EVT EltTy = N->getValueType(0).getVectorElementType();
 
   return selectVSplat(N, Imm, EltTy.getSizeInBits()) &&
-         Imm.getBitWidth() == EltTy.getSizeInBits() && Imm == 1;
-}]>;
-
-def vsplati64_imm_eq_1 : PatLeaf<(bitconvert (v4i32 (build_vector))), [{
-  APInt Imm;
-  SDNode *BV = N->getOperand(0).getNode();
-  EVT EltTy = N->getValueType(0).getVectorElementType();
-
-  return selectVSplat(BV, Imm, EltTy.getSizeInBits()) &&
          Imm.getBitWidth() == EltTy.getSizeInBits() && Imm == 1;
 }]>;
 
@@ -1216,6 +1244,7 @@ class MSA_COPY_PSEUDO_BASE<SDPatternOperator OpNode, ValueType VecTy,
       MSAPseudo<(outs RCD:$wd), (ins RCWS:$ws, ImmOp:$n),
                 [(set RCD:$wd, (OpNode (VecTy RCWS:$ws), Imm:$n))]> {
   bit usesCustomInserter = 1;
+  bit hasNoSchedulingInfo = 1;
 }
 
 class MSA_I5_DESC_BASE<string instr_asm, SDPatternOperator OpNode,
@@ -1246,7 +1275,7 @@ class MSA_I8_SHF_DESC_BASE<string instr_asm, RegisterOperand ROWD,
   dag OutOperandList = (outs ROWD:$wd);
   dag InOperandList = (ins ROWS:$ws, uimm8:$u8);
   string AsmString = !strconcat(instr_asm, "\t$wd, $ws, $u8");
-  list<dag> Pattern = [(set ROWD:$wd, (MipsSHF immZExt8:$u8, ROWS:$ws))];
+  list<dag> Pattern = [(set ROWD:$wd, (MipsSHF timmZExt8:$u8, ROWS:$ws))];
   InstrItinClass Itinerary = itin;
 }
 
@@ -1423,6 +1452,7 @@ class MSA_INSERT_VIDX_PSEUDO_BASE<SDPatternOperator OpNode, ValueType Ty,
                 [(set ROWD:$wd, (OpNode (Ty ROWD:$wd_in), ROFS:$fs,
                                         ROIdx:$n))]> {
   bit usesCustomInserter = 1;
+  bit hasNoSchedulingInfo = 1;
   string Constraints = "$wd = $wd_in";
 }
 
@@ -1778,6 +1808,7 @@ class CFCMSA_DESC {
   string AsmString = "cfcmsa\t$rd, $cs";
   InstrItinClass Itinerary = NoItinerary;
   bit hasSideEffects = 1;
+  bit isMoveReg = 1;
 }
 
 class CLE_S_B_DESC : MSA_3R_DESC_BASE<"cle_s.b", vsetle_v16i8, MSA128BOpnd>;
@@ -1872,6 +1903,7 @@ class CTCMSA_DESC {
   string AsmString = "ctcmsa\t$cd, $rs";
   InstrItinClass Itinerary = NoItinerary;
   bit hasSideEffects = 1;
+  bit isMoveReg = 1;
 }
 
 class DIV_S_B_DESC : MSA_3R_DESC_BASE<"div_s.b", sdiv, MSA128BOpnd>;
@@ -2018,7 +2050,7 @@ class FEXDO_W_DESC : MSA_3RF_DESC_BASE<"fexdo.w", int_mips_fexdo_w,
 // 1.0 when we only need to match ISD::FEXP2.
 class FEXP2_W_DESC : MSA_3RF_DESC_BASE<"fexp2.w", mul_fexp2, MSA128WOpnd>;
 class FEXP2_D_DESC : MSA_3RF_DESC_BASE<"fexp2.d", mul_fexp2, MSA128DOpnd>;
-let usesCustomInserter = 1 in {
+let usesCustomInserter = 1, hasNoSchedulingInfo = 1 in {
   class FEXP2_W_1_PSEUDO_DESC :
       MSAPseudo<(outs MSA128W:$wd), (ins MSA128W:$ws),
                 [(set MSA128W:$wd, (fexp2 MSA128W:$ws))]>;
@@ -2272,13 +2304,13 @@ class INSERT_FW_VIDX64_PSEUDO_DESC :
 class INSERT_FD_VIDX64_PSEUDO_DESC :
     MSA_INSERT_VIDX_PSEUDO_BASE<vector_insert, v2f64, MSA128DOpnd, FGR64Opnd, GPR64Opnd>;
 
-class INSVE_B_DESC : MSA_INSVE_DESC_BASE<"insve.b", insve_v16i8, uimm4, immZExt4,
+class INSVE_B_DESC : MSA_INSVE_DESC_BASE<"insve.b", insve_v16i8, uimm4, timmZExt4,
                                          MSA128BOpnd>;
-class INSVE_H_DESC : MSA_INSVE_DESC_BASE<"insve.h", insve_v8i16, uimm3, immZExt3,
+class INSVE_H_DESC : MSA_INSVE_DESC_BASE<"insve.h", insve_v8i16, uimm3, timmZExt3,
                                          MSA128HOpnd>;
-class INSVE_W_DESC : MSA_INSVE_DESC_BASE<"insve.w", insve_v4i32, uimm2, immZExt2,
+class INSVE_W_DESC : MSA_INSVE_DESC_BASE<"insve.w", insve_v4i32, uimm2, timmZExt2,
                                          MSA128WOpnd>;
-class INSVE_D_DESC : MSA_INSVE_DESC_BASE<"insve.d", insve_v2i64, uimm1, immZExt1,
+class INSVE_D_DESC : MSA_INSVE_DESC_BASE<"insve.d", insve_v2i64, uimm1, timmZExt1,
                                          MSA128DOpnd>;
 
 class LD_DESC_BASE<string instr_asm, SDPatternOperator OpNode,
@@ -2417,6 +2449,7 @@ class MOVE_V_DESC {
   string AsmString = "move.v\t$wd, $ws";
   list<dag> Pattern = [];
   InstrItinClass Itinerary = NoItinerary;
+  bit isMoveReg = 1;
 }
 
 class MSUB_Q_H_DESC : MSA_3RF_4RF_DESC_BASE<"msub_q.h", int_mips_msub_q_h,
@@ -2490,22 +2523,22 @@ class PCNT_W_DESC : MSA_2R_DESC_BASE<"pcnt.w", ctpop, MSA128WOpnd>;
 class PCNT_D_DESC : MSA_2R_DESC_BASE<"pcnt.d", ctpop, MSA128DOpnd>;
 
 class SAT_S_B_DESC : MSA_BIT_X_DESC_BASE<"sat_s.b", int_mips_sat_s_b, uimm3,
-                                         immZExt3, MSA128BOpnd>;
+                                         timmZExt3, MSA128BOpnd>;
 class SAT_S_H_DESC : MSA_BIT_X_DESC_BASE<"sat_s.h", int_mips_sat_s_h, uimm4,
-                                         immZExt4, MSA128HOpnd>;
+                                         timmZExt4, MSA128HOpnd>;
 class SAT_S_W_DESC : MSA_BIT_X_DESC_BASE<"sat_s.w", int_mips_sat_s_w, uimm5,
-                                         immZExt5, MSA128WOpnd>;
+                                         timmZExt5, MSA128WOpnd>;
 class SAT_S_D_DESC : MSA_BIT_X_DESC_BASE<"sat_s.d", int_mips_sat_s_d, uimm6,
-                                         immZExt6, MSA128DOpnd>;
+                                         timmZExt6, MSA128DOpnd>;
 
 class SAT_U_B_DESC : MSA_BIT_X_DESC_BASE<"sat_u.b", int_mips_sat_u_b, uimm3,
-                                         immZExt3, MSA128BOpnd>;
+                                         timmZExt3, MSA128BOpnd>;
 class SAT_U_H_DESC : MSA_BIT_X_DESC_BASE<"sat_u.h", int_mips_sat_u_h, uimm4,
-                                         immZExt4, MSA128HOpnd>;
+                                         timmZExt4, MSA128HOpnd>;
 class SAT_U_W_DESC : MSA_BIT_X_DESC_BASE<"sat_u.w", int_mips_sat_u_w, uimm5,
-                                         immZExt5, MSA128WOpnd>;
+                                         timmZExt5, MSA128WOpnd>;
 class SAT_U_D_DESC : MSA_BIT_X_DESC_BASE<"sat_u.d", int_mips_sat_u_d, uimm6,
-                                         immZExt6, MSA128DOpnd>;
+                                         timmZExt6, MSA128DOpnd>;
 
 class SHF_B_DESC : MSA_I8_SHF_DESC_BASE<"shf.b", MSA128BOpnd>;
 class SHF_H_DESC : MSA_I8_SHF_DESC_BASE<"shf.h", MSA128HOpnd>;
@@ -2518,16 +2551,16 @@ class SLD_D_DESC : MSA_3R_SLD_DESC_BASE<"sld.d", int_mips_sld_d, MSA128DOpnd>;
 
 class SLDI_B_DESC : MSA_ELM_SLD_DESC_BASE<"sldi.b", int_mips_sldi_b,
                                           MSA128BOpnd, MSA128BOpnd, uimm4,
-                                          immZExt4>;
+                                          timmZExt4>;
 class SLDI_H_DESC : MSA_ELM_SLD_DESC_BASE<"sldi.h", int_mips_sldi_h,
                                           MSA128HOpnd, MSA128HOpnd, uimm3,
-                                          immZExt3>;
+                                          timmZExt3>;
 class SLDI_W_DESC : MSA_ELM_SLD_DESC_BASE<"sldi.w", int_mips_sldi_w,
                                           MSA128WOpnd, MSA128WOpnd, uimm2,
-                                          immZExt2>;
+                                          timmZExt2>;
 class SLDI_D_DESC : MSA_ELM_SLD_DESC_BASE<"sldi.d", int_mips_sldi_d,
                                           MSA128DOpnd, MSA128DOpnd, uimm1,
-                                          immZExt1>;
+                                          timmZExt1>;
 
 class SLL_B_DESC : MSA_3R_DESC_BASE<"sll.b", shl, MSA128BOpnd>;
 class SLL_H_DESC : MSA_3R_DESC_BASE<"sll.h", shl, MSA128HOpnd>;
@@ -2581,13 +2614,13 @@ class SRAR_W_DESC : MSA_3R_DESC_BASE<"srar.w", int_mips_srar_w, MSA128WOpnd>;
 class SRAR_D_DESC : MSA_3R_DESC_BASE<"srar.d", int_mips_srar_d, MSA128DOpnd>;
 
 class SRARI_B_DESC : MSA_BIT_X_DESC_BASE<"srari.b", int_mips_srari_b, uimm3,
-                                         immZExt3, MSA128BOpnd>;
+                                         timmZExt3, MSA128BOpnd>;
 class SRARI_H_DESC : MSA_BIT_X_DESC_BASE<"srari.h", int_mips_srari_h, uimm4,
-                                         immZExt4, MSA128HOpnd>;
+                                         timmZExt4, MSA128HOpnd>;
 class SRARI_W_DESC : MSA_BIT_X_DESC_BASE<"srari.w", int_mips_srari_w, uimm5,
-                                         immZExt5, MSA128WOpnd>;
+                                         timmZExt5, MSA128WOpnd>;
 class SRARI_D_DESC : MSA_BIT_X_DESC_BASE<"srari.d", int_mips_srari_d, uimm6,
-                                         immZExt6, MSA128DOpnd>;
+                                         timmZExt6, MSA128DOpnd>;
 
 class SRL_B_DESC : MSA_3R_DESC_BASE<"srl.b", srl, MSA128BOpnd>;
 class SRL_H_DESC : MSA_3R_DESC_BASE<"srl.h", srl, MSA128HOpnd>;
@@ -2609,13 +2642,13 @@ class SRLR_W_DESC : MSA_3R_DESC_BASE<"srlr.w", int_mips_srlr_w, MSA128WOpnd>;
 class SRLR_D_DESC : MSA_3R_DESC_BASE<"srlr.d", int_mips_srlr_d, MSA128DOpnd>;
 
 class SRLRI_B_DESC : MSA_BIT_X_DESC_BASE<"srlri.b", int_mips_srlri_b, uimm3,
-                                         immZExt3, MSA128BOpnd>;
+                                         timmZExt3, MSA128BOpnd>;
 class SRLRI_H_DESC : MSA_BIT_X_DESC_BASE<"srlri.h", int_mips_srlri_h, uimm4,
-                                         immZExt4, MSA128HOpnd>;
+                                         timmZExt4, MSA128HOpnd>;
 class SRLRI_W_DESC : MSA_BIT_X_DESC_BASE<"srlri.w", int_mips_srlri_w, uimm5,
-                                         immZExt5, MSA128WOpnd>;
+                                         timmZExt5, MSA128WOpnd>;
 class SRLRI_D_DESC : MSA_BIT_X_DESC_BASE<"srlri.d", int_mips_srlri_d, uimm6,
-                                         immZExt6, MSA128DOpnd>;
+                                         timmZExt6, MSA128DOpnd>;
 
 class ST_DESC_BASE<string instr_asm, SDPatternOperator OpNode,
                    ValueType TyNode, RegisterOperand ROWD,
@@ -3135,17 +3168,17 @@ def FTRUNC_U_D : FTRUNC_U_D_ENC, FTRUNC_U_D_DESC;
 
 def : MipsPat<(fsub MSA128WOpnd:$wd, (fmul MSA128WOpnd:$ws, MSA128WOpnd:$wt)),
               (FMSUB_W MSA128WOpnd:$wd, MSA128WOpnd:$ws, MSA128WOpnd:$wt)>,
-              FPOP_FUSION_FAST;
+              ISA_MIPS1, ASE_MSA, FPOP_FUSION_FAST;
 def : MipsPat<(fsub MSA128DOpnd:$wd, (fmul MSA128DOpnd:$ws, MSA128DOpnd:$wt)),
               (FMSUB_D MSA128DOpnd:$wd, MSA128DOpnd:$ws, MSA128DOpnd:$wt)>,
-              FPOP_FUSION_FAST;
+              ISA_MIPS1, ASE_MSA, FPOP_FUSION_FAST;
 
 def : MipsPat<(fadd MSA128WOpnd:$wd, (fmul MSA128WOpnd:$ws, MSA128WOpnd:$wt)),
               (FMADD_W MSA128WOpnd:$wd, MSA128WOpnd:$ws, MSA128WOpnd:$wt)>,
-              FPOP_FUSION_FAST;
+              ISA_MIPS1, ASE_MSA, FPOP_FUSION_FAST;
 def : MipsPat<(fadd MSA128DOpnd:$wd, (fmul MSA128DOpnd:$ws, MSA128DOpnd:$wt)),
               (FMADD_D MSA128DOpnd:$wd, MSA128DOpnd:$ws, MSA128DOpnd:$wt)>,
-              FPOP_FUSION_FAST;
+              ISA_MIPS1, ASE_MSA, FPOP_FUSION_FAST;
 
 def HADD_S_H : HADD_S_H_ENC, HADD_S_H_DESC;
 def HADD_S_W : HADD_S_W_ENC, HADD_S_W_DESC;
@@ -3711,6 +3744,7 @@ class MSA_CBRANCH_PSEUDO_DESC_BASE<SDPatternOperator OpNode, ValueType TyNode,
              (ins RCWS:$ws),
              [(set GPR32:$dst, (OpNode (TyNode RCWS:$ws)))]> {
   bit usesCustomInserter = 1;
+  bit hasNoSchedulingInfo = 1;
 }
 
 def SNZ_B_PSEUDO : MSA_CBRANCH_PSEUDO_DESC_BASE<MipsVAllNonZero, v16i8,
@@ -3737,52 +3771,39 @@ def SZ_V_PSEUDO : MSA_CBRANCH_PSEUDO_DESC_BASE<MipsVAnyZero, v16i8,
 
 // Pseudoes used to implement transparent fp16 support.
 
-let Predicates = [HasMSA] in {
- def ST_F16 : MipsPseudo<(outs), (ins MSA128F16:$ws, mem_simm10:$addr),
-                          [(store (f16 MSA128F16:$ws), (addrimm10:$addr))]> {
-   let usesCustomInserter = 1;
- }
+let ASEPredicate = [HasMSA] in {
+  let usesCustomInserter = 1 in {
+    def ST_F16 :
+        MipsPseudo<(outs), (ins MSA128F16:$ws, mem_simm10:$addr),
+                   [(store (f16 MSA128F16:$ws), (addrimm10:$addr))]>;
+    def LD_F16 :
+        MipsPseudo<(outs MSA128F16:$ws), (ins mem_simm10:$addr),
+                   [(set MSA128F16:$ws, (f16 (load addrimm10:$addr)))]>;
+  }
 
- def LD_F16 : MipsPseudo<(outs MSA128F16:$ws), (ins mem_simm10:$addr),
-                         [(set MSA128F16:$ws, (f16 (load addrimm10:$addr)))]> {
-   let usesCustomInserter = 1;
- }
+  let usesCustomInserter = 1, hasNoSchedulingInfo = 1 in {
+    def MSA_FP_EXTEND_W_PSEUDO :
+        MipsPseudo<(outs FGR32Opnd:$fd), (ins MSA128F16:$ws),
+                   [(set FGR32Opnd:$fd, (f32 (fpextend MSA128F16:$ws)))]>;
+    def MSA_FP_ROUND_W_PSEUDO :
+        MipsPseudo<(outs MSA128F16:$wd), (ins FGR32Opnd:$fs),
+                   [(set MSA128F16:$wd, (f16 (fpround FGR32Opnd:$fs)))]>;
+    def MSA_FP_EXTEND_D_PSEUDO :
+        MipsPseudo<(outs FGR64Opnd:$fd), (ins MSA128F16:$ws),
+                   [(set FGR64Opnd:$fd, (f64 (fpextend MSA128F16:$ws)))]>;
+    def MSA_FP_ROUND_D_PSEUDO :
+        MipsPseudo<(outs MSA128F16:$wd), (ins FGR64Opnd:$fs),
+                   [(set MSA128F16:$wd, (f16 (fpround FGR64Opnd:$fs)))]>;
+  }
 
- def MSA_FP_EXTEND_W_PSEUDO : MipsPseudo<(outs FGR32Opnd:$fd),
-                                         (ins MSA128F16:$ws),
-                              [(set FGR32Opnd:$fd,
-                                    (f32 (fpextend MSA128F16:$ws)))]> {
-  let usesCustomInserter = 1;
- }
+  def : MipsPat<(MipsTruncIntFP MSA128F16:$ws),
+                (TRUNC_W_D64 (MSA_FP_EXTEND_D_PSEUDO MSA128F16:$ws))>,
+        ISA_MIPS1, ASE_MSA;
 
- def MSA_FP_ROUND_W_PSEUDO : MipsPseudo<(outs MSA128F16:$wd),
-                                        (ins FGR32Opnd:$fs),
-                              [(set MSA128F16:$wd,
-                                    (f16 (fpround FGR32Opnd:$fs)))]> {
-  let usesCustomInserter = 1;
- }
-
- def MSA_FP_EXTEND_D_PSEUDO : MipsPseudo<(outs FGR64Opnd:$fd),
-                                         (ins MSA128F16:$ws),
-                              [(set FGR64Opnd:$fd,
-                                    (f64 (fpextend MSA128F16:$ws)))]> {
-  let usesCustomInserter = 1;
- }
-
- def MSA_FP_ROUND_D_PSEUDO : MipsPseudo<(outs MSA128F16:$wd),
-                                        (ins FGR64Opnd:$fs),
-                              [(set MSA128F16:$wd,
-                                    (f16 (fpround FGR64Opnd:$fs)))]> {
-  let usesCustomInserter = 1;
- }
-
- def : MipsPat<(MipsTruncIntFP MSA128F16:$ws),
-               (TRUNC_W_D64 (MSA_FP_EXTEND_D_PSEUDO MSA128F16:$ws))>;
-
- def : MipsPat<(MipsFPCmp MSA128F16:$ws, MSA128F16:$wt, imm:$cond),
-               (FCMP_S32 (MSA_FP_EXTEND_W_PSEUDO MSA128F16:$ws),
-                         (MSA_FP_EXTEND_W_PSEUDO MSA128F16:$wt), imm:$cond)>,
-       ISA_MIPS1_NOT_32R6_64R6;
+  def : MipsPat<(MipsFPCmp MSA128F16:$ws, MSA128F16:$wt, imm:$cond),
+                (FCMP_S32 (MSA_FP_EXTEND_W_PSEUDO MSA128F16:$ws),
+                          (MSA_FP_EXTEND_W_PSEUDO MSA128F16:$wt), imm:$cond)>,
+        ISA_MIPS1_NOT_32R6_64R6, ASE_MSA;
 }
 
 def vsplati64_imm_eq_63 : PatLeaf<(bitconvert (v4i32 (build_vector))), [{
@@ -4022,3 +4043,20 @@ def : MSAPat<
          (SPLAT_D v2f64:$ws,
            (COPY_TO_REGCLASS (i32 (EXTRACT_SUBREG i64:$idx, sub_32)), GPR32)),
          sub_64))>;
+
+def : MSAPat<(vfseteq_v4f32 MSA128WOpnd:$a, MSA128WOpnd:$b),
+             (FCEQ_W MSA128WOpnd:$a, MSA128WOpnd:$b)>;
+def : MSAPat<(vfseteq_v2f64 MSA128DOpnd:$a, MSA128DOpnd:$b),
+             (FCEQ_D MSA128DOpnd:$a, MSA128DOpnd:$b)>;
+def : MSAPat<(vfsetle_v4f32 MSA128WOpnd:$a, MSA128WOpnd:$b),
+             (FCLE_W MSA128WOpnd:$a, MSA128WOpnd:$b)>;
+def : MSAPat<(vfsetle_v2f64 MSA128DOpnd:$a, MSA128DOpnd:$b),
+             (FCLE_D MSA128DOpnd:$a, MSA128DOpnd:$b)>;
+def : MSAPat<(vfsetlt_v4f32 MSA128WOpnd:$a, MSA128WOpnd:$b),
+             (FCLT_W MSA128WOpnd:$a, MSA128WOpnd:$b)>;
+def : MSAPat<(vfsetlt_v2f64 MSA128DOpnd:$a, MSA128DOpnd:$b),
+             (FCLT_D MSA128DOpnd:$a, MSA128DOpnd:$b)>;
+def : MSAPat<(vfsetne_v4f32 MSA128WOpnd:$a, MSA128WOpnd:$b),
+             (FCNE_W MSA128WOpnd:$a, MSA128WOpnd:$b)>;
+def : MSAPat<(vfsetne_v2f64 MSA128DOpnd:$a, MSA128DOpnd:$b),
+             (FCNE_D MSA128DOpnd:$a, MSA128DOpnd:$b)>;

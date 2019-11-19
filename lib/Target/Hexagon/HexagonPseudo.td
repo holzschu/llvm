@@ -1,9 +1,8 @@
 //===--- HexagonPseudo.td -------------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -208,6 +207,7 @@ class Call_nr<bits<5> nbits, bit isPred, bit isFalse, dag iops,
     let isPredicable = 0;  // !if(isPred, 0, 1);
     let isPredicated = 0;  // isPred;
     let isPredicatedFalse = isFalse;
+    let Itinerary = itin;
 }
 
 def PS_call_nr : Call_nr<24, 0, 0, (ins s32_0Imm:$Ii), J2_call.Itinerary>;
@@ -406,42 +406,42 @@ let isCall = 1, Uses = [R29, R31], isAsmParserOnly = 1 in {
 }
 
 // Vector store pseudos
-let Predicates = [HasV60T, UseHVX], isPseudo = 1, isCodeGenOnly = 1,
+let Predicates = [HasV60,UseHVX], isPseudo = 1, isCodeGenOnly = 1,
     mayStore = 1, accessSize = HVXVectorAccess, hasSideEffects = 0 in
 class STrivv_template<RegisterClass RC, InstHexagon rootInst>
   : InstHexagon<(outs), (ins IntRegs:$addr, s32_0Imm:$off, RC:$src),
     "", [], "", rootInst.Itinerary, rootInst.Type>;
 
 def PS_vstorerw_ai: STrivv_template<HvxWR, V6_vS32b_ai>,
-      Requires<[HasV60T,UseHVX]>;
+      Requires<[HasV60,UseHVX]>;
 def PS_vstorerw_nt_ai: STrivv_template<HvxWR, V6_vS32b_nt_ai>,
-      Requires<[HasV60T,UseHVX]>;
+      Requires<[HasV60,UseHVX]>;
 def PS_vstorerwu_ai: STrivv_template<HvxWR, V6_vS32Ub_ai>,
-      Requires<[HasV60T,UseHVX]>;
+      Requires<[HasV60,UseHVX]>;
 
 let isPseudo = 1, isCodeGenOnly = 1, mayStore = 1, hasSideEffects = 0 in
 def PS_vstorerq_ai: Pseudo<(outs),
       (ins IntRegs:$Rs, s32_0Imm:$Off, HvxQR:$Qt), "", []>,
-      Requires<[HasV60T,UseHVX]>;
+      Requires<[HasV60,UseHVX]>;
 
 // Vector load pseudos
-let Predicates = [HasV60T, UseHVX], isPseudo = 1, isCodeGenOnly = 1,
+let Predicates = [HasV60, UseHVX], isPseudo = 1, isCodeGenOnly = 1,
     mayLoad = 1, accessSize = HVXVectorAccess, hasSideEffects = 0 in
 class LDrivv_template<RegisterClass RC, InstHexagon rootInst>
   : InstHexagon<(outs RC:$dst), (ins IntRegs:$addr, s32_0Imm:$off),
     "", [], "", rootInst.Itinerary, rootInst.Type>;
 
 def PS_vloadrw_ai: LDrivv_template<HvxWR, V6_vL32b_ai>,
-      Requires<[HasV60T,UseHVX]>;
+      Requires<[HasV60,UseHVX]>;
 def PS_vloadrw_nt_ai: LDrivv_template<HvxWR, V6_vL32b_nt_ai>,
-      Requires<[HasV60T,UseHVX]>;
+      Requires<[HasV60,UseHVX]>;
 def PS_vloadrwu_ai: LDrivv_template<HvxWR, V6_vL32Ub_ai>,
-      Requires<[HasV60T,UseHVX]>;
+      Requires<[HasV60,UseHVX]>;
 
 let isPseudo = 1, isCodeGenOnly = 1, mayLoad = 1, hasSideEffects = 0 in
 def PS_vloadrq_ai: Pseudo<(outs HvxQR:$Qd),
       (ins IntRegs:$Rs, s32_0Imm:$Off), "", []>,
-      Requires<[HasV60T,UseHVX]>;
+      Requires<[HasV60,UseHVX]>;
 
 
 let isCodeGenOnly = 1, isPseudo = 1, hasSideEffects = 0 in
@@ -450,10 +450,10 @@ class VSELInst<dag outs, dag ins, InstHexagon rootInst>
 
 def PS_vselect: VSELInst<(outs HvxVR:$dst),
       (ins PredRegs:$src1, HvxVR:$src2, HvxVR:$src3), V6_vcmov>,
-      Requires<[HasV60T,UseHVX]>;
+      Requires<[HasV60,UseHVX]>;
 def PS_wselect: VSELInst<(outs HvxWR:$dst),
       (ins PredRegs:$src1, HvxWR:$src2, HvxWR:$src3), V6_vccombine>,
-      Requires<[HasV60T,UseHVX]>;
+      Requires<[HasV60,UseHVX]>;
 
 let hasSideEffects = 0, isReMaterializable = 1, isPseudo = 1,
     isCodeGenOnly = 1 in {
@@ -461,6 +461,8 @@ let hasSideEffects = 0, isReMaterializable = 1, isPseudo = 1,
                  V6_veqw.Itinerary, TypeCVI_VA>;
   def PS_qfalse: InstHexagon<(outs HvxQR:$Qd), (ins), "", [], "",
                  V6_vgtw.Itinerary, TypeCVI_VA>;
+  def PS_vdd0:   InstHexagon<(outs HvxWR:$Vd), (ins), "", [], "",
+                 V6_vsubw_dv.Itinerary, TypeCVI_VA_DV>;
 }
 
 // Store predicate.
@@ -523,11 +525,11 @@ let isCodeGenOnly = 1, isPseudo = 1, Defs = [CS], Uses = [CS],
     addrMode = PostInc, accessSize = MS, hasSideEffects = 0 in {
   def NAME#_pci : LDInst<(outs RC:$Rd32, IntRegs:$Rx32),
        (ins IntRegs:$Rx32in, s4_0Imm:$Ii, ModRegs:$Mu2, IntRegs:$Cs),
-       ".error \"should not emit\" ", [], "$Rx32 = $Rx32in", tc_4403ca65>;
+       ".error \"should not emit\" ", [], "$Rx32 = $Rx32in", tc_e93a3d71>;
 
   def NAME#_pcr : LDInst<(outs RC:$Rd32, IntRegs:$Rx32),
        (ins IntRegs:$Rx32in, ModRegs:$Mu2, IntRegs:$Cs),
-       ".error \"should not emit\" ", [], "$Rx32 = $Rx32in", tc_2fc0c436>;
+       ".error \"should not emit\" ", [], "$Rx32 = $Rx32in", tc_44d3da28>;
 }
 }
 
@@ -544,11 +546,11 @@ let isCodeGenOnly = 1, isPseudo = 1, Defs = [CS], Uses = [CS],
     addrMode = PostInc, accessSize = MS, hasSideEffects = 0 in {
   def NAME#_pci : STInst<(outs IntRegs:$Rx32),
        (ins IntRegs:$Rx32in, s4_0Imm:$Ii, ModRegs:$Mu2, RC:$Rt32, IntRegs:$Cs),
-       ".error \"should not emit\" ", [], "$Rx32 = $Rx32in", tc_9fdb5406>;
+       ".error \"should not emit\" ", [], "$Rx32 = $Rx32in", tc_e86aa961>;
 
   def NAME#_pcr : STInst<(outs IntRegs:$Rx32),
        (ins IntRegs:$Rx32in, ModRegs:$Mu2, RC:$Rt32, IntRegs:$Cs),
-       ".error \"should not emit\" ", [], "$Rx32 = $Rx32in", tc_f86c328a>;
+       ".error \"should not emit\" ", [], "$Rx32 = $Rx32in", tc_da97ee82>;
 }
 }
 
@@ -557,3 +559,8 @@ defm PS_storerh : NewCircularStore<IntRegs, HalfWordAccess>;
 defm PS_storerf : NewCircularStore<IntRegs, HalfWordAccess>;
 defm PS_storeri : NewCircularStore<IntRegs, WordAccess>;
 defm PS_storerd : NewCircularStore<DoubleRegs, WordAccess>;
+
+// A pseudo that generates a runtime crash. This is used to implement
+// __builtin_trap.
+let hasSideEffects = 1, isPseudo = 1, isCodeGenOnly = 1, isSolo = 1 in
+def PS_crash: InstHexagon<(outs), (ins), "", [], "", PSEUDO, TypePSEUDO>;

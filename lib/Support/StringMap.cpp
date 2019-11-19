@@ -1,9 +1,8 @@
 //===--- StringMap.cpp - String Hash table map implementation -------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -59,10 +58,8 @@ void StringMapImpl::init(unsigned InitSize) {
   NumTombstones = 0;
 
   TheTable = static_cast<StringMapEntryBase **>(
-      std::calloc(NewNumBuckets+1,
+      safe_calloc(NewNumBuckets+1,
                   sizeof(StringMapEntryBase **) + sizeof(unsigned)));
-  if (TheTable == nullptr)
-    report_bad_alloc_error("Allocation of StringMap table failed.");
 
   // Set the member only if TheTable was successfully allocated
   NumBuckets = NewNumBuckets;
@@ -220,9 +217,7 @@ unsigned StringMapImpl::RehashTable(unsigned BucketNo) {
   // Allocate one extra bucket which will always be non-empty.  This allows the
   // iterators to stop at end.
   auto NewTableArray = static_cast<StringMapEntryBase **>(
-      std::calloc(NewSize+1, sizeof(StringMapEntryBase *) + sizeof(unsigned)));
-  if (NewTableArray == nullptr)
-    report_bad_alloc_error("Allocation of StringMap hash table failed.");
+      safe_calloc(NewSize+1, sizeof(StringMapEntryBase *) + sizeof(unsigned)));
 
   unsigned *NewHashArray = (unsigned *)(NewTableArray + NewSize + 1);
   NewTableArray[NewSize] = (StringMapEntryBase*)2;

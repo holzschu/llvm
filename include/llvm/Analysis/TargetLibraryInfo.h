@@ -1,9 +1,8 @@
 //===-- TargetLibraryInfo.h - Library information ---------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -31,11 +30,12 @@ struct VecDesc {
   unsigned VectorizationFactor;
 };
 
-  enum LibFunc {
+  enum LibFunc : unsigned {
 #define TLI_DEFINE_ENUM
 #include "llvm/Analysis/TargetLibraryInfo.def"
 
-    NumLibFuncs
+    NumLibFuncs,
+    NotLibFunc
   };
 
 /// Implementation of the target library information.
@@ -49,7 +49,7 @@ class TargetLibraryInfoImpl {
 
   unsigned char AvailableArray[(NumLibFuncs+3)/4];
   llvm::DenseMap<unsigned, std::string> CustomNames;
-  static StringRef const StandardNames[NumLibFuncs];
+  static StringLiteral const StandardNames[NumLibFuncs];
   bool ShouldExtI32Param, ShouldExtI32Return, ShouldSignExtI32Param;
 
   enum AvailabilityState {
@@ -87,6 +87,7 @@ public:
   enum VectorLibrary {
     NoLibrary,  // Don't use any vector library.
     Accelerate, // Use Accelerate framework.
+    MASSV,      // IBM MASS vector library.
     SVML        // Intel short vector math library.
   };
 
@@ -281,9 +282,9 @@ public:
     case LibFunc_trunc:        case LibFunc_truncf:     case LibFunc_truncl:
     case LibFunc_log2:         case LibFunc_log2f:      case LibFunc_log2l:
     case LibFunc_exp2:         case LibFunc_exp2f:      case LibFunc_exp2l:
-    case LibFunc_memcmp:       case LibFunc_strcmp:     case LibFunc_strcpy:
-    case LibFunc_stpcpy:       case LibFunc_strlen:     case LibFunc_strnlen:
-    case LibFunc_memchr:       case LibFunc_mempcpy:
+    case LibFunc_memcmp:       case LibFunc_bcmp:       case LibFunc_strcmp:
+    case LibFunc_strcpy:       case LibFunc_stpcpy:     case LibFunc_strlen:
+    case LibFunc_strnlen:      case LibFunc_memchr:     case LibFunc_mempcpy:
       return true;
     }
     return false;
@@ -359,7 +360,6 @@ public:
   TargetLibraryAnalysis(TargetLibraryInfoImpl PresetInfoImpl)
       : PresetInfoImpl(std::move(PresetInfoImpl)) {}
 
-  TargetLibraryInfo run(Module &M, ModuleAnalysisManager &);
   TargetLibraryInfo run(Function &F, FunctionAnalysisManager &);
 
 private:
@@ -385,8 +385,13 @@ public:
   explicit TargetLibraryInfoWrapperPass(const Triple &T);
   explicit TargetLibraryInfoWrapperPass(const TargetLibraryInfoImpl &TLI);
 
-  TargetLibraryInfo &getTLI() { return TLI; }
-  const TargetLibraryInfo &getTLI() const { return TLI; }
+  TargetLibraryInfo &getTLI(const Function &F LLVM_ATTRIBUTE_UNUSED) {
+    return TLI;
+  }
+  const TargetLibraryInfo &
+  getTLI(const Function &F LLVM_ATTRIBUTE_UNUSED) const {
+    return TLI;
+  }
 };
 
 } // end namespace llvm

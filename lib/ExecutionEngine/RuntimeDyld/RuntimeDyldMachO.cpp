@@ -1,9 +1,8 @@
 //===-- RuntimeDyldMachO.cpp - Run-time dynamic linker for MC-JIT -*- C++ -*-=//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -196,10 +195,10 @@ Error RuntimeDyldMachO::populateIndirectSymbolPointersSection(
   assert((PTSectionSize % PTEntrySize) == 0 &&
          "Pointers section does not contain a whole number of stubs?");
 
-  DEBUG(dbgs() << "Populating pointer table section "
-               << Sections[PTSectionID].getName() << ", Section ID "
-               << PTSectionID << ", " << NumPTEntries << " entries, "
-               << PTEntrySize << " bytes each:\n");
+  LLVM_DEBUG(dbgs() << "Populating pointer table section "
+                    << Sections[PTSectionID].getName() << ", Section ID "
+                    << PTSectionID << ", " << NumPTEntries << " entries, "
+                    << PTEntrySize << " bytes each:\n");
 
   for (unsigned i = 0; i < NumPTEntries; ++i) {
     unsigned SymbolIndex =
@@ -210,8 +209,8 @@ Error RuntimeDyldMachO::populateIndirectSymbolPointersSection(
       IndirectSymbolName = *IndirectSymbolNameOrErr;
     else
       return IndirectSymbolNameOrErr.takeError();
-    DEBUG(dbgs() << "  " << IndirectSymbolName << ": index " << SymbolIndex
-          << ", PT offset: " << PTEntryOffset << "\n");
+    LLVM_DEBUG(dbgs() << "  " << IndirectSymbolName << ": index " << SymbolIndex
+                      << ", PT offset: " << PTEntryOffset << "\n");
     RelocationEntry RE(PTSectionID, PTEntryOffset,
                        MachO::GENERIC_RELOC_VANILLA, 0, false, 2);
     addRelocationForSymbol(RE, IndirectSymbolName);
@@ -234,7 +233,10 @@ RuntimeDyldMachOCRTPBase<Impl>::finalizeLoad(const ObjectFile &Obj,
 
   for (const auto &Section : Obj.sections()) {
     StringRef Name;
-    Section.getName(Name);
+    if (Expected<StringRef> NameOrErr = Section.getName())
+      Name = *NameOrErr;
+    else
+      consumeError(NameOrErr.takeError());
 
     // Force emission of the __text, __eh_frame, and __gcc_except_tab sections
     // if they're present. Otherwise call down to the impl to handle other
@@ -275,8 +277,8 @@ unsigned char *RuntimeDyldMachOCRTPBase<Impl>::processFDE(uint8_t *P,
                                                           int64_t DeltaForEH) {
   typedef typename Impl::TargetPtrT TargetPtrT;
 
-  DEBUG(dbgs() << "Processing FDE: Delta for text: " << DeltaForText
-               << ", Delta for EH: " << DeltaForEH << "\n");
+  LLVM_DEBUG(dbgs() << "Processing FDE: Delta for text: " << DeltaForText
+                    << ", Delta for EH: " << DeltaForEH << "\n");
   uint32_t Length = readBytesUnaligned(P, 4);
   P += 4;
   uint8_t *Ret = P + Length;
@@ -352,25 +354,27 @@ RuntimeDyldMachO::create(Triple::ArchType Arch,
     llvm_unreachable("Unsupported target for RuntimeDyldMachO.");
     break;
   case Triple::arm:
-    return make_unique<RuntimeDyldMachOARM>(MemMgr, Resolver);
+    return std::make_unique<RuntimeDyldMachOARM>(MemMgr, Resolver);
   case Triple::aarch64:
-    return make_unique<RuntimeDyldMachOAArch64>(MemMgr, Resolver);
+    return std::make_unique<RuntimeDyldMachOAArch64>(MemMgr, Resolver);
+  case Triple::aarch64_32:
+    return std::make_unique<RuntimeDyldMachOAArch64>(MemMgr, Resolver);
   case Triple::x86:
-    return make_unique<RuntimeDyldMachOI386>(MemMgr, Resolver);
+    return std::make_unique<RuntimeDyldMachOI386>(MemMgr, Resolver);
   case Triple::x86_64:
-    return make_unique<RuntimeDyldMachOX86_64>(MemMgr, Resolver);
+    return std::make_unique<RuntimeDyldMachOX86_64>(MemMgr, Resolver);
   }
 }
 
 std::unique_ptr<RuntimeDyld::LoadedObjectInfo>
 RuntimeDyldMachO::loadObject(const object::ObjectFile &O) {
   if (auto ObjSectionToIDOrErr = loadObjectImpl(O))
-    return llvm::make_unique<LoadedMachOObjectInfo>(*this,
+    return std::make_unique<LoadedMachOObjectInfo>(*this,
                                                     *ObjSectionToIDOrErr);
   else {
     HasError = true;
     raw_string_ostream ErrStream(ErrorStr);
-    logAllUnhandledErrors(ObjSectionToIDOrErr.takeError(), ErrStream, "");
+    logAllUnhandledErrors(ObjSectionToIDOrErr.takeError(), ErrStream);
     return nullptr;
   }
 }

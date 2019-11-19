@@ -1,9 +1,8 @@
 //===- MCSchedule.cpp - Scheduling ------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -12,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/MC/MCSchedule.h"
+#include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCInstrDesc.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCSubtargetInfo.h"
@@ -64,7 +64,27 @@ int MCSchedModel::computeInstrLatency(const MCSubtargetInfo &STI,
   llvm_unreachable("unsupported variant scheduling class");
 }
 
-Optional<double>
+int MCSchedModel::computeInstrLatency(const MCSubtargetInfo &STI,
+                                      const MCInstrInfo &MCII,
+                                      const MCInst &Inst) const {
+  unsigned SchedClass = MCII.get(Inst.getOpcode()).getSchedClass();
+  const MCSchedClassDesc *SCDesc = getSchedClassDesc(SchedClass);
+  if (!SCDesc->isValid())
+    return 0;
+
+  unsigned CPUID = getProcessorID();
+  while (SCDesc->isVariant()) {
+    SchedClass = STI.resolveVariantSchedClass(SchedClass, &Inst, CPUID);
+    SCDesc = getSchedClassDesc(SchedClass);
+  }
+
+  if (SchedClass)
+    return MCSchedModel::computeInstrLatency(STI, *SCDesc);
+
+  llvm_unreachable("unsupported variant scheduling class");
+}
+
+double
 MCSchedModel::getReciprocalThroughput(const MCSubtargetInfo &STI,
                                       const MCSchedClassDesc &SCDesc) {
   Optional<double> Throughput;
@@ -78,10 +98,39 @@ MCSchedModel::getReciprocalThroughput(const MCSubtargetInfo &STI,
     double Temp = NumUnits * 1.0 / I->Cycles;
     Throughput = Throughput ? std::min(Throughput.getValue(), Temp) : Temp;
   }
-  return Throughput ? 1 / Throughput.getValue() : Throughput;
+  if (Throughput.hasValue())
+    return 1.0 / Throughput.getValue();
+
+  // If no throughput value was calculated, assume that we can execute at the
+  // maximum issue width scaled by number of micro-ops for the schedule class.
+  return ((double)SCDesc.NumMicroOps) / SM.IssueWidth;
 }
 
-Optional<double>
+double
+MCSchedModel::getReciprocalThroughput(const MCSubtargetInfo &STI,
+                                      const MCInstrInfo &MCII,
+                                      const MCInst &Inst) const {
+  unsigned SchedClass = MCII.get(Inst.getOpcode()).getSchedClass();
+  const MCSchedClassDesc *SCDesc = getSchedClassDesc(SchedClass);
+
+  // If there's no valid class, assume that the instruction executes/completes
+  // at the maximum issue width.
+  if (!SCDesc->isValid())
+    return 1.0 / IssueWidth;
+
+  unsigned CPUID = getProcessorID();
+  while (SCDesc->isVariant()) {
+    SchedClass = STI.resolveVariantSchedClass(SchedClass, &Inst, CPUID);
+    SCDesc = getSchedClassDesc(SchedClass);
+  }
+
+  if (SchedClass)
+    return MCSchedModel::getReciprocalThroughput(STI, *SCDesc);
+
+  llvm_unreachable("unsupported variant scheduling class");
+}
+
+double
 MCSchedModel::getReciprocalThroughput(unsigned SchedClass,
                                       const InstrItineraryData &IID) {
   Optional<double> Throughput;
@@ -93,5 +142,26 @@ MCSchedModel::getReciprocalThroughput(unsigned SchedClass,
     double Temp = countPopulation(I->getUnits()) * 1.0 / I->getCycles();
     Throughput = Throughput ? std::min(Throughput.getValue(), Temp) : Temp;
   }
-  return Throughput ? 1 / Throughput.getValue() : Throughput;
+  if (Throughput.hasValue())
+    return 1.0 / Throughput.getValue();
+
+  // If there are no execution resources specified for this class, then assume
+  // that it can execute at the maximum default issue width.
+  return 1.0 / DefaultIssueWidth;
+}
+
+unsigned
+MCSchedModel::getForwardingDelayCycles(ArrayRef<MCReadAdvanceEntry> Entries,
+                                       unsigned WriteResourceID) {
+  if (Entries.empty())
+    return 0;
+
+  int DelayCycles = 0;
+  for (const MCReadAdvanceEntry &E : Entries) {
+    if (E.WriteResourceID != WriteResourceID)
+      continue;
+    DelayCycles = std::min(DelayCycles, E.Cycles);
+  }
+
+  return std::abs(DelayCycles);
 }

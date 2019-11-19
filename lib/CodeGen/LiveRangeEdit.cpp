@@ -1,9 +1,8 @@
 //===-- LiveRangeEdit.cpp - Basic tools for editing a register live range -===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -33,7 +32,7 @@ void LiveRangeEdit::Delegate::anchor() { }
 
 LiveInterval &LiveRangeEdit::createEmptyIntervalFrom(unsigned OldReg,
                                                      bool createSubRanges) {
-  unsigned VReg = MRI.createVirtualRegister(MRI.getRegClass(OldReg));
+  Register VReg = MRI.createVirtualRegister(MRI.getRegClass(OldReg));
   if (VRM)
     VRM->setIsSplitFromReg(VReg, VRM->getOriginal(OldReg));
 
@@ -53,7 +52,7 @@ LiveInterval &LiveRangeEdit::createEmptyIntervalFrom(unsigned OldReg,
 }
 
 unsigned LiveRangeEdit::createFrom(unsigned OldReg) {
-  unsigned VReg = MRI.createVirtualRegister(MRI.getRegClass(OldReg));
+  Register VReg = MRI.createVirtualRegister(MRI.getRegClass(OldReg));
   if (VRM) {
     VRM->setIsSplitFromReg(VReg, VRM->getOriginal(OldReg));
   }
@@ -115,7 +114,7 @@ bool LiveRangeEdit::allUsesAvailableAt(const MachineInstr *OrigMI,
       continue;
 
     // We can't remat physreg uses, unless it is a constant.
-    if (TargetRegisterInfo::isPhysicalRegister(MO.getReg())) {
+    if (Register::isPhysicalRegister(MO.getReg())) {
       if (MRI.isConstantPhysReg(MO.getReg()))
         continue;
       return false;
@@ -220,8 +219,8 @@ bool LiveRangeEdit::foldAsLoad(LiveInterval *LI,
   if (!DefMI->isSafeToMove(nullptr, SawStore))
     return false;
 
-  DEBUG(dbgs() << "Try to fold single def: " << *DefMI
-               << "       into single use: " << *UseMI);
+  LLVM_DEBUG(dbgs() << "Try to fold single def: " << *DefMI
+                    << "       into single use: " << *UseMI);
 
   SmallVector<unsigned, 8> Ops;
   if (UseMI->readsWritesVirtualRegister(LI->reg, &Ops).second)
@@ -230,8 +229,10 @@ bool LiveRangeEdit::foldAsLoad(LiveInterval *LI,
   MachineInstr *FoldMI = TII.foldMemoryOperand(*UseMI, Ops, *DefMI, &LIS);
   if (!FoldMI)
     return false;
-  DEBUG(dbgs() << "                folded: " << *FoldMI);
+  LLVM_DEBUG(dbgs() << "                folded: " << *FoldMI);
   LIS.ReplaceMachineInstrInMaps(*UseMI, *FoldMI);
+  if (UseMI->isCall())
+    UseMI->getMF()->moveCallSiteInfo(UseMI, FoldMI);
   UseMI->eraseFromParent();
   DefMI->addRegisterDead(LI->reg, nullptr);
   Dead.push_back(DefMI);
@@ -267,18 +268,18 @@ void LiveRangeEdit::eliminateDeadDef(MachineInstr *MI, ToShrinkSet &ToShrink,
   }
   // Never delete inline asm.
   if (MI->isInlineAsm()) {
-    DEBUG(dbgs() << "Won't delete: " << Idx << '\t' << *MI);
+    LLVM_DEBUG(dbgs() << "Won't delete: " << Idx << '\t' << *MI);
     return;
   }
 
   // Use the same criteria as DeadMachineInstructionElim.
   bool SawStore = false;
   if (!MI->isSafeToMove(nullptr, SawStore)) {
-    DEBUG(dbgs() << "Can't delete: " << Idx << '\t' << *MI);
+    LLVM_DEBUG(dbgs() << "Can't delete: " << Idx << '\t' << *MI);
     return;
   }
 
-  DEBUG(dbgs() << "Deleting dead def " << Idx << '\t' << *MI);
+  LLVM_DEBUG(dbgs() << "Deleting dead def " << Idx << '\t' << *MI);
 
   // Collect virtual registers to be erased after MI is gone.
   SmallVector<unsigned, 8> RegsToErase;
@@ -307,8 +308,8 @@ void LiveRangeEdit::eliminateDeadDef(MachineInstr *MI, ToShrinkSet &ToShrink,
          MOE = MI->operands_end(); MOI != MOE; ++MOI) {
     if (!MOI->isReg())
       continue;
-    unsigned Reg = MOI->getReg();
-    if (!TargetRegisterInfo::isVirtualRegister(Reg)) {
+    Register Reg = MOI->getReg();
+    if (!Register::isVirtualRegister(Reg)) {
       // Check if MI reads any unreserved physregs.
       if (Reg && MOI->readsReg() && !MRI.isReserved(Reg))
         ReadsPhysRegs = true;
@@ -348,11 +349,11 @@ void LiveRangeEdit::eliminateDeadDef(MachineInstr *MI, ToShrinkSet &ToShrink,
     // Remove all operands that aren't physregs.
     for (unsigned i = MI->getNumOperands(); i; --i) {
       const MachineOperand &MO = MI->getOperand(i-1);
-      if (MO.isReg() && TargetRegisterInfo::isPhysicalRegister(MO.getReg()))
+      if (MO.isReg() && Register::isPhysicalRegister(MO.getReg()))
         continue;
       MI->RemoveOperand(i-1);
     }
-    DEBUG(dbgs() << "Converted physregs to:\t" << *MI);
+    LLVM_DEBUG(dbgs() << "Converted physregs to:\t" << *MI);
   } else {
     // If the dest of MI is an original reg and MI is reMaterializable,
     // don't delete the inst. Replace the dest with a new reg, and keep
@@ -465,7 +466,7 @@ LiveRangeEdit::calculateRegClassAndHint(MachineFunction &MF,
   for (unsigned I = 0, Size = size(); I < Size; ++I) {
     LiveInterval &LI = LIS.getInterval(get(I));
     if (MRI.recomputeRegClass(LI.reg))
-      DEBUG({
+      LLVM_DEBUG({
         const TargetRegisterInfo *TRI = MF.getSubtarget().getRegisterInfo();
         dbgs() << "Inflated " << printReg(LI.reg) << " to "
                << TRI->getRegClassName(MRI.getRegClass(LI.reg)) << '\n';

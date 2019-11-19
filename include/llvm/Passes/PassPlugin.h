@@ -1,9 +1,8 @@
 //===- llvm/Passes/PassPlugin.h - Public Plugin API -----------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -102,13 +101,13 @@ private:
 ///
 /// ```
 /// extern "C" ::llvm::PassPluginLibraryInfo LLVM_ATTRIBUTE_WEAK
-/// LLVM_PLUGIN_EXPORT llvmGetPassPluginInfo() {
+/// llvmGetPassPluginInfo() {
 ///   return {
 ///     LLVM_PLUGIN_API_VERSION, "MyPlugin", "v0.1", [](PassBuilder &PB) { ... }
 ///   };
 /// }
 /// ```
-extern "C" ::llvm::PassPluginLibraryInfo LLVM_ATTRIBUTE_WEAK LLVM_PLUGIN_IMPORT
+extern "C" ::llvm::PassPluginLibraryInfo LLVM_ATTRIBUTE_WEAK
 llvmGetPassPluginInfo();
 
 #endif /* LLVM_PASSES_PASSPLUGIN_H */

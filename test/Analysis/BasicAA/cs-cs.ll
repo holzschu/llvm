@@ -4,6 +4,7 @@ target triple = "arm-apple-ios"
 
 declare void @llvm.memset.p0i8.i64(i8* nocapture writeonly, i8, i64, i1) #0
 declare void @llvm.memcpy.p0i8.p0i8.i64(i8* nocapture writeonly, i8* nocapture readonly, i64, i1) #0
+declare void @llvm.memcpy.element.unordered.atomic.p0i8.p0i8.i64(i8* nocapture writeonly, i8* nocapture readonly, i64, i32) #0
 
 declare void @a_readonly_func(i8*) #1
 declare void @a_writeonly_func(i8*) #2
@@ -22,6 +23,22 @@ define void @test2(i8* %P, i8* %Q) #3 {
 ; CHECK:   Just Ref:  Ptr: i8* %Q     <->  tail call void @llvm.memcpy.p0i8.p0i8.i64(i8* %P, i8* %Q, i64 12, i1 false)
 ; CHECK:   Just Mod:   tail call void @llvm.memcpy.p0i8.p0i8.i64(i8* %P, i8* %Q, i64 12, i1 false) <->   tail call void @llvm.memcpy.p0i8.p0i8.i64(i8* %P, i8* %Q, i64 12, i1 false)
 ; CHECK:   Just Mod:   tail call void @llvm.memcpy.p0i8.p0i8.i64(i8* %P, i8* %Q, i64 12, i1 false) <->   tail call void @llvm.memcpy.p0i8.p0i8.i64(i8* %P, i8* %Q, i64 12, i1 false)
+}
+
+define void @test2_atomic(i8* %P, i8* %Q) #3 {
+  tail call void @llvm.memcpy.element.unordered.atomic.p0i8.p0i8.i64(i8* align 1 %P, i8* align 1 %Q, i64 12, i32 1)
+  tail call void @llvm.memcpy.element.unordered.atomic.p0i8.p0i8.i64(i8* align 1 %P, i8* align 1 %Q, i64 12, i32 1)
+  ret void
+
+; CHECK-LABEL: Function: test2_atomic:
+
+; CHECK:   MayAlias:     i8* %P, i8* %Q
+; CHECK:   Just Mod:  Ptr: i8* %P     <->  tail call void @llvm.memcpy.element.unordered.atomic.p0i8.p0i8.i64(i8* align 1 %P, i8* align 1 %Q, i64 12, i32 1)
+; CHECK:   Just Ref:  Ptr: i8* %Q     <->  tail call void @llvm.memcpy.element.unordered.atomic.p0i8.p0i8.i64(i8* align 1 %P, i8* align 1 %Q, i64 12, i32 1)
+; CHECK:   Just Mod:  Ptr: i8* %P     <->  tail call void @llvm.memcpy.element.unordered.atomic.p0i8.p0i8.i64(i8* align 1 %P, i8* align 1 %Q, i64 12, i32 1)
+; CHECK:   Just Ref:  Ptr: i8* %Q     <->  tail call void @llvm.memcpy.element.unordered.atomic.p0i8.p0i8.i64(i8* align 1 %P, i8* align 1 %Q, i64 12, i32 1)
+; CHECK:   Just Mod:   tail call void @llvm.memcpy.element.unordered.atomic.p0i8.p0i8.i64(i8* align 1 %P, i8* align 1 %Q, i64 12, i32 1) <->   tail call void @llvm.memcpy.element.unordered.atomic.p0i8.p0i8.i64(i8* align 1 %P, i8* align 1 %Q, i64 12, i32 1)
+; CHECK:   Just Mod:   tail call void @llvm.memcpy.element.unordered.atomic.p0i8.p0i8.i64(i8* align 1 %P, i8* align 1 %Q, i64 12, i32 1) <->   tail call void @llvm.memcpy.element.unordered.atomic.p0i8.p0i8.i64(i8* align 1 %P, i8* align 1 %Q, i64 12, i32 1)
 }
 
 define void @test2a(i8* noalias %P, i8* noalias %Q) #3 {
@@ -347,26 +364,26 @@ entry:
   call void @an_argmemonly_func(i8* %q) #9 [ "unknown"() ]
   ret void
 
-; CHECK: Just Ref:  Ptr: i8* %p        <->  call void @a_readonly_func(i8* %p) #6 [ "unknown"() ]
-; CHECK: Just Ref:  Ptr: i8* %q        <->  call void @a_readonly_func(i8* %p) #6 [ "unknown"() ]
-; CHECK: NoModRef:  Ptr: i8* %p        <->  call void @an_inaccessiblememonly_func() #7 [ "unknown"() ]
-; CHECK: NoModRef:  Ptr: i8* %q        <->  call void @an_inaccessiblememonly_func() #7 [ "unknown"() ]
-; CHECK: NoModRef:  Ptr: i8* %p        <->  call void @an_inaccessibleorargmemonly_func(i8* %q) #8 [ "unknown"() ]
-; CHECK: Both ModRef (MustAlias):  Ptr: i8* %q     <->  call void @an_inaccessibleorargmemonly_func(i8* %q) #8 [ "unknown"() ]
-; CHECK: NoModRef:  Ptr: i8* %p        <->  call void @an_argmemonly_func(i8* %q) #9 [ "unknown"() ]
-; CHECK: Both ModRef (MustAlias):  Ptr: i8* %q     <->  call void @an_argmemonly_func(i8* %q) #9 [ "unknown"() ]
-; CHECK: Just Ref:   call void @a_readonly_func(i8* %p) #6 [ "unknown"() ] <->   call void @an_inaccessiblememonly_func() #7 [ "unknown"() ]
-; CHECK: Just Ref:   call void @a_readonly_func(i8* %p) #6 [ "unknown"() ] <->   call void @an_inaccessibleorargmemonly_func(i8* %q) #8 [ "unknown"() ]
-; CHECK: Just Ref:   call void @a_readonly_func(i8* %p) #6 [ "unknown"() ] <->   call void @an_argmemonly_func(i8* %q) #9 [ "unknown"() ]
-; CHECK: Both ModRef:   call void @an_inaccessiblememonly_func() #7 [ "unknown"() ] <->   call void @a_readonly_func(i8* %p) #6 [ "unknown"() ]
-; CHECK: Both ModRef:   call void @an_inaccessiblememonly_func() #7 [ "unknown"() ] <->   call void @an_inaccessibleorargmemonly_func(i8* %q) #8 [ "unknown"() ]
-; CHECK: NoModRef:   call void @an_inaccessiblememonly_func() #7 [ "unknown"() ] <->   call void @an_argmemonly_func(i8* %q) #9 [ "unknown"() ]
-; CHECK: Both ModRef:   call void @an_inaccessibleorargmemonly_func(i8* %q) #8 [ "unknown"() ] <->   call void @a_readonly_func(i8* %p) #6 [ "unknown"() ]
-; CHECK: Both ModRef:   call void @an_inaccessibleorargmemonly_func(i8* %q) #8 [ "unknown"() ] <->   call void @an_inaccessiblememonly_func() #7 [ "unknown"() ]
-; CHECK: Both ModRef (MustAlias):   call void @an_inaccessibleorargmemonly_func(i8* %q) #8 [ "unknown"() ] <->   call void @an_argmemonly_func(i8* %q) #9 [ "unknown"() ]
-; CHECK: Both ModRef:   call void @an_argmemonly_func(i8* %q) #9 [ "unknown"() ] <->   call void @a_readonly_func(i8* %p) #6 [ "unknown"() ]
-; CHECK: NoModRef:   call void @an_argmemonly_func(i8* %q) #9 [ "unknown"() ] <->   call void @an_inaccessiblememonly_func() #7 [ "unknown"() ]
-; CHECK: Both ModRef (MustAlias):   call void @an_argmemonly_func(i8* %q) #9 [ "unknown"() ] <->   call void @an_inaccessibleorargmemonly_func(i8* %q) #8 [ "unknown"() ]
+; CHECK: Just Ref:  Ptr: i8* %p        <->  call void @a_readonly_func(i8* %p) #7 [ "unknown"() ]
+; CHECK: Just Ref:  Ptr: i8* %q        <->  call void @a_readonly_func(i8* %p) #7 [ "unknown"() ]
+; CHECK: NoModRef:  Ptr: i8* %p        <->  call void @an_inaccessiblememonly_func() #8 [ "unknown"() ]
+; CHECK: NoModRef:  Ptr: i8* %q        <->  call void @an_inaccessiblememonly_func() #8 [ "unknown"() ]
+; CHECK: NoModRef:  Ptr: i8* %p        <->  call void @an_inaccessibleorargmemonly_func(i8* %q) #9 [ "unknown"() ]
+; CHECK: Both ModRef (MustAlias):  Ptr: i8* %q     <->  call void @an_inaccessibleorargmemonly_func(i8* %q) #9 [ "unknown"() ]
+; CHECK: NoModRef:  Ptr: i8* %p        <->  call void @an_argmemonly_func(i8* %q) #10 [ "unknown"() ]
+; CHECK: Both ModRef (MustAlias):  Ptr: i8* %q     <->  call void @an_argmemonly_func(i8* %q) #10 [ "unknown"() ]
+; CHECK: Just Ref:   call void @a_readonly_func(i8* %p) #7 [ "unknown"() ] <->   call void @an_inaccessiblememonly_func() #8 [ "unknown"() ]
+; CHECK: Just Ref:   call void @a_readonly_func(i8* %p) #7 [ "unknown"() ] <->   call void @an_inaccessibleorargmemonly_func(i8* %q) #9 [ "unknown"() ]
+; CHECK: Just Ref:   call void @a_readonly_func(i8* %p) #7 [ "unknown"() ] <->   call void @an_argmemonly_func(i8* %q) #10 [ "unknown"() ]
+; CHECK: Both ModRef:   call void @an_inaccessiblememonly_func() #8 [ "unknown"() ] <->   call void @a_readonly_func(i8* %p) #7 [ "unknown"() ]
+; CHECK: Both ModRef:   call void @an_inaccessiblememonly_func() #8 [ "unknown"() ] <->   call void @an_inaccessibleorargmemonly_func(i8* %q) #9 [ "unknown"() ]
+; CHECK: NoModRef:   call void @an_inaccessiblememonly_func() #8 [ "unknown"() ] <->   call void @an_argmemonly_func(i8* %q) #10 [ "unknown"() ]
+; CHECK: Both ModRef:   call void @an_inaccessibleorargmemonly_func(i8* %q) #9 [ "unknown"() ] <->   call void @a_readonly_func(i8* %p) #7 [ "unknown"() ]
+; CHECK: Both ModRef:   call void @an_inaccessibleorargmemonly_func(i8* %q) #9 [ "unknown"() ] <->   call void @an_inaccessiblememonly_func() #8 [ "unknown"() ]
+; CHECK: Both ModRef (MustAlias):   call void @an_inaccessibleorargmemonly_func(i8* %q) #9 [ "unknown"() ] <->   call void @an_argmemonly_func(i8* %q) #10 [ "unknown"() ]
+; CHECK: Both ModRef:   call void @an_argmemonly_func(i8* %q) #10 [ "unknown"() ] <->   call void @a_readonly_func(i8* %p) #7 [ "unknown"() ]
+; CHECK: NoModRef:   call void @an_argmemonly_func(i8* %q) #10 [ "unknown"() ] <->   call void @an_inaccessiblememonly_func() #8 [ "unknown"() ]
+; CHECK: Both ModRef (MustAlias):   call void @an_argmemonly_func(i8* %q) #10 [ "unknown"() ] <->   call void @an_inaccessibleorargmemonly_func(i8* %q) #9 [ "unknown"() ]
 }
 
 attributes #0 = { argmemonly nounwind }

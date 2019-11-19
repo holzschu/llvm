@@ -1,6 +1,6 @@
-# RUN: llc -mtriple=x86_64-linux-gnu -mattr=+avx512f -global-isel -run-pass=instruction-select -verify-machineinstrs %s -o - | FileCheck %s --check-prefix=ALL
+# RUN: llc -mtriple=x86_64-linux-gnu -mattr=+avx512f -run-pass=instruction-select -verify-machineinstrs %s -o - | FileCheck %s --check-prefix=ALL
 
-# RUN: llc -mtriple=x86_64-linux-gnu -mattr=+avx512f -global-isel -run-pass=instruction-select -verify-machineinstrs %s -o - | FileCheck %s --check-prefix=ALL
+# RUN: llc -mtriple=x86_64-linux-gnu -mattr=+avx512f -run-pass=instruction-select -verify-machineinstrs %s -o - | FileCheck %s --check-prefix=ALL
 
 --- |
   define void @test_extract_128_idx0() {
@@ -23,7 +23,7 @@
 ---
 name:            test_extract_128_idx0
 # ALL-LABEL: name:  test_extract_128_idx0
-alignment:       4
+alignment:       16
 legalized:       true
 regBankSelected: true
 # ALL:      registers:
@@ -49,7 +49,7 @@ body:             |
 ---
 name:            test_extract_128_idx1
 # ALL-LABEL: name:  test_extract_128_idx1
-alignment:       4
+alignment:       16
 legalized:       true
 regBankSelected: true
 # ALL:      registers:
@@ -75,7 +75,7 @@ body:             |
 ---
 name:            test_extract_256_idx0
 # ALL-LABEL: name:  test_extract_256_idx0
-alignment:       4
+alignment:       16
 legalized:       true
 regBankSelected: true
 # ALL:      registers:
@@ -101,7 +101,7 @@ body:             |
 ---
 name:            test_extract_256_idx1
 # ALL-LABEL: name:  test_extract_256_idx1
-alignment:       4
+alignment:       16
 legalized:       true
 regBankSelected: true
 # ALL:      registers:

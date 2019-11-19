@@ -1,9 +1,8 @@
 //===- llvm/Function.h - Class to represent a single function ---*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -120,7 +119,7 @@ private:
   /// function is automatically inserted into the end of the function list for
   /// the module.
   ///
-  Function(FunctionType *Ty, LinkageTypes Linkage,
+  Function(FunctionType *Ty, LinkageTypes Linkage, unsigned AddrSpace,
            const Twine &N = "", Module *M = nullptr);
 
 public:
@@ -134,12 +133,31 @@ public:
   const Function &getFunction() const { return *this; }
 
   static Function *Create(FunctionType *Ty, LinkageTypes Linkage,
-                          const Twine &N = "", Module *M = nullptr) {
-    return new Function(Ty, Linkage, N, M);
+                          unsigned AddrSpace, const Twine &N = "",
+                          Module *M = nullptr) {
+    return new Function(Ty, Linkage, AddrSpace, N, M);
   }
+
+  // TODO: remove this once all users have been updated to pass an AddrSpace
+  static Function *Create(FunctionType *Ty, LinkageTypes Linkage,
+                          const Twine &N = "", Module *M = nullptr) {
+    return new Function(Ty, Linkage, static_cast<unsigned>(-1), N, M);
+  }
+
+  /// Creates a new function and attaches it to a module.
+  ///
+  /// Places the function in the program address space as specified
+  /// by the module's data layout.
+  static Function *Create(FunctionType *Ty, LinkageTypes Linkage,
+                          const Twine &N, Module &M);
 
   // Provide fast operand accessors.
   DECLARE_TRANSPARENT_OPERAND_ACCESSORS(Value);
+
+  /// Returns the number of non-debug IR instructions in this function.
+  /// This is equivalent to the sum of the sizes of each basic block contained
+  /// within this function.
+  unsigned getInstructionCount() const;
 
   /// Returns the FunctionType for me.
   FunctionType *getFunctionType() const {
@@ -181,7 +199,7 @@ public:
 
   static Intrinsic::ID lookupIntrinsicID(StringRef Name);
 
-  /// \brief Recalculate the ID for this function if it is an Intrinsic defined
+  /// Recalculate the ID for this function if it is an Intrinsic defined
   /// in llvm/Intrinsics.h.  Sets the intrinsic ID to Intrinsic::not_intrinsic
   /// if the name of this function does not match an intrinsic in that header.
   /// Note, this method does not need to be called directly, as it is called
@@ -201,34 +219,34 @@ public:
     setValueSubclassData((getSubclassDataFromValue() & 0xc00f) | (ID << 4));
   }
 
-  /// @brief Return the attribute list for this Function.
+  /// Return the attribute list for this Function.
   AttributeList getAttributes() const { return AttributeSets; }
 
-  /// @brief Set the attribute list for this Function.
+  /// Set the attribute list for this Function.
   void setAttributes(AttributeList Attrs) { AttributeSets = Attrs; }
 
-  /// @brief Add function attributes to this function.
+  /// Add function attributes to this function.
   void addFnAttr(Attribute::AttrKind Kind) {
     addAttribute(AttributeList::FunctionIndex, Kind);
   }
 
-  /// @brief Add function attributes to this function.
+  /// Add function attributes to this function.
   void addFnAttr(StringRef Kind, StringRef Val = StringRef()) {
     addAttribute(AttributeList::FunctionIndex,
                  Attribute::get(getContext(), Kind, Val));
   }
 
-  /// @brief Add function attributes to this function.
+  /// Add function attributes to this function.
   void addFnAttr(Attribute Attr) {
     addAttribute(AttributeList::FunctionIndex, Attr);
   }
 
-  /// @brief Remove function attributes from this function.
+  /// Remove function attributes from this function.
   void removeFnAttr(Attribute::AttrKind Kind) {
     removeAttribute(AttributeList::FunctionIndex, Kind);
   }
 
-  /// @brief Remove function attribute from this function.
+  /// Remove function attribute from this function.
   void removeFnAttr(StringRef Kind) {
     setAttributes(getAttributes().removeAttribute(
         getContext(), AttributeList::FunctionIndex, Kind));
@@ -263,7 +281,7 @@ public:
     static ProfileCount getInvalid() { return ProfileCount(-1, PCT_Invalid); }
   };
 
-  /// \brief Set the entry count for this function.
+  /// Set the entry count for this function.
   ///
   /// Entry count is the number of times this function was executed based on
   /// pgo data. \p Imports points to a set of GUIDs that needs to
@@ -276,17 +294,20 @@ public:
   void setEntryCount(uint64_t Count, ProfileCountType Type = PCT_Real,
                      const DenseSet<GlobalValue::GUID> *Imports = nullptr);
 
-  /// \brief Get the entry count for this function.
+  /// Get the entry count for this function.
   ///
-  /// Entry count is the number of times the function was executed based on
-  /// pgo data.
-  ProfileCount getEntryCount() const;
+  /// Entry count is the number of times the function was executed.
+  /// When AllowSynthetic is false, only pgo_data will be returned.
+  ProfileCount getEntryCount(bool AllowSynthetic = false) const;
 
   /// Return true if the function is annotated with profile data.
   ///
   /// Presence of entry counts from a profile run implies the function has
-  /// profile annotations.
-  bool hasProfileData() const { return getEntryCount().hasValue(); }
+  /// profile annotations. If IncludeSynthetic is false, only return true
+  /// when the profile data is real.
+  bool hasProfileData(bool IncludeSynthetic = false) const {
+    return getEntryCount(IncludeSynthetic).hasValue();
+  }
 
   /// Returns the set of GUIDs that needs to be imported to the function for
   /// sample PGO, to enable the same inlines as the profiled optimized binary.
@@ -298,31 +319,34 @@ public:
   /// Get the section prefix for this function.
   Optional<StringRef> getSectionPrefix() const;
 
-  /// @brief Return true if the function has the attribute.
+  /// Return true if the function has the attribute.
   bool hasFnAttribute(Attribute::AttrKind Kind) const {
     return AttributeSets.hasFnAttribute(Kind);
   }
 
-  /// @brief Return true if the function has the attribute.
+  /// Return true if the function has the attribute.
   bool hasFnAttribute(StringRef Kind) const {
     return AttributeSets.hasFnAttribute(Kind);
   }
 
-  /// @brief Return the attribute for the given attribute kind.
+  /// Return the attribute for the given attribute kind.
   Attribute getFnAttribute(Attribute::AttrKind Kind) const {
     return getAttribute(AttributeList::FunctionIndex, Kind);
   }
 
-  /// @brief Return the attribute for the given attribute kind.
+  /// Return the attribute for the given attribute kind.
   Attribute getFnAttribute(StringRef Kind) const {
     return getAttribute(AttributeList::FunctionIndex, Kind);
   }
 
-  /// \brief Return the stack alignment for the function.
+  /// Return the stack alignment for the function.
   unsigned getFnStackAlignment() const {
     if (!hasFnAttribute(Attribute::StackAlignment))
       return 0;
-    return AttributeSets.getStackAlignment(AttributeList::FunctionIndex);
+    if (const auto MA =
+            AttributeSets.getStackAlignment(AttributeList::FunctionIndex))
+      return MA->value();
+    return 0;
   }
 
   /// hasGC/getGC/setGC/clearGC - The name of the garbage collection algorithm
@@ -334,110 +358,123 @@ public:
   void setGC(std::string Str);
   void clearGC();
 
-  /// @brief adds the attribute to the list of attributes.
+  /// adds the attribute to the list of attributes.
   void addAttribute(unsigned i, Attribute::AttrKind Kind);
 
-  /// @brief adds the attribute to the list of attributes.
+  /// adds the attribute to the list of attributes.
   void addAttribute(unsigned i, Attribute Attr);
 
-  /// @brief adds the attributes to the list of attributes.
+  /// adds the attributes to the list of attributes.
   void addAttributes(unsigned i, const AttrBuilder &Attrs);
 
-  /// @brief adds the attribute to the list of attributes for the given arg.
+  /// adds the attribute to the list of attributes for the given arg.
   void addParamAttr(unsigned ArgNo, Attribute::AttrKind Kind);
 
-  /// @brief adds the attribute to the list of attributes for the given arg.
+  /// adds the attribute to the list of attributes for the given arg.
   void addParamAttr(unsigned ArgNo, Attribute Attr);
 
-  /// @brief adds the attributes to the list of attributes for the given arg.
+  /// adds the attributes to the list of attributes for the given arg.
   void addParamAttrs(unsigned ArgNo, const AttrBuilder &Attrs);
 
-  /// @brief removes the attribute from the list of attributes.
+  /// removes the attribute from the list of attributes.
   void removeAttribute(unsigned i, Attribute::AttrKind Kind);
 
-  /// @brief removes the attribute from the list of attributes.
+  /// removes the attribute from the list of attributes.
   void removeAttribute(unsigned i, StringRef Kind);
 
-  /// @brief removes the attributes from the list of attributes.
+  /// removes the attributes from the list of attributes.
   void removeAttributes(unsigned i, const AttrBuilder &Attrs);
 
-  /// @brief removes the attribute from the list of attributes.
+  /// removes the attribute from the list of attributes.
   void removeParamAttr(unsigned ArgNo, Attribute::AttrKind Kind);
 
-  /// @brief removes the attribute from the list of attributes.
+  /// removes the attribute from the list of attributes.
   void removeParamAttr(unsigned ArgNo, StringRef Kind);
 
-  /// @brief removes the attribute from the list of attributes.
+  /// removes the attribute from the list of attributes.
   void removeParamAttrs(unsigned ArgNo, const AttrBuilder &Attrs);
 
-  /// @brief check if an attributes is in the list of attributes.
+  /// check if an attributes is in the list of attributes.
   bool hasAttribute(unsigned i, Attribute::AttrKind Kind) const {
     return getAttributes().hasAttribute(i, Kind);
   }
 
-  /// @brief check if an attributes is in the list of attributes.
+  /// check if an attributes is in the list of attributes.
   bool hasParamAttribute(unsigned ArgNo, Attribute::AttrKind Kind) const {
     return getAttributes().hasParamAttribute(ArgNo, Kind);
   }
 
-  /// @brief gets the attribute from the list of attributes.
+  /// gets the specified attribute from the list of attributes.
+  Attribute getParamAttribute(unsigned ArgNo, Attribute::AttrKind Kind) const {
+    return getAttributes().getParamAttr(ArgNo, Kind);
+  }
+
+  /// gets the attribute from the list of attributes.
   Attribute getAttribute(unsigned i, Attribute::AttrKind Kind) const {
     return AttributeSets.getAttribute(i, Kind);
   }
 
-  /// @brief gets the attribute from the list of attributes.
+  /// gets the attribute from the list of attributes.
   Attribute getAttribute(unsigned i, StringRef Kind) const {
     return AttributeSets.getAttribute(i, Kind);
   }
 
-  /// @brief adds the dereferenceable attribute to the list of attributes.
+  /// adds the dereferenceable attribute to the list of attributes.
   void addDereferenceableAttr(unsigned i, uint64_t Bytes);
 
-  /// @brief adds the dereferenceable attribute to the list of attributes for
+  /// adds the dereferenceable attribute to the list of attributes for
   /// the given arg.
   void addDereferenceableParamAttr(unsigned ArgNo, uint64_t Bytes);
 
-  /// @brief adds the dereferenceable_or_null attribute to the list of
+  /// adds the dereferenceable_or_null attribute to the list of
   /// attributes.
   void addDereferenceableOrNullAttr(unsigned i, uint64_t Bytes);
 
-  /// @brief adds the dereferenceable_or_null attribute to the list of
+  /// adds the dereferenceable_or_null attribute to the list of
   /// attributes for the given arg.
   void addDereferenceableOrNullParamAttr(unsigned ArgNo, uint64_t Bytes);
 
-  /// @brief Extract the alignment for a call or parameter (0=unknown).
+  /// Extract the alignment for a call or parameter (0=unknown).
   unsigned getParamAlignment(unsigned ArgNo) const {
-    return AttributeSets.getParamAlignment(ArgNo);
+    if (const auto MA = AttributeSets.getParamAlignment(ArgNo))
+      return MA->value();
+    return 0;
   }
 
-  /// @brief Extract the number of dereferenceable bytes for a call or
+  /// Extract the byval type for a parameter.
+  Type *getParamByValType(unsigned ArgNo) const {
+    Type *Ty = AttributeSets.getParamByValType(ArgNo);
+    return Ty ? Ty : (arg_begin() + ArgNo)->getType()->getPointerElementType();
+  }
+
+  /// Extract the number of dereferenceable bytes for a call or
   /// parameter (0=unknown).
   /// @param i AttributeList index, referring to a return value or argument.
   uint64_t getDereferenceableBytes(unsigned i) const {
     return AttributeSets.getDereferenceableBytes(i);
   }
 
-  /// @brief Extract the number of dereferenceable bytes for a parameter.
+  /// Extract the number of dereferenceable bytes for a parameter.
   /// @param ArgNo Index of an argument, with 0 being the first function arg.
   uint64_t getParamDereferenceableBytes(unsigned ArgNo) const {
     return AttributeSets.getParamDereferenceableBytes(ArgNo);
   }
 
-  /// @brief Extract the number of dereferenceable_or_null bytes for a call or
+  /// Extract the number of dereferenceable_or_null bytes for a call or
   /// parameter (0=unknown).
   /// @param i AttributeList index, referring to a return value or argument.
   uint64_t getDereferenceableOrNullBytes(unsigned i) const {
     return AttributeSets.getDereferenceableOrNullBytes(i);
   }
 
-  /// @brief Extract the number of dereferenceable_or_null bytes for a
+  /// Extract the number of dereferenceable_or_null bytes for a
   /// parameter.
   /// @param ArgNo AttributeList ArgNo, referring to an argument.
   uint64_t getParamDereferenceableOrNullBytes(unsigned ArgNo) const {
     return AttributeSets.getParamDereferenceableOrNullBytes(ArgNo);
   }
 
-  /// @brief Determine if the function does not access memory.
+  /// Determine if the function does not access memory.
   bool doesNotAccessMemory() const {
     return hasFnAttribute(Attribute::ReadNone);
   }
@@ -445,7 +482,7 @@ public:
     addFnAttr(Attribute::ReadNone);
   }
 
-  /// @brief Determine if the function does not access or only reads memory.
+  /// Determine if the function does not access or only reads memory.
   bool onlyReadsMemory() const {
     return doesNotAccessMemory() || hasFnAttribute(Attribute::ReadOnly);
   }
@@ -453,7 +490,7 @@ public:
     addFnAttr(Attribute::ReadOnly);
   }
 
-  /// @brief Determine if the function does not access or only writes memory.
+  /// Determine if the function does not access or only writes memory.
   bool doesNotReadMemory() const {
     return doesNotAccessMemory() || hasFnAttribute(Attribute::WriteOnly);
   }
@@ -461,14 +498,14 @@ public:
     addFnAttr(Attribute::WriteOnly);
   }
 
-  /// @brief Determine if the call can access memmory only using pointers based
+  /// Determine if the call can access memmory only using pointers based
   /// on its arguments.
   bool onlyAccessesArgMemory() const {
     return hasFnAttribute(Attribute::ArgMemOnly);
   }
   void setOnlyAccessesArgMemory() { addFnAttr(Attribute::ArgMemOnly); }
 
-  /// @brief Determine if the function may only access memory that is
+  /// Determine if the function may only access memory that is
   ///  inaccessible from the IR.
   bool onlyAccessesInaccessibleMemory() const {
     return hasFnAttribute(Attribute::InaccessibleMemOnly);
@@ -477,7 +514,7 @@ public:
     addFnAttr(Attribute::InaccessibleMemOnly);
   }
 
-  /// @brief Determine if the function may only access memory that is
+  /// Determine if the function may only access memory that is
   ///  either inaccessible from the IR or pointed to by its arguments.
   bool onlyAccessesInaccessibleMemOrArgMem() const {
     return hasFnAttribute(Attribute::InaccessibleMemOrArgMemOnly);
@@ -486,7 +523,7 @@ public:
     addFnAttr(Attribute::InaccessibleMemOrArgMemOnly);
   }
 
-  /// @brief Determine if the function cannot return.
+  /// Determine if the function cannot return.
   bool doesNotReturn() const {
     return hasFnAttribute(Attribute::NoReturn);
   }
@@ -497,7 +534,7 @@ public:
   /// Determine if the function should not perform indirect branch tracking.
   bool doesNoCfCheck() const { return hasFnAttribute(Attribute::NoCfCheck); }
 
-  /// @brief Determine if the function cannot unwind.
+  /// Determine if the function cannot unwind.
   bool doesNotThrow() const {
     return hasFnAttribute(Attribute::NoUnwind);
   }
@@ -505,7 +542,7 @@ public:
     addFnAttr(Attribute::NoUnwind);
   }
 
-  /// @brief Determine if the call cannot be duplicated.
+  /// Determine if the call cannot be duplicated.
   bool cannotDuplicate() const {
     return hasFnAttribute(Attribute::NoDuplicate);
   }
@@ -513,7 +550,7 @@ public:
     addFnAttr(Attribute::NoDuplicate);
   }
 
-  /// @brief Determine if the call is convergent.
+  /// Determine if the call is convergent.
   bool isConvergent() const {
     return hasFnAttribute(Attribute::Convergent);
   }
@@ -524,12 +561,20 @@ public:
     removeFnAttr(Attribute::Convergent);
   }
 
-  /// @brief Determine if the call has sideeffects.
+  /// Determine if the call has sideeffects.
   bool isSpeculatable() const {
     return hasFnAttribute(Attribute::Speculatable);
   }
   void setSpeculatable() {
     addFnAttr(Attribute::Speculatable);
+  }
+
+  /// Determine if the call might deallocate memory.
+  bool doesNotFreeMemory() const {
+    return onlyReadsMemory() || hasFnAttribute(Attribute::NoFree);
+  }
+  void setDoesNotFreeMemory() {
+    addFnAttr(Attribute::NoFree);
   }
 
   /// Determine if the function is known not to recurse, directly or
@@ -541,7 +586,7 @@ public:
     addFnAttr(Attribute::NoRecurse);
   }
 
-  /// @brief True if the ABI mandates (or the user requested) that this
+  /// True if the ABI mandates (or the user requested) that this
   /// function be in a unwind table.
   bool hasUWTable() const {
     return hasFnAttribute(Attribute::UWTable);
@@ -550,19 +595,19 @@ public:
     addFnAttr(Attribute::UWTable);
   }
 
-  /// @brief True if this function needs an unwind table.
+  /// True if this function needs an unwind table.
   bool needsUnwindTableEntry() const {
-    return hasUWTable() || !doesNotThrow();
+    return hasUWTable() || !doesNotThrow() || hasPersonalityFn();
   }
 
-  /// @brief Determine if the function returns a structure through first
+  /// Determine if the function returns a structure through first
   /// or second pointer argument.
   bool hasStructRetAttr() const {
     return AttributeSets.hasParamAttribute(0, Attribute::StructRet) ||
            AttributeSets.hasParamAttribute(1, Attribute::StructRet);
   }
 
-  /// @brief Determine if the parameter or return value is marked with NoAlias
+  /// Determine if the parameter or return value is marked with NoAlias
   /// attribute.
   bool returnDoesNotAlias() const {
     return AttributeSets.hasAttribute(AttributeList::ReturnIndex,
@@ -572,12 +617,15 @@ public:
     addAttribute(AttributeList::ReturnIndex, Attribute::NoAlias);
   }
 
+  /// Do not optimize this function (-O0).
+  bool hasOptNone() const { return hasFnAttribute(Attribute::OptimizeNone); }
+
   /// Optimize this function for minimum size (-Oz).
-  bool optForMinSize() const { return hasFnAttribute(Attribute::MinSize); }
+  bool hasMinSize() const { return hasFnAttribute(Attribute::MinSize); }
 
   /// Optimize this function for size (-Os) or minimum size (-Oz).
-  bool optForSize() const {
-    return hasFnAttribute(Attribute::OptimizeForSize) || optForMinSize();
+  bool hasOptSize() const {
+    return hasFnAttribute(Attribute::OptimizeForSize) || hasMinSize();
   }
 
   /// copyAttributesFrom - copy all additional attributes (those not needed to
@@ -667,6 +715,12 @@ public:
     return Arguments + NumArgs;
   }
 
+  Argument* getArg(unsigned i) const {
+    assert (i < NumArgs && "getArg() out of range!");
+    CheckLazyArguments();
+    return Arguments + i;
+  }
+
   iterator_range<arg_iterator> args() {
     return make_range(arg_begin(), arg_end());
   }
@@ -679,30 +733,30 @@ public:
   size_t arg_size() const { return NumArgs; }
   bool arg_empty() const { return arg_size() == 0; }
 
-  /// \brief Check whether this function has a personality function.
+  /// Check whether this function has a personality function.
   bool hasPersonalityFn() const {
     return getSubclassDataFromValue() & (1<<3);
   }
 
-  /// \brief Get the personality function associated with this function.
+  /// Get the personality function associated with this function.
   Constant *getPersonalityFn() const;
   void setPersonalityFn(Constant *Fn);
 
-  /// \brief Check whether this function has prefix data.
+  /// Check whether this function has prefix data.
   bool hasPrefixData() const {
     return getSubclassDataFromValue() & (1<<1);
   }
 
-  /// \brief Get the prefix data associated with this function.
+  /// Get the prefix data associated with this function.
   Constant *getPrefixData() const;
   void setPrefixData(Constant *PrefixData);
 
-  /// \brief Check whether this function has prologue data.
+  /// Check whether this function has prologue data.
   bool hasPrologueData() const {
     return getSubclassDataFromValue() & (1<<2);
   }
 
-  /// \brief Get the prologue data associated with this function.
+  /// Get the prologue data associated with this function.
   Constant *getPrologueData() const;
   void setPrologueData(Constant *PrologueData);
 
@@ -762,12 +816,12 @@ public:
   /// setjmp or other function that gcc recognizes as "returning twice".
   bool callsFunctionThatReturnsTwice() const;
 
-  /// \brief Set the attached subprogram.
+  /// Set the attached subprogram.
   ///
   /// Calls \a setMetadata() with \a LLVMContext::MD_dbg.
   void setSubprogram(DISubprogram *SP);
 
-  /// \brief Get the attached subprogram.
+  /// Get the attached subprogram.
   ///
   /// Calls \a getMetadata() with \a LLVMContext::MD_dbg and casts the result
   /// to \a DISubprogram.
@@ -775,6 +829,12 @@ public:
 
   /// Returns true if we should emit debug info for profiling.
   bool isDebugInfoForProfiling() const;
+
+  /// Check if null pointer dereferencing is considered undefined behavior for
+  /// the function.
+  /// Return value: false => null pointer dereference is undefined.
+  /// Return value: true =>  null pointer dereference is not undefined.
+  bool nullPointerIsDefined() const;
 
 private:
   void allocHungoffUselist();
@@ -787,6 +847,13 @@ private:
   }
   void setValueSubclassDataBit(unsigned Bit, bool On);
 };
+
+/// Check whether null pointer dereferencing is considered undefined behavior
+/// for a given function or an address space.
+/// Null pointer access in non-zero address space is not considered undefined.
+/// Return value: false => null pointer dereference is undefined.
+/// Return value: true =>  null pointer dereference is not undefined.
+bool NullPointerIsDefined(const Function *F, unsigned AS = 0);
 
 template <>
 struct OperandTraits<Function> : public HungoffOperandTraits<3> {};

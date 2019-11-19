@@ -1,9 +1,8 @@
 //===- MCAssembler.h - Object File Generation -------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -23,6 +22,7 @@
 #include "llvm/MC/MCFragment.h"
 #include "llvm/MC/MCLinkerOptimizationHint.h"
 #include "llvm/MC/MCSymbol.h"
+#include "llvm/Support/VersionTuple.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -94,6 +94,8 @@ public:
     unsigned Major;
     unsigned Minor;
     unsigned Update;
+    /// An optional version of the SDK that was used to build the source.
+    VersionTuple SDKVersion;
   };
 
 private:
@@ -130,7 +132,7 @@ private:
   // refactoring too.
   mutable SmallPtrSet<const MCSymbol *, 32> ThumbFuncs;
 
-  /// \brief The bundle alignment size currently set in the assembler.
+  /// The bundle alignment size currently set in the assembler.
   ///
   /// By default it's 0, which means bundling is disabled.
   unsigned BundleAlignSize;
@@ -162,12 +164,14 @@ private:
   /// evaluates to.
   /// \param Value [out] On return, the value of the fixup as currently laid
   /// out.
+  /// \param WasForced [out] On return, the value in the fixup is set to the
+  /// correct value if WasForced is true, even if evaluateFixup returns false.
   /// \return Whether the fixup value was fully resolved. This is true if the
   /// \p Value result is fixed, otherwise the value may change due to
   /// relocation.
   bool evaluateFixup(const MCAsmLayout &Layout, const MCFixup &Fixup,
                      const MCFragment *DF, MCValue &Target,
-                     uint64_t &Value) const;
+                     uint64_t &Value, bool &WasForced) const;
 
   /// Check whether a fixup can be satisfied, or whether it needs to be relaxed
   /// (increased in size, in order to hold its value correctly).
@@ -178,11 +182,11 @@ private:
   bool fragmentNeedsRelaxation(const MCRelaxableFragment *IF,
                                const MCAsmLayout &Layout) const;
 
-  /// \brief Perform one layout iteration and return true if any offsets
+  /// Perform one layout iteration and return true if any offsets
   /// were adjusted.
   bool layoutOnce(MCAsmLayout &Layout);
 
-  /// \brief Perform one layout iteration of the given section and return true
+  /// Perform one layout iteration of the given section and return true
   /// if any offsets were adjusted.
   bool layoutSectionOnce(MCAsmLayout &Layout, MCSection &Sec);
 
@@ -236,8 +240,8 @@ public:
   /// defining a separate atom.
   bool isSymbolLinkerVisible(const MCSymbol &SD) const;
 
-  /// Emit the section contents using the given object writer.
-  void writeSectionData(const MCSection *Section,
+  /// Emit the section contents to \p OS.
+  void writeSectionData(raw_ostream &OS, const MCSection *Section,
                         const MCAsmLayout &Layout) const;
 
   /// Check whether a given symbol has been flagged with .thumb_func.
@@ -253,20 +257,24 @@ public:
   /// MachO deployment target version information.
   const VersionInfoType &getVersionInfo() const { return VersionInfo; }
   void setVersionMin(MCVersionMinType Type, unsigned Major, unsigned Minor,
-                     unsigned Update) {
+                     unsigned Update,
+                     VersionTuple SDKVersion = VersionTuple()) {
     VersionInfo.EmitBuildVersion = false;
     VersionInfo.TypeOrPlatform.Type = Type;
     VersionInfo.Major = Major;
     VersionInfo.Minor = Minor;
     VersionInfo.Update = Update;
+    VersionInfo.SDKVersion = SDKVersion;
   }
   void setBuildVersion(MachO::PlatformType Platform, unsigned Major,
-                       unsigned Minor, unsigned Update) {
+                       unsigned Minor, unsigned Update,
+                       VersionTuple SDKVersion = VersionTuple()) {
     VersionInfo.EmitBuildVersion = true;
     VersionInfo.TypeOrPlatform.Platform = Platform;
     VersionInfo.Major = Major;
     VersionInfo.Minor = Minor;
     VersionInfo.Update = Update;
+    VersionInfo.SDKVersion = SDKVersion;
   }
 
   /// Reuse an assembler instance
@@ -416,6 +424,13 @@ public:
   const MCLOHContainer &getLOHContainer() const {
     return const_cast<MCAssembler *>(this)->getLOHContainer();
   }
+
+  struct CGProfileEntry {
+    const MCSymbolRefExpr *From;
+    const MCSymbolRefExpr *To;
+    uint64_t Count;
+  };
+  std::vector<CGProfileEntry> CGProfile;
   /// @}
   /// \name Backend Data Access
   /// @{
@@ -431,21 +446,22 @@ public:
       FileNames.push_back(FileName);
   }
 
-  /// \brief Write the necessary bundle padding to the given object writer.
+  /// Write the necessary bundle padding to \p OS.
   /// Expects a fragment \p F containing instructions and its size \p FSize.
-  void writeFragmentPadding(const MCFragment &F, uint64_t FSize,
-                            MCObjectWriter *OW) const;
+  void writeFragmentPadding(raw_ostream &OS, const MCEncodedFragment &F,
+                            uint64_t FSize) const;
 
   /// @}
 
   void dump() const;
 };
 
-/// \brief Compute the amount of padding required before the fragment \p F to
+/// Compute the amount of padding required before the fragment \p F to
 /// obey bundling restrictions, where \p FOffset is the fragment's offset in
 /// its section and \p FSize is the fragment's size.
-uint64_t computeBundlePadding(const MCAssembler &Assembler, const MCFragment *F,
-                              uint64_t FOffset, uint64_t FSize);
+uint64_t computeBundlePadding(const MCAssembler &Assembler,
+                              const MCEncodedFragment *F, uint64_t FOffset,
+                              uint64_t FSize);
 
 } // end namespace llvm
 

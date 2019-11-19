@@ -1,9 +1,8 @@
 //===- DWARFTypeUnit.cpp --------------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -18,41 +17,30 @@
 
 using namespace llvm;
 
-bool DWARFTypeUnit::extractImpl(const DWARFDataExtractor &debug_info,
-                                uint32_t *offset_ptr) {
-  if (!DWARFUnit::extractImpl(debug_info, offset_ptr))
-    return false;
-  TypeHash = debug_info.getU64(offset_ptr);
-  TypeOffset = debug_info.getU32(offset_ptr);
-  // TypeOffset is relative to the beginning of the header,
-  // so we have to account for the leading length field.
-  // FIXME: The size of the length field is 12 in DWARF64.
-  unsigned SizeOfLength = 4;
-  return TypeOffset < getLength() + SizeOfLength;
-}
-
 void DWARFTypeUnit::dump(raw_ostream &OS, DIDumpOptions DumpOpts) {
-  DWARFDie TD = getDIEForOffset(TypeOffset + getOffset());
+  DWARFDie TD = getDIEForOffset(getTypeOffset() + getOffset());
   const char *Name = TD.getName(DINameKind::ShortName);
 
   if (DumpOpts.SummarizeTypes) {
     OS << "name = '" << Name << "'"
-       << " type_signature = " << format("0x%016" PRIx64, TypeHash)
-       << " length = " << format("0x%08x", getLength()) << '\n';
+       << " type_signature = " << format("0x%016" PRIx64, getTypeHash())
+       << " length = " << format("0x%08" PRIx64, getLength()) << '\n';
     return;
   }
 
-  OS << format("0x%08x", getOffset()) << ": Type Unit:"
-     << " length = " << format("0x%08x", getLength())
+  OS << format("0x%08" PRIx64, getOffset()) << ": Type Unit:"
+     << " length = " << format("0x%08" PRIx64, getLength())
      << " version = " << format("0x%04x", getVersion());
   if (getVersion() >= 5)
     OS << " unit_type = " << dwarf::UnitTypeString(getUnitType());
-  OS << " abbr_offset = " << format("0x%04x", getAbbreviations()->getOffset())
+  OS << " abbr_offset = "
+     << format("0x%04" PRIx64, getAbbreviations()->getOffset())
      << " addr_size = " << format("0x%02x", getAddressByteSize())
      << " name = '" << Name << "'"
-     << " type_signature = " << format("0x%016" PRIx64, TypeHash)
-     << " type_offset = " << format("0x%04x", TypeOffset)
-     << " (next unit at " << format("0x%08x", getNextUnitOffset()) << ")\n";
+     << " type_signature = " << format("0x%016" PRIx64, getTypeHash())
+     << " type_offset = " << format("0x%04" PRIx64, getTypeOffset())
+     << " (next unit at " << format("0x%08" PRIx64, getNextUnitOffset())
+     << ")\n";
 
   if (DWARFDie TU = getUnitDIE(false))
     TU.dump(OS, 0, DumpOpts);

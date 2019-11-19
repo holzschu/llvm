@@ -1,7 +1,21 @@
 ; RUN: llc -O0 -mtriple=x86_64-apple-darwin -filetype=asm %s -o - | FileCheck %s
+; RUN: llc -O0 -mtriple=x86_64-apple-darwin -filetype=obj %s -o - | llvm-dwarfdump - --name=a | FileCheck --check-prefix=OBJFILE %s
+; REQUIRES: object-emission
+;
 ; Ensure that we generate an indirect location for the variable length array a.
-; CHECK: ##DEBUG_VALUE: vla:a <- [DW_OP_deref] [$rcx+0]
-; CHECK: DW_OP_breg2
+;
+; CHECK: ##DEBUG_VALUE: vla:a <- [DW_OP_deref] {{\$r[a-z]+}}
+; CHECK: DW_OP_breg{{[0-9]}}
+;
+; Ensure there's only one level of indirection in the vla location -- it should
+; be a memory location. Base register can be any allocatable one; variables are
+; filtered by --name arg to llvm-dwarfdump.
+;
+; OBJFILE: DW_TAG_variable
+; OBJFILE: DW_AT_location
+; OBJFILE-NEXT: ): DW_OP_breg{{[0-9]+}} R{{[0-9A-Z]+}}+0)
+; OBJFILE: DW_AT_name ("a")
+;
 ; rdar://problem/13658587
 ;
 ; generated from:
@@ -33,7 +47,7 @@ entry:
   %2 = call i8* @llvm.stacksave(), !dbg !17
   store i8* %2, i8** %saved_stack, !dbg !17
   %vla = alloca i32, i64 %1, align 16, !dbg !17
-  call void @llvm.dbg.declare(metadata i32* %vla, metadata !18, metadata !DIExpression(DW_OP_deref)), !dbg !17
+  call void @llvm.dbg.declare(metadata i32* %vla, metadata !18, metadata !DIExpression()), !dbg !17
   %arrayidx = getelementptr inbounds i32, i32* %vla, i64 0, !dbg !22
   store i32 42, i32* %arrayidx, align 4, !dbg !22
   %3 = load i32, i32* %n.addr, align 4, !dbg !23
@@ -78,12 +92,12 @@ entry:
 !0 = distinct !DICompileUnit(language: DW_LANG_C99, producer: "clang version 3.3 ", isOptimized: false, emissionKind: FullDebug, file: !1, enums: !2, retainedTypes: !2, globals: !2, imports: !2)
 !1 = !DIFile(filename: "vla.c", directory: "")
 !2 = !{}
-!4 = distinct !DISubprogram(name: "vla", line: 1, isLocal: false, isDefinition: true, virtualIndex: 6, flags: DIFlagPrototyped, isOptimized: false, unit: !0, scopeLine: 1, file: !1, scope: !5, type: !6, variables: !2)
+!4 = distinct !DISubprogram(name: "vla", line: 1, isLocal: false, isDefinition: true, virtualIndex: 6, flags: DIFlagPrototyped, isOptimized: false, unit: !0, scopeLine: 1, file: !1, scope: !5, type: !6, retainedNodes: !2)
 !5 = !DIFile(filename: "vla.c", directory: "")
 !6 = !DISubroutineType(types: !7)
 !7 = !{!8, !8}
 !8 = !DIBasicType(tag: DW_TAG_base_type, name: "int", size: 32, align: 32, encoding: DW_ATE_signed)
-!9 = distinct !DISubprogram(name: "main", line: 7, isLocal: false, isDefinition: true, virtualIndex: 6, flags: DIFlagPrototyped, isOptimized: false, unit: !0, scopeLine: 7, file: !1, scope: !5, type: !10, variables: !2)
+!9 = distinct !DISubprogram(name: "main", line: 7, isLocal: false, isDefinition: true, virtualIndex: 6, flags: DIFlagPrototyped, isOptimized: false, unit: !0, scopeLine: 7, file: !1, scope: !5, type: !10, retainedNodes: !2)
 !10 = !DISubroutineType(types: !11)
 !11 = !{!8, !8, !12}
 !12 = !DIDerivedType(tag: DW_TAG_pointer_type, size: 64, align: 64, baseType: !13)

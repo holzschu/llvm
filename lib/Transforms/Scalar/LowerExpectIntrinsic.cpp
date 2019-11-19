@@ -1,9 +1,8 @@
 //===- LowerExpectIntrinsic.cpp - Lower expect intrinsic ------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -27,6 +26,7 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/Utils/MisExpect.h"
 
 using namespace llvm;
 
@@ -72,15 +72,20 @@ static bool handleSwitchExpect(SwitchInst &SI) {
   unsigned n = SI.getNumCases(); // +1 for default case.
   SmallVector<uint32_t, 16> Weights(n + 1, UnlikelyBranchWeight);
 
-  if (Case == *SI.case_default())
-    Weights[0] = LikelyBranchWeight;
-  else
-    Weights[Case.getCaseIndex() + 1] = LikelyBranchWeight;
+  uint64_t Index = (Case == *SI.case_default()) ? 0 : Case.getCaseIndex() + 1;
+  Weights[Index] = LikelyBranchWeight;
+
+  SI.setMetadata(
+      LLVMContext::MD_misexpect,
+      MDBuilder(CI->getContext())
+          .createMisExpect(Index, LikelyBranchWeight, UnlikelyBranchWeight));
+
+  SI.setCondition(ArgValue);
+  misexpect::checkFrontendInstrumentation(SI);
 
   SI.setMetadata(LLVMContext::MD_prof,
                  MDBuilder(CI->getContext()).createBranchWeights(Weights));
 
-  SI.setCondition(ArgValue);
   return true;
 }
 
@@ -156,7 +161,7 @@ static void handlePhiDef(CallInst *Expect) {
     return Result;
   };
 
-  auto *PhiDef = dyn_cast<PHINode>(V);
+  auto *PhiDef = cast<PHINode>(V);
 
   // Get the first dominating conditional branch of the operand
   // i's incoming block.
@@ -281,19 +286,28 @@ template <class BrSelInst> static bool handleBrSelExpect(BrSelInst &BSI) {
 
   MDBuilder MDB(CI->getContext());
   MDNode *Node;
+  MDNode *ExpNode;
 
   if ((ExpectedValue->getZExtValue() == ValueComparedTo) ==
-      (Predicate == CmpInst::ICMP_EQ))
+      (Predicate == CmpInst::ICMP_EQ)) {
     Node = MDB.createBranchWeights(LikelyBranchWeight, UnlikelyBranchWeight);
-  else
+    ExpNode = MDB.createMisExpect(0, LikelyBranchWeight, UnlikelyBranchWeight);
+  } else {
     Node = MDB.createBranchWeights(UnlikelyBranchWeight, LikelyBranchWeight);
+    ExpNode = MDB.createMisExpect(1, LikelyBranchWeight, UnlikelyBranchWeight);
+  }
 
-  BSI.setMetadata(LLVMContext::MD_prof, Node);
+  BSI.setMetadata(LLVMContext::MD_misexpect, ExpNode);
 
   if (CmpI)
     CmpI->setOperand(0, ArgValue);
   else
     BSI.setCondition(ArgValue);
+
+  misexpect::checkFrontendInstrumentation(BSI);
+
+  BSI.setMetadata(LLVMContext::MD_prof, Node);
+
   return true;
 }
 
@@ -357,7 +371,7 @@ PreservedAnalyses LowerExpectIntrinsicPass::run(Function &F,
 }
 
 namespace {
-/// \brief Legacy pass for lowering expect intrinsics out of the IR.
+/// Legacy pass for lowering expect intrinsics out of the IR.
 ///
 /// When this pass is run over a function it uses expect intrinsics which feed
 /// branches and switches to provide branch weight metadata for those

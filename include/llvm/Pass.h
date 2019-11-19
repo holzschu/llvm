@@ -1,9 +1,8 @@
 //===- llvm/Pass.h - Base class for Passes ----------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -307,6 +306,9 @@ protected:
 };
 
 //===----------------------------------------------------------------------===//
+/// Deprecated - do not create new passes as BasicBlockPasses. Use FunctionPass
+/// with a loop over the BasicBlocks instead.
+//
 /// BasicBlockPass class - This class is used to implement most local
 /// optimizations.  Optimizations should subclass this class if they
 /// meet the following constraints:
@@ -339,6 +341,8 @@ public:
   /// do any post processing needed after all passes have run.
   virtual bool doFinalization(Function &);
 
+  void preparePassManager(PMStack &PMS) override;
+
   void assignPassManager(PMStack &PMS, PassManagerType T) override;
 
   ///  Return what kind of Pass Manager can manage this pass.
@@ -353,19 +357,8 @@ protected:
 
 /// If the user specifies the -time-passes argument on an LLVM tool command line
 /// then the value of this boolean will be true, otherwise false.
-/// @brief This is the storage for the -time-passes option.
+/// This is the storage for the -time-passes option.
 extern bool TimePassesIsEnabled;
-
-/// isFunctionInPrintList - returns true if a function should be printed via
-//  debugging options like -print-after-all/-print-before-all.
-//  @brief Tells if the function IR should be printed by PrinterPass.
-extern bool isFunctionInPrintList(StringRef FunctionName);
-
-/// forcePrintModuleIR - returns true if IR printing passes should
-//  be printing module IR (even for local-pass printers e.g. function-pass)
-//  to provide more context, as enabled by debugging option -print-module-scope
-//  @brief Tells if IR printer should be printing module IR
-extern bool forcePrintModuleIR();
 
 } // end namespace llvm
 

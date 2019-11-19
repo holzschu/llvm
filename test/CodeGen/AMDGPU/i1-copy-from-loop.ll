@@ -1,17 +1,25 @@
-; RUN: llc -march=amdgcn -verify-machineinstrs < %s | FileCheck -check-prefix=SI %s
-; RUN: llc -march=amdgcn -mcpu=tonga -verify-machineinstrs < %s | FileCheck -check-prefix=SI %s
+; RUN: llc -mtriple=amdgcn-- -verify-machineinstrs < %s | FileCheck -check-prefix=SI %s
+; RUN: llc -mtriple=amdgcn-- -mcpu=tonga -verify-machineinstrs < %s | FileCheck -check-prefix=SI %s
 
 ; SI-LABEL: {{^}}i1_copy_from_loop:
 ;
-; Cannot use an SGPR mask to copy %cc out of the loop, since the mask would
-; only contain the lanes that were active during the last loop iteration.
-;
+; SI: [[LOOP:BB0_[0-9]+]]:  ; %Flow1
+; SI:   s_or_b64 exec, exec, [[EXIT_MASK:s\[[0-9]+:[0-9]+\]]]
+; SI:   ; %Flow
+; SI:  s_and_b64 [[ACCUM_MASK:s\[[0-9]+:[0-9]+\]]], [[CC_MASK:s\[[0-9]+:[0-9]+\]]], exec
+; SI:  s_or_b64  [[I1_VALUE:s\[[0-9]+:[0-9]+\]]], s[6:7], [[ACCUM_MASK]]
+; SI:  s_cbranch_execz [[FOR_END_LABEL:BB0_[0-9]+]]
+
 ; SI: ; %for.body
-; SI: v_cmp_gt_u32_e64 [[SREG:s\[[0-9]+:[0-9]+\]]], 4,
-; SI: v_cndmask_b32_e64 [[VREG:v[0-9]+]], 0, -1, [[SREG]]
-; SI-NOT: [[VREG]]
-; SI: ; %for.end
-; SI: v_cmp_ne_u32_e32 vcc, 0, [[VREG]]
+; SI:      v_cmp_lt_u32_e64  [[CC_MASK]], s{{[0-9]+}}, 4
+
+; SI: [[FOR_END_LABEL]]
+; SI:      s_or_b64 exec, exec, [[EXIT_MASK]]
+; SI:      s_and_saveexec_b64 {{s\[[0-9]+:[0-9]+\]}}, [[I1_VALUE]]
+; SI:      s_cbranch_execz [[EXIT:BB0_[0-9]+]]
+; SI: [[EXIT]]
+; SI-NEXT: s_endpgm
+
 define amdgpu_ps void @i1_copy_from_loop(<4 x i32> inreg %rsrc, i32 %tid) {
 entry:
   br label %for.body

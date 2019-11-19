@@ -1,9 +1,8 @@
 //===- SjLjEHPrepare.cpp - Eliminate Invoke & Unwind instructions ---------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,7 +15,7 @@
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
-#include "llvm/Analysis/Utils/Local.h"
+#include "llvm/Transforms/Utils/Local.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
@@ -40,15 +39,15 @@ class SjLjEHPrepare : public FunctionPass {
   Type *doubleUnderDataTy;
   Type *doubleUnderJBufTy;
   Type *FunctionContextTy;
-  Constant *RegisterFn;
-  Constant *UnregisterFn;
-  Constant *BuiltinSetupDispatchFn;
-  Constant *FrameAddrFn;
-  Constant *StackAddrFn;
-  Constant *StackRestoreFn;
-  Constant *LSDAAddrFn;
-  Constant *CallSiteFn;
-  Constant *FuncCtxFn;
+  FunctionCallee RegisterFn;
+  FunctionCallee UnregisterFn;
+  Function *BuiltinSetupDispatchFn;
+  Function *FrameAddrFn;
+  Function *StackAddrFn;
+  Function *StackRestoreFn;
+  Function *LSDAAddrFn;
+  Function *CallSiteFn;
+  Function *FuncCtxFn;
   AllocaInst *FuncCtx;
 
 public:
@@ -190,14 +189,16 @@ Value *SjLjEHPrepare::setupFunctionContext(Function &F,
         Builder.CreateConstGEP2_32(FunctionContextTy, FuncCtx, 0, 2, "__data");
 
     // The exception values come back in context->__data[0].
+    Type *Int32Ty = Type::getInt32Ty(F.getContext());
     Value *ExceptionAddr = Builder.CreateConstGEP2_32(doubleUnderDataTy, FCData,
                                                       0, 0, "exception_gep");
-    Value *ExnVal = Builder.CreateLoad(ExceptionAddr, true, "exn_val");
+    Value *ExnVal = Builder.CreateLoad(Int32Ty, ExceptionAddr, true, "exn_val");
     ExnVal = Builder.CreateIntToPtr(ExnVal, Builder.getInt8PtrTy());
 
     Value *SelectorAddr = Builder.CreateConstGEP2_32(doubleUnderDataTy, FCData,
                                                      0, 1, "exn_selector_gep");
-    Value *SelVal = Builder.CreateLoad(SelectorAddr, true, "exn_selector_val");
+    Value *SelVal =
+        Builder.CreateLoad(Int32Ty, SelectorAddr, true, "exn_selector_val");
 
     substituteLPadValues(LPI, ExnVal, SelVal);
   }
@@ -307,8 +308,8 @@ void SjLjEHPrepare::lowerAcrossUnwindEdges(Function &F,
       for (InvokeInst *Invoke : Invokes) {
         BasicBlock *UnwindBlock = Invoke->getUnwindDest();
         if (UnwindBlock != &BB && LiveBBs.count(UnwindBlock)) {
-          DEBUG(dbgs() << "SJLJ Spill: " << Inst << " around "
-                       << UnwindBlock->getName() << "\n");
+          LLVM_DEBUG(dbgs() << "SJLJ Spill: " << Inst << " around "
+                            << UnwindBlock->getName() << "\n");
           NeedsSpill = true;
           break;
         }
@@ -476,7 +477,10 @@ bool SjLjEHPrepare::runOnFunction(Function &F) {
   UnregisterFn = M.getOrInsertFunction(
       "_Unwind_SjLj_Unregister", Type::getVoidTy(M.getContext()),
       PointerType::getUnqual(FunctionContextTy));
-  FrameAddrFn = Intrinsic::getDeclaration(&M, Intrinsic::frameaddress);
+  FrameAddrFn = Intrinsic::getDeclaration(
+      &M, Intrinsic::frameaddress,
+      {Type::getInt8PtrTy(M.getContext(),
+                          M.getDataLayout().getAllocaAddrSpace())});
   StackAddrFn = Intrinsic::getDeclaration(&M, Intrinsic::stacksave);
   StackRestoreFn = Intrinsic::getDeclaration(&M, Intrinsic::stackrestore);
   BuiltinSetupDispatchFn =

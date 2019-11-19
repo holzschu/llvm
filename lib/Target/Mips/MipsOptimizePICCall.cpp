@@ -1,9 +1,8 @@
 //===- MipsOptimizePICCall.cpp - Optimize PIC Calls -----------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -90,10 +89,10 @@ public:
   }
 
 private:
-  /// \brief Visit MBB.
+  /// Visit MBB.
   bool visitNode(MBBInfo &MBBI);
 
-  /// \brief Test if MI jumps to a function via a register.
+  /// Test if MI jumps to a function via a register.
   ///
   /// Also, return the virtual register containing the target function's address
   /// and the underlying object in Reg and Val respectively, if the function's
@@ -101,15 +100,15 @@ private:
   bool isCallViaRegister(MachineInstr &MI, unsigned &Reg,
                          ValueType &Val) const;
 
-  /// \brief Return the number of instructions that dominate the current
+  /// Return the number of instructions that dominate the current
   /// instruction and load the function address from object Entry.
   unsigned getCount(ValueType Entry);
 
-  /// \brief Return the destination virtual register of the last instruction
+  /// Return the destination virtual register of the last instruction
   /// that loads from object Entry.
   unsigned getReg(ValueType Entry);
 
-  /// \brief Update ScopedHT.
+  /// Update ScopedHT.
   void incCntAndSetReg(ValueType Entry, unsigned Reg);
 
   ScopedHTType ScopedHT;
@@ -128,8 +127,7 @@ static MachineOperand *getCallTargetRegOpnd(MachineInstr &MI) {
 
   MachineOperand &MO = MI.getOperand(0);
 
-  if (!MO.isReg() || !MO.isUse() ||
-      !TargetRegisterInfo::isVirtualRegister(MO.getReg()))
+  if (!MO.isReg() || !MO.isUse() || !Register::isVirtualRegister(MO.getReg()))
     return nullptr;
 
   return &MO;
@@ -153,7 +151,7 @@ static void setCallTargetReg(MachineBasicBlock *MBB,
                              MachineBasicBlock::iterator I) {
   MachineFunction &MF = *MBB->getParent();
   const TargetInstrInfo &TII = *MF.getSubtarget().getInstrInfo();
-  unsigned SrcReg = I->getOperand(0).getReg();
+  Register SrcReg = I->getOperand(0).getReg();
   unsigned DstReg = getRegTy(SrcReg, MF) == MVT::i32 ? Mips::T9 : Mips::T9_64;
   BuildMI(*MBB, I, I->getDebugLoc(), TII.get(TargetOpcode::COPY), DstReg)
       .addReg(SrcReg);

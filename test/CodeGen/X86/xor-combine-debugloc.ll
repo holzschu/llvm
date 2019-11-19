@@ -1,4 +1,4 @@
-; RUN: llc -stop-after=expand-isel-pseudos < %s | FileCheck %s
+; RUN: llc -stop-after=finalize-isel < %s | FileCheck %s
 ;
 ; Make sure that when the entry block of IR below is lowered, an instruction
 ; that implictly defines $eflags has a same debug location with the icmp
@@ -10,7 +10,7 @@
 ; CHECK-DAG:  [[VREG1:%[^ ]+]]:gr32 = COPY $esi
 ; CHECK-DAG:  [[VREG2:%[^ ]+]]:gr32 = COPY $edi
 ; CHECK:      SUB32rr [[VREG2]], [[VREG1]], implicit-def $eflags, debug-location [[DLOC1]]
-; CHECK-NEXT: JE_1{{.*}} implicit $eflags, debug-location [[DLOC2]]
+; CHECK-NEXT: JCC_1{{.*}} 4, implicit $eflags, debug-location [[DLOC2]]
 ; CHECK-NEXT: JMP_1{{.*}} debug-location [[DLOC2]]
 
 target triple = "x86_64-unknown-linux-gnu"
@@ -49,7 +49,7 @@ declare void @llvm.dbg.value(metadata, i64, metadata, metadata)
 !1 = !DIFile(filename: "foo.c", directory: "b/")
 !2 = !{i32 2, !"Dwarf Version", i32 4}
 !3 = !{i32 2, !"Debug Info Version", i32 3}
-!4 = distinct !DISubprogram(name: "foo", scope: !1, file: !1, line: 4, type: !5, isLocal: false, isDefinition: true, scopeLine: 4, flags: DIFlagPrototyped, isOptimized: true, unit: !0, variables: !8)
+!4 = distinct !DISubprogram(name: "foo", scope: !1, file: !1, line: 4, type: !5, isLocal: false, isDefinition: true, scopeLine: 4, flags: DIFlagPrototyped, isOptimized: true, unit: !0, retainedNodes: !8)
 !5 = !DISubroutineType(types: !6)
 !6 = !{!7, !7, !7}
 !7 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)

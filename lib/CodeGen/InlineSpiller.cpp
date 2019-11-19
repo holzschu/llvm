@@ -1,9 +1,8 @@
 //===- InlineSpiller.cpp - Insert spills and restores inline --------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -12,7 +11,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "LiveRangeCalc.h"
 #include "Spiller.h"
 #include "SplitKit.h"
 #include "llvm/ADT/ArrayRef.h"
@@ -27,6 +25,7 @@
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/CodeGen/LiveInterval.h"
 #include "llvm/CodeGen/LiveIntervals.h"
+#include "llvm/CodeGen/LiveRangeCalc.h"
 #include "llvm/CodeGen/LiveRangeEdit.h"
 #include "llvm/CodeGen/LiveStacks.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
@@ -46,6 +45,7 @@
 #include "llvm/CodeGen/TargetRegisterInfo.h"
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
 #include "llvm/CodeGen/VirtRegMap.h"
+#include "llvm/Config/llvm-config.h"
 #include "llvm/Support/BlockFrequency.h"
 #include "llvm/Support/BranchProbability.h"
 #include "llvm/Support/CommandLine.h"
@@ -75,6 +75,10 @@ STATISTIC(NumRemats,          "Number of rematerialized defs for spilling");
 
 static cl::opt<bool> DisableHoisting("disable-spill-hoist", cl::Hidden,
                                      cl::desc("Disable inline spill hoisting"));
+static cl::opt<bool>
+RestrictStatepointRemat("restrict-statepoint-remat",
+                       cl::init(false), cl::Hidden,
+                       cl::desc("Restrict remat for statepoint operands"));
 
 namespace {
 
@@ -214,6 +218,7 @@ private:
   void eliminateRedundantSpills(LiveInterval &LI, VNInfo *VNI);
 
   void markValueUsed(LiveInterval*, VNInfo*);
+  bool canGuaranteeAssignmentAfterRemat(unsigned VReg, MachineInstr &MI);
   bool reMaterializeFor(LiveInterval &, MachineInstr &MI);
   void reMaterializeAll();
 
@@ -335,14 +340,13 @@ void InlineSpiller::collectRegsToSpill() {
     if (isRegToSpill(SnipReg))
       continue;
     RegsToSpill.push_back(SnipReg);
-    DEBUG(dbgs() << "\talso spill snippet " << SnipLI << '\n');
+    LLVM_DEBUG(dbgs() << "\talso spill snippet " << SnipLI << '\n');
     ++NumSnippets;
   }
 }
 
 bool InlineSpiller::isSibling(unsigned Reg) {
-  return TargetRegisterInfo::isVirtualRegister(Reg) &&
-           VRM.getOriginal(Reg) == Original;
+  return Register::isVirtualRegister(Reg) && VRM.getOriginal(Reg) == Original;
 }
 
 /// It is beneficial to spill to earlier place in the same BB in case
@@ -372,7 +376,7 @@ bool InlineSpiller::hoistSpillInsideBB(LiveInterval &SpillLI,
   assert(VNI && VNI->def == Idx.getRegSlot() && "Not defined by copy");
 #endif
 
-  unsigned SrcReg = CopyMI.getOperand(1).getReg();
+  Register SrcReg = CopyMI.getOperand(1).getReg();
   LiveInterval &SrcLI = LIS.getInterval(SrcReg);
   VNInfo *SrcVNI = SrcLI.getVNInfoAt(Idx);
   LiveQueryResult SrcQ = SrcLI.Query(Idx);
@@ -387,8 +391,8 @@ bool InlineSpiller::hoistSpillInsideBB(LiveInterval &SpillLI,
   LiveInterval &OrigLI = LIS.getInterval(Original);
   VNInfo *OrigVNI = OrigLI.getVNInfoAt(Idx);
   StackInt->MergeValueInAsValue(OrigLI, OrigVNI, StackInt->getValNumInfo(0));
-  DEBUG(dbgs() << "\tmerged orig valno " << OrigVNI->id << ": "
-               << *StackInt << '\n');
+  LLVM_DEBUG(dbgs() << "\tmerged orig valno " << OrigVNI->id << ": "
+                    << *StackInt << '\n');
 
   // We are going to spill SrcVNI immediately after its def, so clear out
   // any later spills of the same value.
@@ -409,7 +413,7 @@ bool InlineSpiller::hoistSpillInsideBB(LiveInterval &SpillLI,
                           MRI.getRegClass(SrcReg), &TRI);
   --MII; // Point to store instruction.
   LIS.InsertMachineInstrInMaps(*MII);
-  DEBUG(dbgs() << "\thoisted: " << SrcVNI->def << '\t' << *MII);
+  LLVM_DEBUG(dbgs() << "\thoisted: " << SrcVNI->def << '\t' << *MII);
 
   HSpiller.addToMergeableSpills(*MII, StackSlot, Original);
   ++NumSpills;
@@ -428,8 +432,8 @@ void InlineSpiller::eliminateRedundantSpills(LiveInterval &SLI, VNInfo *VNI) {
     LiveInterval *LI;
     std::tie(LI, VNI) = WorkList.pop_back_val();
     unsigned Reg = LI->reg;
-    DEBUG(dbgs() << "Checking redundant spills for "
-                 << VNI->id << '@' << VNI->def << " in " << *LI << '\n');
+    LLVM_DEBUG(dbgs() << "Checking redundant spills for " << VNI->id << '@'
+                      << VNI->def << " in " << *LI << '\n');
 
     // Regs to spill are taken care of.
     if (isRegToSpill(Reg))
@@ -437,7 +441,7 @@ void InlineSpiller::eliminateRedundantSpills(LiveInterval &SLI, VNInfo *VNI) {
 
     // Add all of VNI's live range to StackInt.
     StackInt->MergeValueInAsValue(*LI, VNI, StackInt->getValNumInfo(0));
-    DEBUG(dbgs() << "Merged to stack int: " << *StackInt << '\n');
+    LLVM_DEBUG(dbgs() << "Merged to stack int: " << *StackInt << '\n');
 
     // Find all spills and copies of VNI.
     for (MachineRegisterInfo::use_instr_nodbg_iterator
@@ -465,7 +469,7 @@ void InlineSpiller::eliminateRedundantSpills(LiveInterval &SLI, VNInfo *VNI) {
       // Erase spills.
       int FI;
       if (Reg == TII.isStoreToStackSlot(MI, FI) && FI == StackSlot) {
-        DEBUG(dbgs() << "Redundant spill " << Idx << '\t' << MI);
+        LLVM_DEBUG(dbgs() << "Redundant spill " << Idx << '\t' << MI);
         // eliminateDeadDefs won't normally remove stores, so switch opcode.
         MI.setDesc(TII.get(TargetOpcode::KILL));
         DeadDefs.push_back(&MI);
@@ -513,6 +517,28 @@ void InlineSpiller::markValueUsed(LiveInterval *LI, VNInfo *VNI) {
   } while (!WorkList.empty());
 }
 
+bool InlineSpiller::canGuaranteeAssignmentAfterRemat(unsigned VReg,
+                                                     MachineInstr &MI) {
+  if (!RestrictStatepointRemat)
+    return true;
+  // Here's a quick explanation of the problem we're trying to handle here:
+  // * There are some pseudo instructions with more vreg uses than there are
+  //   physical registers on the machine.
+  // * This is normally handled by spilling the vreg, and folding the reload
+  //   into the user instruction.  (Thus decreasing the number of used vregs
+  //   until the remainder can be assigned to physregs.)
+  // * However, since we may try to spill vregs in any order, we can end up
+  //   trying to spill each operand to the instruction, and then rematting it
+  //   instead.  When that happens, the new live intervals (for the remats) are
+  //   expected to be trivially assignable (i.e. RS_Done).  However, since we
+  //   may have more remats than physregs, we're guaranteed to fail to assign
+  //   one.
+  // At the moment, we only handle this for STATEPOINTs since they're the only
+  // psuedo op where we've seen this.  If we start seeing other instructions
+  // with the same problem, we need to revisit this.
+  return (MI.getOpcode() != TargetOpcode::STATEPOINT);
+}
+
 /// reMaterializeFor - Attempt to rematerialize before MI instead of reloading.
 bool InlineSpiller::reMaterializeFor(LiveInterval &VirtReg, MachineInstr &MI) {
   // Analyze instruction
@@ -527,13 +553,13 @@ bool InlineSpiller::reMaterializeFor(LiveInterval &VirtReg, MachineInstr &MI) {
   VNInfo *ParentVNI = VirtReg.getVNInfoAt(UseIdx.getBaseIndex());
 
   if (!ParentVNI) {
-    DEBUG(dbgs() << "\tadding <undef> flags: ");
+    LLVM_DEBUG(dbgs() << "\tadding <undef> flags: ");
     for (unsigned i = 0, e = MI.getNumOperands(); i != e; ++i) {
       MachineOperand &MO = MI.getOperand(i);
       if (MO.isReg() && MO.isUse() && MO.getReg() == VirtReg.reg)
         MO.setIsUndef();
     }
-    DEBUG(dbgs() << UseIdx << '\t' << MI);
+    LLVM_DEBUG(dbgs() << UseIdx << '\t' << MI);
     return true;
   }
 
@@ -547,7 +573,7 @@ bool InlineSpiller::reMaterializeFor(LiveInterval &VirtReg, MachineInstr &MI) {
 
   if (!Edit->canRematerializeAt(RM, OrigVNI, UseIdx, false)) {
     markValueUsed(&VirtReg, ParentVNI);
-    DEBUG(dbgs() << "\tcannot remat for " << UseIdx << '\t' << MI);
+    LLVM_DEBUG(dbgs() << "\tcannot remat for " << UseIdx << '\t' << MI);
     return false;
   }
 
@@ -555,7 +581,7 @@ bool InlineSpiller::reMaterializeFor(LiveInterval &VirtReg, MachineInstr &MI) {
   // same register for uses and defs.
   if (RI.Tied) {
     markValueUsed(&VirtReg, ParentVNI);
-    DEBUG(dbgs() << "\tcannot remat tied reg: " << UseIdx << '\t' << MI);
+    LLVM_DEBUG(dbgs() << "\tcannot remat tied reg: " << UseIdx << '\t' << MI);
     return false;
   }
 
@@ -566,6 +592,14 @@ bool InlineSpiller::reMaterializeFor(LiveInterval &VirtReg, MachineInstr &MI) {
     Edit->markRematerialized(RM.ParentVNI);
     ++NumFoldedLoads;
     return true;
+  }
+
+  // If we can't guarantee that we'll be able to actually assign the new vreg,
+  // we can't remat.
+  if (!canGuaranteeAssignmentAfterRemat(VirtReg.reg, MI)) {
+    markValueUsed(&VirtReg, ParentVNI);
+    LLVM_DEBUG(dbgs() << "\tcannot remat for " << UseIdx << '\t' << MI);
+    return false;
   }
 
   // Allocate a new register for the remat.
@@ -581,8 +615,8 @@ bool InlineSpiller::reMaterializeFor(LiveInterval &VirtReg, MachineInstr &MI) {
   NewMI->setDebugLoc(MI.getDebugLoc());
 
   (void)DefIdx;
-  DEBUG(dbgs() << "\tremat:  " << DefIdx << '\t'
-               << *LIS.getInstructionFromIndex(DefIdx));
+  LLVM_DEBUG(dbgs() << "\tremat:  " << DefIdx << '\t'
+                    << *LIS.getInstructionFromIndex(DefIdx));
 
   // Replace operands
   for (const auto &OpPair : Ops) {
@@ -592,7 +626,7 @@ bool InlineSpiller::reMaterializeFor(LiveInterval &VirtReg, MachineInstr &MI) {
       MO.setIsKill();
     }
   }
-  DEBUG(dbgs() << "\t        " << UseIdx << '\t' << MI << '\n');
+  LLVM_DEBUG(dbgs() << "\t        " << UseIdx << '\t' << MI << '\n');
 
   ++NumRemats;
   return true;
@@ -619,6 +653,9 @@ void InlineSpiller::reMaterializeAll() {
       if (MI.isDebugValue())
         continue;
 
+      assert(!MI.isDebugInstr() && "Did not expect to find a use in debug "
+             "instruction that isn't a DBG_VALUE");
+
       anyRemat |= reMaterializeFor(LI, MI);
     }
   }
@@ -637,7 +674,7 @@ void InlineSpiller::reMaterializeAll() {
       MI->addRegisterDead(Reg, &TRI);
       if (!MI->allDefsAreDead())
         continue;
-      DEBUG(dbgs() << "All defs dead: " << *MI);
+      LLVM_DEBUG(dbgs() << "All defs dead: " << *MI);
       DeadDefs.push_back(MI);
     }
   }
@@ -646,7 +683,7 @@ void InlineSpiller::reMaterializeAll() {
   // deleted here.
   if (DeadDefs.empty())
     return;
-  DEBUG(dbgs() << "Remat created " << DeadDefs.size() << " dead defs.\n");
+  LLVM_DEBUG(dbgs() << "Remat created " << DeadDefs.size() << " dead defs.\n");
   Edit->eliminateDeadDefs(DeadDefs, RegsToSpill, AA);
 
   // LiveRangeEdit::eliminateDeadDef is used to remove dead define instructions
@@ -669,7 +706,8 @@ void InlineSpiller::reMaterializeAll() {
     RegsToSpill[ResultPos++] = Reg;
   }
   RegsToSpill.erase(RegsToSpill.begin() + ResultPos, RegsToSpill.end());
-  DEBUG(dbgs() << RegsToSpill.size() << " registers to spill after remat.\n");
+  LLVM_DEBUG(dbgs() << RegsToSpill.size()
+                    << " registers to spill after remat.\n");
 }
 
 //===----------------------------------------------------------------------===//
@@ -691,7 +729,7 @@ bool InlineSpiller::coalesceStackAccess(MachineInstr *MI, unsigned Reg) {
   if (!IsLoad)
     HSpiller.rmFromMergeableSpills(*MI, StackSlot);
 
-  DEBUG(dbgs() << "Coalescing stack access: " << *MI);
+  LLVM_DEBUG(dbgs() << "Coalescing stack access: " << *MI);
   LIS.RemoveMachineInstrFromMaps(*MI);
   MI->eraseFromParent();
 
@@ -794,11 +832,11 @@ foldMemoryOperand(ArrayRef<std::pair<MachineInstr *, unsigned>> Ops,
   if (FoldOps.empty())
     return false;
 
-  MachineInstrSpan MIS(MI);
+  MachineInstrSpan MIS(MI, MI->getParent());
 
   MachineInstr *FoldMI =
       LoadMI ? TII.foldMemoryOperand(*MI, FoldOps, *LoadMI, &LIS)
-             : TII.foldMemoryOperand(*MI, FoldOps, StackSlot, &LIS);
+             : TII.foldMemoryOperand(*MI, FoldOps, StackSlot, &LIS, &VRM);
   if (!FoldMI)
     return false;
 
@@ -806,9 +844,8 @@ foldMemoryOperand(ArrayRef<std::pair<MachineInstr *, unsigned>> Ops,
   for (MIBundleOperands MO(*MI); MO.isValid(); ++MO) {
     if (!MO->isReg())
       continue;
-    unsigned Reg = MO->getReg();
-    if (!Reg || TargetRegisterInfo::isVirtualRegister(Reg) ||
-        MRI.isReserved(Reg)) {
+    Register Reg = MO->getReg();
+    if (!Reg || Register::isVirtualRegister(Reg) || MRI.isReserved(Reg)) {
       continue;
     }
     // Skip non-Defs, including undef uses and internal reads.
@@ -829,6 +866,8 @@ foldMemoryOperand(ArrayRef<std::pair<MachineInstr *, unsigned>> Ops,
       HSpiller.rmFromMergeableSpills(*MI, FI))
     --NumSpills;
   LIS.ReplaceMachineInstrInMaps(*MI, *FoldMI);
+  if (MI->isCall())
+    MI->getMF()->moveCallSiteInfo(MI, FoldMI);
   MI->eraseFromParent();
 
   // Insert any new instructions other than FoldMI into the LIS maps.
@@ -848,8 +887,8 @@ foldMemoryOperand(ArrayRef<std::pair<MachineInstr *, unsigned>> Ops,
         FoldMI->RemoveOperand(i - 1);
     }
 
-  DEBUG(dumpMachineInstrRangeWithSlotIndex(MIS.begin(), MIS.end(), LIS,
-                                           "folded"));
+  LLVM_DEBUG(dumpMachineInstrRangeWithSlotIndex(MIS.begin(), MIS.end(), LIS,
+                                                "folded"));
 
   if (!WasCopy)
     ++NumFolded;
@@ -866,14 +905,14 @@ void InlineSpiller::insertReload(unsigned NewVReg,
                                  MachineBasicBlock::iterator MI) {
   MachineBasicBlock &MBB = *MI->getParent();
 
-  MachineInstrSpan MIS(MI);
+  MachineInstrSpan MIS(MI, &MBB);
   TII.loadRegFromStackSlot(MBB, MI, NewVReg, StackSlot,
                            MRI.getRegClass(NewVReg), &TRI);
 
   LIS.InsertMachineInstrRangeInMaps(MIS.begin(), MI);
 
-  DEBUG(dumpMachineInstrRangeWithSlotIndex(MIS.begin(), MI, LIS, "reload",
-                                           NewVReg));
+  LLVM_DEBUG(dumpMachineInstrRangeWithSlotIndex(MIS.begin(), MI, LIS, "reload",
+                                                NewVReg));
   ++NumReloads;
 }
 
@@ -896,7 +935,7 @@ void InlineSpiller::insertSpill(unsigned NewVReg, bool isKill,
                                  MachineBasicBlock::iterator MI) {
   MachineBasicBlock &MBB = *MI->getParent();
 
-  MachineInstrSpan MIS(MI);
+  MachineInstrSpan MIS(MI, &MBB);
   bool IsRealSpill = true;
   if (isFullUndefDef(*MI)) {
     // Don't spill undef value.
@@ -912,8 +951,8 @@ void InlineSpiller::insertSpill(unsigned NewVReg, bool isKill,
 
   LIS.InsertMachineInstrRangeInMaps(std::next(MI), MIS.end());
 
-  DEBUG(dumpMachineInstrRangeWithSlotIndex(std::next(MI), MIS.end(), LIS,
-                                           "spill"));
+  LLVM_DEBUG(dumpMachineInstrRangeWithSlotIndex(std::next(MI), MIS.end(), LIS,
+                                                "spill"));
   ++NumSpills;
   if (IsRealSpill)
     HSpiller.addToMergeableSpills(*std::next(MI), StackSlot, Original);
@@ -921,7 +960,7 @@ void InlineSpiller::insertSpill(unsigned NewVReg, bool isKill,
 
 /// spillAroundUses - insert spill code around each use of Reg.
 void InlineSpiller::spillAroundUses(unsigned Reg) {
-  DEBUG(dbgs() << "spillAroundUses " << printReg(Reg) << '\n');
+  LLVM_DEBUG(dbgs() << "spillAroundUses " << printReg(Reg) << '\n');
   LiveInterval &OldLI = LIS.getInterval(Reg);
 
   // Iterate over instructions using Reg.
@@ -934,11 +973,14 @@ void InlineSpiller::spillAroundUses(unsigned Reg) {
     if (MI->isDebugValue()) {
       // Modify DBG_VALUE now that the value is in a spill slot.
       MachineBasicBlock *MBB = MI->getParent();
-      DEBUG(dbgs() << "Modifying debug info due to spill:\t" << *MI);
+      LLVM_DEBUG(dbgs() << "Modifying debug info due to spill:\t" << *MI);
       buildDbgValueForSpill(*MBB, MI, *MI, StackSlot);
       MBB->erase(MI);
       continue;
     }
+
+    assert(!MI->isDebugInstr() && "Did not expect to find a use in debug "
+           "instruction that isn't a DBG_VALUE");
 
     // Ignore copies to/from snippets. We'll delete them.
     if (SnippetCopies.count(MI))
@@ -965,7 +1007,7 @@ void InlineSpiller::spillAroundUses(unsigned Reg) {
     if (SibReg && isSibling(SibReg)) {
       // This may actually be a copy between snippets.
       if (isRegToSpill(SibReg)) {
-        DEBUG(dbgs() << "Found new snippet copy: " << *MI);
+        LLVM_DEBUG(dbgs() << "Found new snippet copy: " << *MI);
         SnippetCopies.insert(MI);
         continue;
       }
@@ -1008,7 +1050,7 @@ void InlineSpiller::spillAroundUses(unsigned Reg) {
           hasLiveDef = true;
       }
     }
-    DEBUG(dbgs() << "\trewrite: " << Idx << '\t' << *MI << '\n');
+    LLVM_DEBUG(dbgs() << "\trewrite: " << Idx << '\t' << *MI << '\n');
 
     // FIXME: Use a second vreg if instruction has no tied ops.
     if (RI.Writes)
@@ -1034,7 +1076,7 @@ void InlineSpiller::spillAll() {
   for (unsigned Reg : RegsToSpill)
     StackInt->MergeSegmentsInAsValue(LIS.getInterval(Reg),
                                      StackInt->getValNumInfo(0));
-  DEBUG(dbgs() << "Merged spilled regs: " << *StackInt << '\n');
+  LLVM_DEBUG(dbgs() << "Merged spilled regs: " << *StackInt << '\n');
 
   // Spill around uses of all RegsToSpill.
   for (unsigned Reg : RegsToSpill)
@@ -1042,7 +1084,7 @@ void InlineSpiller::spillAll() {
 
   // Hoisted spills may cause dead code.
   if (!DeadDefs.empty()) {
-    DEBUG(dbgs() << "Eliminating " << DeadDefs.size() << " dead defs\n");
+    LLVM_DEBUG(dbgs() << "Eliminating " << DeadDefs.size() << " dead defs\n");
     Edit->eliminateDeadDefs(DeadDefs, RegsToSpill, AA);
   }
 
@@ -1067,17 +1109,17 @@ void InlineSpiller::spillAll() {
 void InlineSpiller::spill(LiveRangeEdit &edit) {
   ++NumSpilledRanges;
   Edit = &edit;
-  assert(!TargetRegisterInfo::isStackSlot(edit.getReg())
-         && "Trying to spill a stack slot.");
+  assert(!Register::isStackSlot(edit.getReg()) &&
+         "Trying to spill a stack slot.");
   // Share a stack slot among all descendants of Original.
   Original = VRM.getOriginal(edit.getReg());
   StackSlot = VRM.getStackSlot(Original);
   StackInt = nullptr;
 
-  DEBUG(dbgs() << "Inline spilling "
-               << TRI.getRegClassName(MRI.getRegClass(edit.getReg()))
-               << ':' << edit.getParent()
-               << "\nFrom original " << printReg(Original) << '\n');
+  LLVM_DEBUG(dbgs() << "Inline spilling "
+                    << TRI.getRegClassName(MRI.getRegClass(edit.getReg()))
+                    << ':' << edit.getParent() << "\nFrom original "
+                    << printReg(Original) << '\n');
   assert(edit.getParent().isSpillable() &&
          "Attempting to spill already spilled value.");
   assert(DeadDefs.empty() && "Previous spill didn't remove dead defs");
@@ -1103,7 +1145,7 @@ void HoistSpillHelper::addToMergeableSpills(MachineInstr &Spill, int StackSlot,
   // save a copy of LiveInterval in StackSlotToOrigLI because the original
   // LiveInterval may be cleared after all its references are spilled.
   if (StackSlotToOrigLI.find(StackSlot) == StackSlotToOrigLI.end()) {
-    auto LI = llvm::make_unique<LiveInterval>(OrigLI.reg, OrigLI.weight);
+    auto LI = std::make_unique<LiveInterval>(OrigLI.reg, OrigLI.weight);
     LI->assign(OrigLI, Allocator);
     StackSlotToOrigLI[StackSlot] = std::move(LI);
   }
@@ -1261,11 +1303,11 @@ void HoistSpillHelper::getVisitOrders(
          "Orders have different size with WorkSet");
 
 #ifndef NDEBUG
-  DEBUG(dbgs() << "Orders size is " << Orders.size() << "\n");
+  LLVM_DEBUG(dbgs() << "Orders size is " << Orders.size() << "\n");
   SmallVector<MachineDomTreeNode *, 32>::reverse_iterator RIt = Orders.rbegin();
   for (; RIt != Orders.rend(); RIt++)
-    DEBUG(dbgs() << "BB" << (*RIt)->getBlock()->getNumber() << ",");
-  DEBUG(dbgs() << "\n");
+    LLVM_DEBUG(dbgs() << "BB" << (*RIt)->getBlock()->getNumber() << ",");
+  LLVM_DEBUG(dbgs() << "\n");
 #endif
 }
 
@@ -1374,7 +1416,7 @@ void HoistSpillHelper::runHoistSpills(
       // Current Block is the BB containing the new hoisted spill. Add it to
       // SpillsToKeep. LiveReg is the source of the new spill.
       SpillsToKeep[*RIt] = LiveReg;
-      DEBUG({
+      LLVM_DEBUG({
         dbgs() << "spills in BB: ";
         for (const auto Rspill : SpillsInSubTree)
           dbgs() << Rspill->getBlock()->getNumber() << " ";
@@ -1415,7 +1457,7 @@ void HoistSpillHelper::hoistAllSpills() {
   LiveRangeEdit Edit(nullptr, NewVRegs, MF, LIS, &VRM, this);
 
   for (unsigned i = 0, e = MRI.getNumVirtRegs(); i != e; ++i) {
-    unsigned Reg = TargetRegisterInfo::index2VirtReg(i);
+    unsigned Reg = Register::index2VirtReg(i);
     unsigned Original = VRM.getPreSplitReg(Reg);
     if (!MRI.def_empty(Reg))
       Virt2SiblingsMap[Original].insert(Reg);
@@ -1430,7 +1472,7 @@ void HoistSpillHelper::hoistAllSpills() {
     if (Ent.second.empty())
       continue;
 
-    DEBUG({
+    LLVM_DEBUG({
       dbgs() << "\nFor Slot" << Slot << " and VN" << OrigVNI->id << ":\n"
              << "Equal spills in BB: ";
       for (const auto spill : EqValSpills)
@@ -1445,7 +1487,7 @@ void HoistSpillHelper::hoistAllSpills() {
 
     runHoistSpills(OrigLI, *OrigVNI, EqValSpills, SpillsToRm, SpillsToIns);
 
-    DEBUG({
+    LLVM_DEBUG({
       dbgs() << "Finally inserted spills in BB: ";
       for (const auto Ispill : SpillsToIns)
         dbgs() << Ispill.first->getNumber() << " ";

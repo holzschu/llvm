@@ -1,9 +1,8 @@
 //===- ObjCARC.h - ObjC ARC Optimization --------------*- C++ -*-----------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 /// \file
@@ -28,7 +27,7 @@
 #include "llvm/Analysis/ObjCARCAnalysisUtils.h"
 #include "llvm/Analysis/ObjCARCInstKind.h"
 #include "llvm/Analysis/Passes.h"
-#include "llvm/Analysis/Utils/Local.h"
+#include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/CallSite.h"
 #include "llvm/IR/InstIterator.h"
@@ -43,7 +42,7 @@ class raw_ostream;
 namespace llvm {
 namespace objcarc {
 
-/// \brief Erase the given instruction.
+/// Erase the given instruction.
 ///
 /// Many ObjC calls return their argument verbatim,
 /// so if it's such a call and the return value has users, replace them with the
@@ -58,7 +57,7 @@ static inline void EraseInstruction(Instruction *CI) {
     // Replace the return value with the argument.
     assert((IsForwarding(GetBasicARCInstKind(CI)) ||
             (IsNoopOnNull(GetBasicARCInstKind(CI)) &&
-             isa<ConstantPointerNull>(OldArg))) &&
+             IsNullOrUndef(OldArg->stripPointerCasts()))) &&
            "Can't delete non-forwarding instruction with users!");
     CI->replaceAllUsesWith(OldArg);
   }

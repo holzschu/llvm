@@ -1,9 +1,8 @@
 //===- Metadata.cpp - Implement Metadata classes --------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -237,7 +236,7 @@ void ReplaceableMetadataImpl::replaceAllUsesWith(Metadata *MD) {
   // Copy out uses since UseMap will get touched below.
   using UseTy = std::pair<void *, std::pair<OwnerTy, uint64_t>>;
   SmallVector<UseTy, 8> Uses(UseMap.begin(), UseMap.end());
-  llvm::sort(Uses.begin(), Uses.end(), [](const UseTy &L, const UseTy &R) {
+  llvm::sort(Uses, [](const UseTy &L, const UseTy &R) {
     return L.second.second < R.second.second;
   });
   for (const auto &Pair : Uses) {
@@ -290,7 +289,7 @@ void ReplaceableMetadataImpl::resolveAllUses(bool ResolveUsers) {
   // Copy out uses since UseMap could get touched below.
   using UseTy = std::pair<void *, std::pair<OwnerTy, uint64_t>>;
   SmallVector<UseTy, 8> Uses(UseMap.begin(), UseMap.end());
-  llvm::sort(Uses.begin(), Uses.end(), [](const UseTy &L, const UseTy &R) {
+  llvm::sort(Uses, [](const UseTy &L, const UseTy &R) {
     return L.second.second < R.second.second;
   });
   UseMap.clear();
@@ -1110,14 +1109,14 @@ void MDAttachmentMap::set(unsigned ID, MDNode &MD) {
                            std::make_tuple(&MD));
 }
 
-void MDAttachmentMap::erase(unsigned ID) {
+bool MDAttachmentMap::erase(unsigned ID) {
   if (empty())
-    return;
+    return false;
 
   // Common case is one/last value.
   if (Attachments.back().first == ID) {
     Attachments.pop_back();
-    return;
+    return true;
   }
 
   for (auto I = Attachments.begin(), E = std::prev(Attachments.end()); I != E;
@@ -1125,8 +1124,10 @@ void MDAttachmentMap::erase(unsigned ID) {
     if (I->first == ID) {
       *I = std::move(Attachments.back());
       Attachments.pop_back();
-      return;
+      return true;
     }
+
+  return false;
 }
 
 MDNode *MDAttachmentMap::lookup(unsigned ID) const {
@@ -1149,37 +1150,36 @@ void MDGlobalAttachmentMap::insert(unsigned ID, MDNode &MD) {
   Attachments.push_back({ID, TrackingMDNodeRef(&MD)});
 }
 
+MDNode *MDGlobalAttachmentMap::lookup(unsigned ID) const {
+  for (const auto &A : Attachments)
+    if (A.MDKind == ID)
+      return A.Node;
+  return nullptr;
+}
+
 void MDGlobalAttachmentMap::get(unsigned ID,
-                                SmallVectorImpl<MDNode *> &Result) {
-  for (auto A : Attachments)
+                                SmallVectorImpl<MDNode *> &Result) const {
+  for (const auto &A : Attachments)
     if (A.MDKind == ID)
       Result.push_back(A.Node);
 }
 
-void MDGlobalAttachmentMap::erase(unsigned ID) {
-  auto Follower = Attachments.begin();
-  for (auto Leader = Attachments.begin(), E = Attachments.end(); Leader != E;
-       ++Leader) {
-    if (Leader->MDKind != ID) {
-      if (Follower != Leader)
-        *Follower = std::move(*Leader);
-      ++Follower;
-    }
-  }
-  Attachments.resize(Follower - Attachments.begin());
+bool MDGlobalAttachmentMap::erase(unsigned ID) {
+  auto I = std::remove_if(Attachments.begin(), Attachments.end(),
+                          [ID](const Attachment &A) { return A.MDKind == ID; });
+  bool Changed = I != Attachments.end();
+  Attachments.erase(I, Attachments.end());
+  return Changed;
 }
 
 void MDGlobalAttachmentMap::getAll(
     SmallVectorImpl<std::pair<unsigned, MDNode *>> &Result) const {
-  for (auto &A : Attachments)
+  for (const auto &A : Attachments)
     Result.emplace_back(A.MDKind, A.Node);
 
   // Sort the resulting array so it is stable with respect to metadata IDs. We
   // need to preserve the original insertion order though.
-  std::stable_sort(
-      Result.begin(), Result.end(),
-      [](const std::pair<unsigned, MDNode *> &A,
-         const std::pair<unsigned, MDNode *> &B) { return A.first < B.first; });
+  llvm::stable_sort(Result, less_first());
 }
 
 void Instruction::setMetadata(StringRef Kind, MDNode *Node) {
@@ -1398,15 +1398,16 @@ void GlobalObject::addMetadata(StringRef Kind, MDNode &MD) {
   addMetadata(getContext().getMDKindID(Kind), MD);
 }
 
-void GlobalObject::eraseMetadata(unsigned KindID) {
+bool GlobalObject::eraseMetadata(unsigned KindID) {
   // Nothing to unset.
   if (!hasMetadata())
-    return;
+    return false;
 
   auto &Store = getContext().pImpl->GlobalObjectMetadata[this];
-  Store.erase(KindID);
+  bool Changed = Store.erase(KindID);
   if (Store.empty())
     clearMetadata();
+  return Changed;
 }
 
 void GlobalObject::getAllMetadata(
@@ -1437,11 +1438,9 @@ void GlobalObject::setMetadata(StringRef Kind, MDNode *N) {
 }
 
 MDNode *GlobalObject::getMetadata(unsigned KindID) const {
-  SmallVector<MDNode *, 1> MDs;
-  getMetadata(KindID, MDs);
-  if (MDs.empty())
-    return nullptr;
-  return MDs[0];
+  if (hasMetadata())
+    return getContext().pImpl->GlobalObjectMetadata[this].lookup(KindID);
+  return nullptr;
 }
 
 MDNode *GlobalObject::getMetadata(StringRef Kind) const {
@@ -1481,7 +1480,7 @@ void GlobalObject::copyMetadata(const GlobalObject *Other, unsigned Offset) {
       std::vector<uint64_t> Elements(OrigElements.size() + 2);
       Elements[0] = dwarf::DW_OP_plus_uconst;
       Elements[1] = Offset;
-      std::copy(OrigElements.begin(), OrigElements.end(), Elements.begin() + 2);
+      llvm::copy(OrigElements, Elements.begin() + 2);
       E = DIExpression::get(getContext(), Elements);
       Attachment = DIGlobalVariableExpression::get(getContext(), GV, E);
     }
@@ -1496,6 +1495,24 @@ void GlobalObject::addTypeMetadata(unsigned Offset, Metadata *TypeID) {
                     {ConstantAsMetadata::get(ConstantInt::get(
                          Type::getInt64Ty(getContext()), Offset)),
                      TypeID}));
+}
+
+void GlobalObject::addVCallVisibilityMetadata(VCallVisibility Visibility) {
+  addMetadata(LLVMContext::MD_vcall_visibility,
+              *MDNode::get(getContext(),
+                           {ConstantAsMetadata::get(ConstantInt::get(
+                               Type::getInt64Ty(getContext()), Visibility))}));
+}
+
+GlobalObject::VCallVisibility GlobalObject::getVCallVisibility() const {
+  if (MDNode *MD = getMetadata(LLVMContext::MD_vcall_visibility)) {
+    uint64_t Val = cast<ConstantInt>(
+                       cast<ConstantAsMetadata>(MD->getOperand(0))->getValue())
+                       ->getZExtValue();
+    assert(Val <= 2 && "unknown vcall visibility!");
+    return (VCallVisibility)Val;
+  }
+  return VCallVisibility::VCallVisibilityPublic;
 }
 
 void Function::setSubprogram(DISubprogram *SP) {

@@ -1,9 +1,8 @@
 //===-- RISCVInstrInfo.h - RISCV Instruction Information --------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -22,10 +21,12 @@
 
 namespace llvm {
 
+class RISCVSubtarget;
+
 class RISCVInstrInfo : public RISCVGenInstrInfo {
 
 public:
-  RISCVInstrInfo();
+  explicit RISCVInstrInfo(RISCVSubtarget &STI);
 
   unsigned isLoadFromStackSlot(const MachineInstr &MI,
                                int &FrameIndex) const override;
@@ -47,10 +48,10 @@ public:
                             int FrameIndex, const TargetRegisterClass *RC,
                             const TargetRegisterInfo *TRI) const override;
 
-  // Materializes the given int32 Val into DstReg.
-  void movImm32(MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI,
-                const DebugLoc &DL, unsigned DstReg, uint64_t Val,
-                MachineInstr::MIFlag Flag = MachineInstr::NoFlags) const;
+  // Materializes the given integer Val into DstReg.
+  void movImm(MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI,
+              const DebugLoc &DL, Register DstReg, uint64_t Val,
+              MachineInstr::MIFlag Flag = MachineInstr::NoFlags) const;
 
   unsigned getInstSizeInBytes(const MachineInstr &MI) const override;
 
@@ -79,6 +80,14 @@ public:
 
   bool isBranchOffsetInRange(unsigned BranchOpc,
                              int64_t BrOffset) const override;
+
+  bool isAsCheapAsAMove(const MachineInstr &MI) const override;
+
+  bool verifyInstruction(const MachineInstr &MI,
+                         StringRef &ErrInfo) const override;
+
+protected:
+  const RISCVSubtarget &STI;
 };
 }
 #endif

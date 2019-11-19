@@ -1,9 +1,8 @@
 //===-lto.cpp - LLVM Link Time Optimizer ----------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -19,6 +18,7 @@
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/DiagnosticPrinter.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/LTO/LTO.h"
 #include "llvm/LTO/legacy/LTOCodeGenerator.h"
 #include "llvm/LTO/legacy/LTOModule.h"
 #include "llvm/LTO/legacy/ThinLTOCodeGenerator.h"
@@ -96,7 +96,7 @@ struct LTOToolDiagnosticHandler : public DiagnosticHandler {
 // Initialize the configured targets if they have not been initialized.
 static void lto_initialize() {
   if (!initialized) {
-#ifdef LLVM_ON_WIN32
+#ifdef _WIN32
     // Dialog box on crash disabling doesn't work across DLL boundaries, so do
     // it here.
     llvm::sys::DisableSystemDialogsOnCrash();
@@ -112,7 +112,7 @@ static void lto_initialize() {
     static LLVMContext Context;
     LTOContext = &Context;
     LTOContext->setDiagnosticHandler(
-        llvm::make_unique<LTOToolDiagnosticHandler>(), true);
+        std::make_unique<LTOToolDiagnosticHandler>(), true);
     initialized = true;
   }
 }
@@ -277,8 +277,8 @@ lto_module_t lto_module_create_in_local_context(const void *mem, size_t length,
   llvm::TargetOptions Options = InitTargetOptionsFromCodeGenFlags();
 
   // Create a local context. Ownership will be transferred to LTOModule.
-  std::unique_ptr<LLVMContext> Context = llvm::make_unique<LLVMContext>();
-  Context->setDiagnosticHandler(llvm::make_unique<LTOToolDiagnosticHandler>(),
+  std::unique_ptr<LLVMContext> Context = std::make_unique<LLVMContext>();
+  Context->setDiagnosticHandler(std::make_unique<LTOToolDiagnosticHandler>(),
                                 true);
 
   ErrorOr<std::unique_ptr<LTOModule>> M = LTOModule::createInLocalContext(
@@ -338,7 +338,7 @@ static lto_code_gen_t createCodeGen(bool InLocalContext) {
   TargetOptions Options = InitTargetOptionsFromCodeGenFlags();
 
   LibLTOCodeGenerator *CodeGen =
-      InLocalContext ? new LibLTOCodeGenerator(make_unique<LLVMContext>())
+      InLocalContext ? new LibLTOCodeGenerator(std::make_unique<LLVMContext>())
                      : new LibLTOCodeGenerator();
   CodeGen->setTargetOptions(Options);
   return wrap(CodeGen);
@@ -591,6 +591,13 @@ void thinlto_codegen_set_cache_size_bytes(
   return unwrap(cg)->setCacheMaxSizeBytes(MaxSizeBytes);
 }
 
+void thinlto_codegen_set_cache_size_megabytes(
+    thinlto_code_gen_t cg, unsigned MaxSizeMegabytes) {
+  uint64_t MaxSizeBytes = MaxSizeMegabytes;
+  MaxSizeBytes *= 1024 * 1024;
+  return unwrap(cg)->setCacheMaxSizeBytes(MaxSizeBytes);
+}
+
 void thinlto_codegen_set_cache_size_files(
     thinlto_code_gen_t cg, unsigned MaxSizeFiles) {
   return unwrap(cg)->setCacheMaxSizeFiles(MaxSizeFiles);
@@ -624,4 +631,30 @@ lto_bool_t thinlto_codegen_set_pic_model(thinlto_code_gen_t cg,
   }
   sLastErrorString = "Unknown PIC model";
   return true;
+}
+
+DEFINE_SIMPLE_CONVERSION_FUNCTIONS(lto::InputFile, lto_input_t)
+
+lto_input_t lto_input_create(const void *buffer, size_t buffer_size, const char *path) {
+  return wrap(LTOModule::createInputFile(buffer, buffer_size, path, sLastErrorString));
+}
+
+void lto_input_dispose(lto_input_t input) {
+  delete unwrap(input);
+}
+
+extern unsigned lto_input_get_num_dependent_libraries(lto_input_t input) {
+  return LTOModule::getDependentLibraryCount(unwrap(input));
+}
+
+extern const char *lto_input_get_dependent_library(lto_input_t input,
+                                                   size_t index,
+                                                   size_t *size) {
+  return LTOModule::getDependentLibrary(unwrap(input), index, size);
+}
+
+extern const char *const *lto_runtime_lib_symbols_list(size_t *size) {
+  auto symbols = lto::LTO::getRuntimeLibcallSymbols();
+  *size = symbols.size();
+  return symbols.data();
 }

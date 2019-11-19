@@ -19,8 +19,8 @@ define zeroext i8 @fullGtU(i32 %i1, i32 %i2) {
 ; CHECK-NEXT: cmp [[BLOCKVAL1]], [[BLOCKVAL2]]
 ; CHECK-NEXT: b.ne
 ; Next BB
-; CHECK: add [[BLOCKBASE2:x[0-9]+]], [[BLOCKBASE]], [[I2]]
-; CHECK-NEXT: add [[BLOCKBASE1:x[0-9]+]], [[BLOCKBASE]], [[I1]]
+; CHECK: add [[BLOCKBASE1:x[0-9]+]], [[I1]], [[BLOCKBASE]]
+; CHECK-NEXT: add [[BLOCKBASE2:x[0-9]+]], [[I2]], [[BLOCKBASE]]
 ; CHECK-NEXT: ldrb [[LOADEDVAL1:w[0-9]+]], {{\[}}[[BLOCKBASE1]], #1]
 ; CHECK-NEXT: ldrb [[LOADEDVAL2:w[0-9]+]], {{\[}}[[BLOCKBASE2]], #1]
 ; CHECK-NEXT: cmp [[LOADEDVAL1]], [[LOADEDVAL2]]
@@ -28,7 +28,6 @@ define zeroext i8 @fullGtU(i32 %i1, i32 %i2) {
 ; Next BB
 ; CHECK: ldrb [[LOADEDVAL3:w[0-9]+]], {{\[}}[[BLOCKBASE1]], #2]
 ; CHECK-NEXT: ldrb [[LOADEDVAL4:w[0-9]+]], {{\[}}[[BLOCKBASE2]], #2]
-; CHECK-NEXT: mov w0, wzr
 ; CHECK-NEXT: cmp [[LOADEDVAL3]], [[LOADEDVAL4]]
 entry:
   %idxprom = sext i32 %i1 to i64

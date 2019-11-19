@@ -1,9 +1,8 @@
 //===- BitcodeWriterPass.cpp - Bitcode writing pass -----------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -79,4 +78,8 @@ ModulePass *llvm::createBitcodeWriterPass(raw_ostream &Str,
                                           bool EmitSummaryIndex, bool EmitModuleHash) {
   return new WriteBitcodePass(Str, ShouldPreserveUseListOrder,
                               EmitSummaryIndex, EmitModuleHash);
+}
+
+bool llvm::isBitcodeWriterPass(Pass *P) {
+  return P->getPassID() == (llvm::AnalysisID)&WriteBitcodePass::ID;
 }

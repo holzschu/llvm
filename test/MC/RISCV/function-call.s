@@ -11,12 +11,12 @@ call foo
 # RELOC: R_RISCV_CALL foo 0x0
 # INSTR: auipc ra, 0
 # INSTR: jalr  ra
-# FIXUP: fixup A - offset: 0, value: foo, kind:
+# FIXUP: fixup A - offset: 0, value: foo, kind: fixup_riscv_call
 call bar
 # RELOC: R_RISCV_CALL bar 0x0
 # INSTR: auipc ra, 0
 # INSTR: jalr  ra
-# FIXUP: fixup A - offset: 0, value: bar, kind:
+# FIXUP: fixup A - offset: 0, value: bar, kind: fixup_riscv_call
 
 # Ensure that calls to functions whose names coincide with register names work.
 
@@ -24,16 +24,44 @@ call zero
 # RELOC: R_RISCV_CALL zero 0x0
 # INSTR: auipc ra, 0
 # INSTR: jalr  ra
-# FIXUP: fixup A - offset: 0, value: zero, kind:
+# FIXUP: fixup A - offset: 0, value: zero, kind: fixup_riscv_call
 
 call f1
 # RELOC: R_RISCV_CALL f1 0x0
 # INSTR: auipc ra, 0
 # INSTR: jalr  ra
-# FIXUP: fixup A - offset: 0, value: f1, kind:
+# FIXUP: fixup A - offset: 0, value: f1, kind: fixup_riscv_call
 
 call ra
 # RELOC: R_RISCV_CALL ra 0x0
 # INSTR: auipc ra, 0
 # INSTR: jalr  ra
-# FIXUP: fixup A - offset: 0, value: ra, kind:
+# FIXUP: fixup A - offset: 0, value: ra, kind: fixup_riscv_call
+
+call mstatus
+# RELOC: R_RISCV_CALL mstatus 0x0
+# INSTR: auipc ra, 0
+# INSTR: jalr  ra
+# FIXUP: fixup A - offset: 0, value: mstatus, kind: fixup_riscv_call
+
+# Ensure that calls to procedure linkage table symbols work.
+
+call foo@plt
+# RELOC: R_RISCV_CALL_PLT foo 0x0
+# INSTR: auipc ra, 0
+# INSTR: jalr  ra
+# FIXUP: fixup A - offset: 0, value: foo@plt, kind: fixup_riscv_call_plt
+
+# Ensure that an explicit register operand can be parsed.
+
+call a0, foo
+# RELOC: R_RISCV_CALL foo 0x0
+# INSTR: auipc a0, 0
+# INSTR: jalr  a0
+# FIXUP: fixup A - offset: 0, value: foo, kind: fixup_riscv_call
+
+call a0, foo@plt
+# RELOC: R_RISCV_CALL_PLT foo 0x0
+# INSTR: auipc a0, 0
+# INSTR: jalr  a0
+# FIXUP: fixup A - offset: 0, value: foo@plt, kind: fixup_riscv_call_plt

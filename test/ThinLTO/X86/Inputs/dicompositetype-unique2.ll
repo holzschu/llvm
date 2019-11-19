@@ -1,4 +1,4 @@
-target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-scei-ps4"
 
 %struct.CFVS = type { %struct.Vec }
@@ -26,7 +26,7 @@ declare dereferenceable(1) %struct.S* @_Z3Getv()
 !4 = !{i32 2, !"Debug Info Version", i32 3}
 !5 = !{i32 1, !"wchar_size", i32 2}
 !6 = !{i32 7, !"PIC Level", i32 2}
-!8 = distinct !DISubprogram(name: "~CFVS", linkageName: "_ZN4CFVSD2Ev", scope: !9, file: !1, line: 2, type: !28, isLocal: false, isDefinition: true, scopeLine: 2, flags: DIFlagPrototyped, isOptimized: false, unit: !0, declaration: !27, variables: !2)
+!8 = distinct !DISubprogram(name: "~CFVS", linkageName: "_ZN4CFVSD2Ev", scope: !9, file: !1, line: 2, type: !28, isLocal: false, isDefinition: true, scopeLine: 2, flags: DIFlagPrototyped, isOptimized: false, unit: !0, declaration: !27, retainedNodes: !2)
 !9 = distinct !DICompositeType(tag: DW_TAG_structure_type, name: "CFVS", file: !10, line: 7, size: 8, elements: !11, identifier: "_ZTS4CFVS")
 !10 = !DIFile(filename: "./bz188598.h", directory: "")
 !11 = !{!12, !27}

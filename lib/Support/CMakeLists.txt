@@ -33,9 +33,28 @@ elseif( CMAKE_HOST_UNIX )
   if( UNIX AND NOT (BEOS OR HAIKU) )
     set(system_libs ${system_libs} m)
   endif()
+  if( FUCHSIA )
+    set(system_libs ${system_libs} zircon)
+  endif()
 endif( MSVC OR MINGW )
 
+# Delay load shell32.dll if possible to speed up process startup.
+set (delayload_flags)
+if (MSVC)
+  set (delayload_flags delayimp -delayload:shell32.dll -delayload:ole32.dll)
+endif()
+
+# Link Z3 if the user wants to build it.
+if(LLVM_WITH_Z3)
+  set(Z3_LINK_FILES ${Z3_LIBRARIES})
+else()
+  set(Z3_LINK_FILES "")
+endif()
+
 add_llvm_library(LLVMSupport
+  AArch64TargetParser.cpp
+  ABIBreak.cpp
+  ARMTargetParser.cpp
   AMDGPUMetadata.cpp
   APFloat.cpp
   APInt.cpp
@@ -50,6 +69,7 @@ add_llvm_library(LLVMSupport
   BinaryStreamWriter.cpp
   BlockFrequency.cpp
   BranchProbability.cpp
+  BuryPointer.cpp
   CachePruning.cpp
   circular_raw_ostream.cpp
   Chrono.cpp
@@ -57,6 +77,7 @@ add_llvm_library(LLVMSupport
   CodeGenCoverage.cpp
   CommandLine.cpp
   Compression.cpp
+  CRC.cpp
   ConvertUTF.cpp
   ConvertUTFWrapper.cpp
   CrashRecoveryContext.cpp
@@ -68,6 +89,8 @@ add_llvm_library(LLVMSupport
   DJB.cpp
   Error.cpp
   ErrorHandling.cpp
+  FileCheck.cpp
+  FileCollector.cpp
   FileUtilities.cpp
   FileOutputBuffer.cpp
   FoldingSet.cpp
@@ -79,7 +102,8 @@ add_llvm_library(LLVMSupport
   InitLLVM.cpp
   IntEqClasses.cpp
   IntervalMap.cpp
-  JamCRC.cpp
+  ItaniumManglingCanonicalizer.cpp
+  JSON.cpp
   KnownBits.cpp
   LEB128.cpp
   LineIterator.cpp
@@ -91,6 +115,7 @@ add_llvm_library(LLVMSupport
   MemoryBuffer.cpp
   MD5.cpp
   NativeFormatting.cpp
+  Optional.cpp
   Options.cpp
   Parallel.cpp
   PluginLoader.cpp
@@ -100,6 +125,7 @@ add_llvm_library(LLVMSupport
   ScaledNumber.cpp
   ScopedPrinter.cpp
   SHA1.cpp
+  Signposts.cpp
   SmallPtrSet.cpp
   SmallVector.cpp
   SourceMgr.cpp
@@ -110,10 +136,12 @@ add_llvm_library(LLVMSupport
   StringPool.cpp
   StringSaver.cpp
   StringRef.cpp
+  SymbolRemappingReader.cpp
   SystemUtils.cpp
   TarWriter.cpp
   TargetParser.cpp
   ThreadPool.cpp
+  TimeProfiler.cpp
   Timer.cpp
   ToolOutputFile.cpp
   TrigramIndex.cpp
@@ -121,6 +149,8 @@ add_llvm_library(LLVMSupport
   Twine.cpp
   Unicode.cpp
   UnicodeCaseFold.cpp
+  VersionTuple.cpp
+  VirtualFileSystem.cpp
   WithColor.cpp
   YAMLParser.cpp
   YAMLTraits.cpp
@@ -132,6 +162,7 @@ add_llvm_library(LLVMSupport
   regfree.c
   regstrlcpy.c
   xxhash.cpp
+  Z3Solver.cpp
 
 # System
   Atomic.cpp
@@ -139,7 +170,6 @@ add_llvm_library(LLVMSupport
   Errno.cpp
   Host.cpp
   Memory.cpp
-  Mutex.cpp
   Path.cpp
   Process.cpp
   Program.cpp
@@ -157,7 +187,14 @@ add_llvm_library(LLVMSupport
   ${LLVM_MAIN_INCLUDE_DIR}/llvm/ADT
   ${LLVM_MAIN_INCLUDE_DIR}/llvm/Support
   ${Backtrace_INCLUDE_DIRS}
-  LINK_LIBS ${system_libs}
+  LINK_LIBS ${system_libs} ${delayload_flags} ${Z3_LINK_FILES}
   )
 
 set_property(TARGET LLVMSupport PROPERTY LLVM_SYSTEM_LIBS "${system_libs}")
+
+if(LLVM_WITH_Z3)
+  target_include_directories(LLVMSupport SYSTEM
+    PRIVATE
+    ${Z3_INCLUDE_DIR}
+    )
+endif()

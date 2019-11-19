@@ -1,9 +1,8 @@
 //===-- AArch64BaseInfo.cpp - AArch64 Base encoding information------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -53,6 +52,21 @@ namespace llvm {
 #include "AArch64GenSystemOperands.inc"
   }
 }
+
+namespace llvm {
+  namespace AArch64TSB {
+#define GET_TSB_IMPL
+#include "AArch64GenSystemOperands.inc"
+  }
+}
+
+namespace llvm {
+  namespace AArch64PRCTX {
+#define GET_PRCTX_IMPL
+#include "AArch64GenSystemOperands.inc"
+  }
+}
+
 namespace llvm {
   namespace AArch64PRFM {
 #define GET_PRFM_IMPL
@@ -61,8 +75,22 @@ namespace llvm {
 }
 
 namespace llvm {
+  namespace AArch64SVEPRFM {
+#define GET_SVEPRFM_IMPL
+#include "AArch64GenSystemOperands.inc"
+  }
+}
+
+namespace llvm {
   namespace AArch64SVEPredPattern {
 #define GET_SVEPREDPAT_IMPL
+#include "AArch64GenSystemOperands.inc"
+  }
+}
+
+namespace llvm {
+  namespace AArch64ExactFPImm {
+#define GET_EXACTFPIMM_IMPL
 #include "AArch64GenSystemOperands.inc"
   }
 }
@@ -82,6 +110,13 @@ namespace llvm {
 }
 
 namespace llvm {
+  namespace AArch64BTIHint {
+#define GET_BTI_IMPL
+#include "AArch64GenSystemOperands.inc"
+  }
+}
+
+namespace llvm {
   namespace AArch64SysReg {
 #define GET_SYSREG_IMPL
 #include "AArch64GenSystemOperands.inc"
@@ -90,7 +125,7 @@ namespace llvm {
 
 uint32_t AArch64SysReg::parseGenericRegister(StringRef Name) {
   // Try to parse an S<op0>_<op1>_<Cn>_<Cm>_<op2> register name
-  Regex GenericRegPattern("^S([0-3])_([0-7])_C([0-9]|1[0-5])_C([0-9]|1[0-5])_([0-7])$");
+  static const Regex GenericRegPattern("^S([0-3])_([0-7])_C([0-9]|1[0-5])_C([0-9]|1[0-5])_([0-7])$");
 
   std::string UpperName = Name.upper();
   SmallVector<StringRef, 5> Ops;

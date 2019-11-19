@@ -1,9 +1,8 @@
 //===-- TargetMachine.cpp -------------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -115,6 +114,15 @@ LLVMTargetMachineRef LLVMCreateTargetMachine(LLVMTargetRef T,
     case LLVMRelocDynamicNoPic:
       RM = Reloc::DynamicNoPIC;
       break;
+    case LLVMRelocROPI:
+      RM = Reloc::ROPI;
+      break;
+    case LLVMRelocRWPI:
+      RM = Reloc::RWPI;
+      break;
+    case LLVMRelocROPI_RWPI:
+      RM = Reloc::ROPI_RWPI;
+      break;
     default:
       break;
   }
@@ -196,7 +204,7 @@ static LLVMBool LLVMTargetMachineEmit(LLVMTargetMachineRef T, LLVMModuleRef M,
       ft = TargetMachine::CGFT_ObjectFile;
       break;
   }
-  if (TM->addPassesToEmitFile(pass, OS, ft)) {
+  if (TM->addPassesToEmitFile(pass, OS, nullptr, ft)) {
     error = "TargetMachine can't emit a file of this type";
     *ErrorMessage = strdup(error.c_str());
     return true;
@@ -211,7 +219,7 @@ static LLVMBool LLVMTargetMachineEmit(LLVMTargetMachineRef T, LLVMModuleRef M,
 LLVMBool LLVMTargetMachineEmitToFile(LLVMTargetMachineRef T, LLVMModuleRef M,
   char* Filename, LLVMCodeGenFileType codegen, char** ErrorMessage) {
   std::error_code EC;
-  raw_fd_ostream dest(Filename, EC, sys::fs::F_None);
+  raw_fd_ostream dest(Filename, EC, sys::fs::OF_None);
   if (EC) {
     *ErrorMessage = strdup(EC.message().c_str());
     return true;
@@ -236,6 +244,10 @@ LLVMBool LLVMTargetMachineEmitToMemoryBuffer(LLVMTargetMachineRef T,
 
 char *LLVMGetDefaultTargetTriple(void) {
   return strdup(sys::getDefaultTargetTriple().c_str());
+}
+
+char *LLVMNormalizeTargetTriple(const char* triple) {
+  return strdup(Triple::normalize(StringRef(triple)).c_str());
 }
 
 char *LLVMGetHostCPUName(void) {

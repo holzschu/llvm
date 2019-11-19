@@ -1,9 +1,8 @@
 //===-- llvm/CodeGen/MachineModuleInfo.cpp ----------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -36,11 +35,6 @@
 
 using namespace llvm;
 using namespace llvm::dwarf;
-
-// Handle the Pass registration stuff necessary to use DataLayout's.
-INITIALIZE_PASS(MachineModuleInfo, "machinemoduleinfo",
-                "Machine Module Information", false, false)
-char MachineModuleInfo::ID = 0;
 
 // Out of line virtual method.
 MachineModuleInfoImpl::~MachineModuleInfoImpl() = default;
@@ -122,7 +116,7 @@ ArrayRef<MCSymbol *> MMIAddrLabelMap::getAddrLabelSymbolToEmit(BasicBlock *BB) {
   BBCallbacks.back().setMap(this);
   Entry.Index = BBCallbacks.size() - 1;
   Entry.Fn = BB->getParent();
-  Entry.Symbols.push_back(Context.createTempSymbol());
+  Entry.Symbols.push_back(Context.createTempSymbol(!BB->hasAddressTaken()));
   return Entry.Symbols;
 }
 
@@ -194,26 +188,15 @@ void MMIAddrLabelMapCallbackPtr::allUsesReplacedWith(Value *V2) {
   Map->UpdateForRAUWBlock(cast<BasicBlock>(getValPtr()), cast<BasicBlock>(V2));
 }
 
-MachineModuleInfo::MachineModuleInfo(const TargetMachine *TM)
-  : ImmutablePass(ID), TM(*TM),
-    Context(TM->getMCAsmInfo(), TM->getMCRegisterInfo(),
-            TM->getObjFileLowering(), nullptr, false) {
-  initializeMachineModuleInfoPass(*PassRegistry::getPassRegistry());
-}
-
-MachineModuleInfo::~MachineModuleInfo() = default;
-
-bool MachineModuleInfo::doInitialization(Module &M) {
+void MachineModuleInfo::initialize() {
   ObjFileMMI = nullptr;
   CurCallSite = 0;
-  DbgInfoAvailable = UsesVAFloatArgument = UsesMorestackAddr = false;
+  UsesMSVCFloatingPoint = UsesMorestackAddr = false;
   HasSplitStack = HasNosplitStack = false;
   AddrLabelSymbols = nullptr;
-  TheModule = &M;
-  return false;
 }
 
-bool MachineModuleInfo::doFinalization(Module &M) {
+void MachineModuleInfo::finalize() {
   Personalities.clear();
 
   delete AddrLabelSymbols;
@@ -223,9 +206,29 @@ bool MachineModuleInfo::doFinalization(Module &M) {
 
   delete ObjFileMMI;
   ObjFileMMI = nullptr;
-
-  return false;
 }
+
+MachineModuleInfo::MachineModuleInfo(MachineModuleInfo &&MMI)
+    : TM(std::move(MMI.TM)),
+      Context(MMI.TM.getMCAsmInfo(), MMI.TM.getMCRegisterInfo(),
+              MMI.TM.getObjFileLowering(), nullptr, nullptr, false) {
+  ObjFileMMI = MMI.ObjFileMMI;
+  CurCallSite = MMI.CurCallSite;
+  UsesMSVCFloatingPoint = MMI.UsesMSVCFloatingPoint;
+  UsesMorestackAddr = MMI.UsesMorestackAddr;
+  HasSplitStack = MMI.HasSplitStack;
+  HasNosplitStack = MMI.HasNosplitStack;
+  AddrLabelSymbols = MMI.AddrLabelSymbols;
+  TheModule = MMI.TheModule;
+}
+
+MachineModuleInfo::MachineModuleInfo(const LLVMTargetMachine *TM)
+    : TM(*TM), Context(TM->getMCAsmInfo(), TM->getMCRegisterInfo(),
+                       TM->getObjFileLowering(), nullptr, nullptr, false) {
+  initialize();
+}
+
+MachineModuleInfo::~MachineModuleInfo() { finalize(); }
 
 //===- Address of Block Management ----------------------------------------===//
 
@@ -305,19 +308,20 @@ public:
   FreeMachineFunction() : FunctionPass(ID) {}
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
-    AU.addRequired<MachineModuleInfo>();
-    AU.addPreserved<MachineModuleInfo>();
+    AU.addRequired<MachineModuleInfoWrapperPass>();
+    AU.addPreserved<MachineModuleInfoWrapperPass>();
   }
 
   bool runOnFunction(Function &F) override {
-    MachineModuleInfo &MMI = getAnalysis<MachineModuleInfo>();
+    MachineModuleInfo &MMI =
+        getAnalysis<MachineModuleInfoWrapperPass>().getMMI();
     MMI.deleteMachineFunctionFor(F);
     return true;
   }
-  
+
   StringRef getPassName() const override {
     return "Free MachineFunction";
-  } 
+  }
 };
 
 } // end anonymous namespace
@@ -328,21 +332,35 @@ FunctionPass *llvm::createFreeMachineFunctionPass() {
   return new FreeMachineFunction();
 }
 
-//===- MMI building helpers -----------------------------------------------===//
+MachineModuleInfoWrapperPass::MachineModuleInfoWrapperPass(
+    const LLVMTargetMachine *TM)
+    : ImmutablePass(ID), MMI(TM) {
+  initializeMachineModuleInfoWrapperPassPass(*PassRegistry::getPassRegistry());
+}
 
-void llvm::computeUsesVAFloatArgument(const CallInst &I,
-                                      MachineModuleInfo &MMI) {
-  FunctionType *FT =
-      cast<FunctionType>(I.getCalledValue()->getType()->getContainedType(0));
-  if (FT->isVarArg() && !MMI.usesVAFloatArgument()) {
-    for (unsigned i = 0, e = I.getNumArgOperands(); i != e; ++i) {
-      Type *T = I.getArgOperand(i)->getType();
-      for (auto i : post_order(T)) {
-        if (i->isFloatingPointTy()) {
-          MMI.setUsesVAFloatArgument(true);
-          return;
-        }
-      }
-    }
-  }
+// Handle the Pass registration stuff necessary to use DataLayout's.
+INITIALIZE_PASS(MachineModuleInfoWrapperPass, "machinemoduleinfo",
+                "Machine Module Information", false, false)
+char MachineModuleInfoWrapperPass::ID = 0;
+
+bool MachineModuleInfoWrapperPass::doInitialization(Module &M) {
+  MMI.initialize();
+  MMI.TheModule = &M;
+  MMI.DbgInfoAvailable = !M.debug_compile_units().empty();
+  return false;
+}
+
+bool MachineModuleInfoWrapperPass::doFinalization(Module &M) {
+  MMI.finalize();
+  return false;
+}
+
+AnalysisKey MachineModuleAnalysis::Key;
+
+MachineModuleInfo MachineModuleAnalysis::run(Module &M,
+                                             ModuleAnalysisManager &) {
+  MachineModuleInfo MMI(TM);
+  MMI.TheModule = &M;
+  MMI.DbgInfoAvailable = !M.debug_compile_units().empty();
+  return MMI;
 }

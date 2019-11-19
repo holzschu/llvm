@@ -1,14 +1,13 @@
 //===-- WebAssemblyRegNumbering.cpp - Register Numbering ------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief This file implements a pass which assigns WebAssembly register
+/// This file implements a pass which assigns WebAssembly register
 /// numbers for CodeGen virtual registers.
 ///
 //===----------------------------------------------------------------------===//
@@ -60,9 +59,9 @@ FunctionPass *llvm::createWebAssemblyRegNumbering() {
 }
 
 bool WebAssemblyRegNumbering::runOnMachineFunction(MachineFunction &MF) {
-  DEBUG(dbgs() << "********** Register Numbering **********\n"
-                  "********** Function: "
-               << MF.getName() << '\n');
+  LLVM_DEBUG(dbgs() << "********** Register Numbering **********\n"
+                       "********** Function: "
+                    << MF.getName() << '\n');
 
   WebAssemblyFunctionInfo &MFI = *MF.getInfo<WebAssemblyFunctionInfo>();
   MachineRegisterInfo &MRI = MF.getRegInfo();
@@ -73,12 +72,12 @@ bool WebAssemblyRegNumbering::runOnMachineFunction(MachineFunction &MF) {
   // variables. Assign the numbers for them first.
   MachineBasicBlock &EntryMBB = MF.front();
   for (MachineInstr &MI : EntryMBB) {
-    if (!WebAssembly::isArgument(MI))
+    if (!WebAssembly::isArgument(MI.getOpcode()))
       break;
 
     int64_t Imm = MI.getOperand(1).getImm();
-    DEBUG(dbgs() << "Arg VReg " << MI.getOperand(0).getReg() << " -> WAReg "
-                 << Imm << "\n");
+    LLVM_DEBUG(dbgs() << "Arg VReg " << MI.getOperand(0).getReg()
+                      << " -> WAReg " << Imm << "\n");
     MFI.setWAReg(MI.getOperand(0).getReg(), Imm);
   }
 
@@ -90,19 +89,19 @@ bool WebAssemblyRegNumbering::runOnMachineFunction(MachineFunction &MF) {
   // Start the numbering for locals after the arg regs
   unsigned CurReg = MFI.getParams().size();
   for (unsigned VRegIdx = 0; VRegIdx < NumVRegs; ++VRegIdx) {
-    unsigned VReg = TargetRegisterInfo::index2VirtReg(VRegIdx);
+    unsigned VReg = Register::index2VirtReg(VRegIdx);
     // Skip unused registers.
     if (MRI.use_empty(VReg))
       continue;
     // Handle stackified registers.
     if (MFI.isVRegStackified(VReg)) {
-      DEBUG(dbgs() << "VReg " << VReg << " -> WAReg "
-                   << (INT32_MIN | NumStackRegs) << "\n");
+      LLVM_DEBUG(dbgs() << "VReg " << VReg << " -> WAReg "
+                        << (INT32_MIN | NumStackRegs) << "\n");
       MFI.setWAReg(VReg, INT32_MIN | NumStackRegs++);
       continue;
     }
     if (MFI.getWAReg(VReg) == WebAssemblyFunctionInfo::UnusedReg) {
-      DEBUG(dbgs() << "VReg " << VReg << " -> WAReg " << CurReg << "\n");
+      LLVM_DEBUG(dbgs() << "VReg " << VReg << " -> WAReg " << CurReg << "\n");
       MFI.setWAReg(VReg, CurReg++);
     }
   }

@@ -1,9 +1,8 @@
 //===- lib/Codegen/MachineRegisterInfo.cpp --------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -22,6 +21,7 @@
 #include "llvm/CodeGen/TargetInstrInfo.h"
 #include "llvm/CodeGen/TargetRegisterInfo.h"
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
+#include "llvm/Config/llvm-config.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/DebugLoc.h"
 #include "llvm/IR/Function.h"
@@ -92,36 +92,29 @@ bool
 MachineRegisterInfo::constrainRegAttrs(unsigned Reg,
                                        unsigned ConstrainingReg,
                                        unsigned MinNumRegs) {
-  auto const *OldRC = getRegClassOrNull(Reg);
-  auto const *RC = getRegClassOrNull(ConstrainingReg);
-  // A virtual register at any point must have either a low-level type
-  // or a class assigned, but not both. The only exception is the internals of
-  // GlobalISel's instruction selection pass, which is allowed to temporarily
-  // introduce registers with types and classes both.
-  assert((OldRC || getType(Reg).isValid()) && "Reg has neither class nor type");
-  assert((!OldRC || !getType(Reg).isValid()) && "Reg has class and type both");
-  assert((RC || getType(ConstrainingReg).isValid()) &&
-         "ConstrainingReg has neither class nor type");
-  assert((!RC || !getType(ConstrainingReg).isValid()) &&
-         "ConstrainingReg has class and type both");
-  if (OldRC && RC)
-    return ::constrainRegClass(*this, Reg, OldRC, RC, MinNumRegs);
-  // If one of the virtual registers is generic (used in generic machine
-  // instructions, has a low-level type, doesn't have a class), and the other is
-  // concrete (used in target specific instructions, doesn't have a low-level
-  // type, has a class), we can not unify them.
-  if (OldRC || RC)
+  const LLT RegTy = getType(Reg);
+  const LLT ConstrainingRegTy = getType(ConstrainingReg);
+  if (RegTy.isValid() && ConstrainingRegTy.isValid() &&
+      RegTy != ConstrainingRegTy)
     return false;
-  // At this point, both registers are guaranteed to have a valid low-level
-  // type, and they must agree.
-  if (getType(Reg) != getType(ConstrainingReg))
-    return false;
-  auto const *OldRB = getRegBankOrNull(Reg);
-  auto const *RB = getRegBankOrNull(ConstrainingReg);
-  if (OldRB)
-    return !RB || RB == OldRB;
-  if (RB)
-    setRegBank(Reg, *RB);
+  const auto ConstrainingRegCB = getRegClassOrRegBank(ConstrainingReg);
+  if (!ConstrainingRegCB.isNull()) {
+    const auto RegCB = getRegClassOrRegBank(Reg);
+    if (RegCB.isNull())
+      setRegClassOrRegBank(Reg, ConstrainingRegCB);
+    else if (RegCB.is<const TargetRegisterClass *>() !=
+             ConstrainingRegCB.is<const TargetRegisterClass *>())
+      return false;
+    else if (RegCB.is<const TargetRegisterClass *>()) {
+      if (!::constrainRegClass(
+              *this, Reg, RegCB.get<const TargetRegisterClass *>(),
+              ConstrainingRegCB.get<const TargetRegisterClass *>(), MinNumRegs))
+        return false;
+    } else if (RegCB != ConstrainingRegCB)
+      return false;
+  }
+  if (ConstrainingRegTy.isValid())
+    setType(Reg, ConstrainingRegTy);
   return true;
 }
 
@@ -151,7 +144,7 @@ MachineRegisterInfo::recomputeRegClass(unsigned Reg) {
 }
 
 unsigned MachineRegisterInfo::createIncompleteVirtualRegister(StringRef Name) {
-  unsigned Reg = TargetRegisterInfo::index2VirtReg(getNumVirtRegs());
+  unsigned Reg = Register::index2VirtReg(getNumVirtRegs());
   VRegInfo.grow(Reg);
   RegAllocHints.grow(Reg);
   insertVRegByName(Name, Reg);
@@ -161,7 +154,7 @@ unsigned MachineRegisterInfo::createIncompleteVirtualRegister(StringRef Name) {
 /// createVirtualRegister - Create and return a new virtual register in the
 /// function with the specified register class.
 ///
-unsigned
+Register
 MachineRegisterInfo::createVirtualRegister(const TargetRegisterClass *RegClass,
                                            StringRef Name) {
   assert(RegClass && "Cannot create register without RegClass!");
@@ -176,40 +169,40 @@ MachineRegisterInfo::createVirtualRegister(const TargetRegisterClass *RegClass,
   return Reg;
 }
 
-LLT MachineRegisterInfo::getType(unsigned VReg) const {
-  VRegToTypeMap::const_iterator TypeIt = getVRegToType().find(VReg);
-  return TypeIt != getVRegToType().end() ? TypeIt->second : LLT{};
-}
-
-void MachineRegisterInfo::setType(unsigned VReg, LLT Ty) {
-  // Check that VReg doesn't have a class.
-  assert((getRegClassOrRegBank(VReg).isNull() ||
-         !getRegClassOrRegBank(VReg).is<const TargetRegisterClass *>()) &&
-         "Can't set the size of a non-generic virtual register");
-  getVRegToType()[VReg] = Ty;
-}
-
-unsigned
-MachineRegisterInfo::createGenericVirtualRegister(LLT Ty, StringRef Name) {
-  // New virtual register number.
+Register MachineRegisterInfo::cloneVirtualRegister(Register VReg,
+                                                   StringRef Name) {
   unsigned Reg = createIncompleteVirtualRegister(Name);
-  // FIXME: Should we use a dummy register class?
-  VRegInfo[Reg].first = static_cast<RegisterBank *>(nullptr);
-  getVRegToType()[Reg] = Ty;
+  VRegInfo[Reg].first = VRegInfo[VReg].first;
+  setType(Reg, getType(VReg));
   if (TheDelegate)
     TheDelegate->MRI_NoteNewVirtualRegister(Reg);
   return Reg;
 }
 
-void MachineRegisterInfo::clearVirtRegTypes() {
-  getVRegToType().clear();
+void MachineRegisterInfo::setType(unsigned VReg, LLT Ty) {
+  VRegToType.grow(VReg);
+  VRegToType[VReg] = Ty;
 }
+
+Register
+MachineRegisterInfo::createGenericVirtualRegister(LLT Ty, StringRef Name) {
+  // New virtual register number.
+  unsigned Reg = createIncompleteVirtualRegister(Name);
+  // FIXME: Should we use a dummy register class?
+  VRegInfo[Reg].first = static_cast<RegisterBank *>(nullptr);
+  setType(Reg, Ty);
+  if (TheDelegate)
+    TheDelegate->MRI_NoteNewVirtualRegister(Reg);
+  return Reg;
+}
+
+void MachineRegisterInfo::clearVirtRegTypes() { VRegToType.clear(); }
 
 /// clearVirtRegs - Remove all virtual registers (after physreg assignment).
 void MachineRegisterInfo::clearVirtRegs() {
 #ifndef NDEBUG
   for (unsigned i = 0, e = getNumVirtRegs(); i != e; ++i) {
-    unsigned Reg = TargetRegisterInfo::index2VirtReg(i);
+    unsigned Reg = Register::index2VirtReg(i);
     if (!VRegInfo[Reg].second)
       continue;
     verifyUseList(Reg);
@@ -262,7 +255,7 @@ void MachineRegisterInfo::verifyUseList(unsigned Reg) const {
 void MachineRegisterInfo::verifyUseLists() const {
 #ifndef NDEBUG
   for (unsigned i = 0, e = getNumVirtRegs(); i != e; ++i)
-    verifyUseList(TargetRegisterInfo::index2VirtReg(i));
+    verifyUseList(Register::index2VirtReg(i));
   for (unsigned i = 1, e = getTargetRegisterInfo()->getNumRegs(); i != e; ++i)
     verifyUseList(i);
 #endif
@@ -388,12 +381,12 @@ void MachineRegisterInfo::replaceRegWith(unsigned FromReg, unsigned ToReg) {
   assert(FromReg != ToReg && "Cannot replace a reg with itself");
 
   const TargetRegisterInfo *TRI = getTargetRegisterInfo();
-  
+
   // TODO: This could be more efficient by bulk changing the operands.
   for (reg_iterator I = reg_begin(FromReg), E = reg_end(); I != E; ) {
     MachineOperand &O = *I;
     ++I;
-    if (TargetRegisterInfo::isPhysicalRegister(ToReg)) {
+    if (Register::isPhysicalRegister(ToReg)) {
       O.substPhysReg(ToReg, *TRI);
     } else {
       O.setReg(ToReg);
@@ -428,6 +421,13 @@ bool MachineRegisterInfo::hasOneNonDBGUse(unsigned RegNo) const {
   if (UI == use_nodbg_end())
     return false;
   return ++UI == use_nodbg_end();
+}
+
+bool MachineRegisterInfo::hasOneNonDBGUser(unsigned RegNo) const {
+  use_instr_nodbg_iterator UI = use_instr_nodbg_begin(RegNo);
+  if (UI == use_instr_nodbg_end())
+    return false;
+  return ++UI == use_instr_nodbg_end();
 }
 
 /// clearKillFlags - Iterate over all the uses of the given register and
@@ -498,7 +498,7 @@ MachineRegisterInfo::EmitLiveInCopies(MachineBasicBlock *EntryMBB,
 
 LaneBitmask MachineRegisterInfo::getMaxLaneMaskForVReg(unsigned Reg) const {
   // Lane masks are only defined for vregs.
-  assert(TargetRegisterInfo::isVirtualRegister(Reg));
+  assert(Register::isVirtualRegister(Reg));
   const TargetRegisterClass &TRC = *getRegClass(Reg);
   return TRC.getLaneMask();
 }
@@ -517,7 +517,7 @@ void MachineRegisterInfo::freezeReservedRegs(const MachineFunction &MF) {
 }
 
 bool MachineRegisterInfo::isConstantPhysReg(unsigned PhysReg) const {
-  assert(TargetRegisterInfo::isPhysicalRegister(PhysReg));
+  assert(Register::isPhysicalRegister(PhysReg));
 
   const TargetRegisterInfo *TRI = getTargetRegisterInfo();
   if (TRI->isConstantPhysReg(PhysReg))

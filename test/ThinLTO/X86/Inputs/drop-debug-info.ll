@@ -1,7 +1,7 @@
 ; This file is checked-in as a .bc file, because the debug info version is
 ; intentionally out-of-date and llvm-as will drop it before writing the bitcode
 
-target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
+target datalayout = "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-apple-macosx10.11.0"
 
 
@@ -32,7 +32,7 @@ declare void @llvm.dbg.value(metadata, i64, metadata, metadata)
 !9 = !DIBasicType(encoding: DW_ATE_signed, size: 32, align: 32, name: "int")
 !10 = !DIDerivedType(baseType: !4, tag: DW_TAG_pointer_type, size: 64, align: 64, flags: DIFlagArtificial)
 !11 = !DIBasicType(tag: DW_TAG_base_type, name: "char", size: 8, align: 8, encoding: DW_ATE_signed_char)
-!13 = distinct !DISubprogram(name: "test_with_debug", linkageName: "test_with_debug", line: 6, isLocal: false, isDefinition: true, flags: DIFlagPrototyped, isOptimized: true, unit: !0, scopeLine: 6, file: !1, scope: !14, type: !15, variables: !17)
+!13 = distinct !DISubprogram(name: "test_with_debug", linkageName: "test_with_debug", line: 6, isLocal: false, isDefinition: true, flags: DIFlagPrototyped, isOptimized: true, unit: !0, scopeLine: 6, file: !1, scope: !14, type: !15, retainedNodes: !17)
 !14 = !DIFile(filename: "test.cpp", directory: "")
 !15 = !DISubroutineType(types: !16)
 !16 = !{null}

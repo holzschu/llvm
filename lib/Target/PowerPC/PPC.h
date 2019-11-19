@@ -1,9 +1,8 @@
 //===-- PPC.h - Top-level interface for PowerPC Target ----------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,7 +15,6 @@
 #define LLVM_LIB_TARGET_POWERPC_PPC_H
 
 #include "llvm/Support/CodeGen.h"
-#include "MCTargetDesc/PPCMCTargetDesc.h"
 
 // GCC #defines PPC on Linux but we use it as our namespace name
 #undef PPC
@@ -52,21 +50,35 @@ namespace llvm {
   FunctionPass *createPPCExpandISELPass();
   FunctionPass *createPPCPreEmitPeepholePass();
   void LowerPPCMachineInstrToMCInst(const MachineInstr *MI, MCInst &OutMI,
-                                    AsmPrinter &AP, bool isDarwin);
+                                    AsmPrinter &AP, bool IsDarwin);
   bool LowerPPCMachineOperandToMCOperand(const MachineOperand &MO,
                                          MCOperand &OutMO, AsmPrinter &AP,
-                                         bool isDarwin);
+                                         bool IsDarwin);
 
+  void initializePPCCTRLoopsPass(PassRegistry&);
+#ifndef NDEBUG
+  void initializePPCCTRLoopsVerifyPass(PassRegistry&);
+#endif
+  void initializePPCLoopPreIncPrepPass(PassRegistry&);
+  void initializePPCTOCRegDepsPass(PassRegistry&);
+  void initializePPCEarlyReturnPass(PassRegistry&);
+  void initializePPCVSXCopyPass(PassRegistry&);
   void initializePPCVSXFMAMutatePass(PassRegistry&);
+  void initializePPCVSXSwapRemovalPass(PassRegistry&);
+  void initializePPCReduceCRLogicalsPass(PassRegistry&);
+  void initializePPCBSelPass(PassRegistry&);
+  void initializePPCBranchCoalescingPass(PassRegistry&);
+  void initializePPCQPXLoadSplatPass(PassRegistry&);
   void initializePPCBoolRetToIntPass(PassRegistry&);
   void initializePPCExpandISELPass(PassRegistry &);
   void initializePPCPreEmitPeepholePass(PassRegistry &);
   void initializePPCTLSDynamicCallPass(PassRegistry &);
   void initializePPCMIPeepholePass(PassRegistry&);
+
   extern char &PPCVSXFMAMutateID;
 
   namespace PPCII {
-    
+
   /// Target Operand Flag enum.
   enum TOF {
     //===------------------------------------------------------------------===//
@@ -74,8 +86,8 @@ namespace llvm {
     MO_NO_FLAG,
 
     /// On a symbol operand "FOO", this indicates that the reference is actually
-    /// to "FOO@plt".  This is used for calls and jumps to external functions on
-    /// for PIC calls on Linux and ELF systems.
+    /// to "FOO@plt".  This is used for calls and jumps to external functions
+    /// and for PIC calls on 32-bit ELF systems.
     MO_PLT = 1,
 
     /// MO_PIC_FLAG - If this bit is set, the symbol reference is relative to
@@ -111,7 +123,7 @@ namespace llvm {
     MO_TLS = 8 << 4
   };
   } // end namespace PPCII
-  
+
 } // end namespace llvm;
 
 #endif

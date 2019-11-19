@@ -1,14 +1,13 @@
 //- WebAssembly.td - Describe the WebAssembly Target Machine --*- tablegen -*-//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief This is a target description file for the WebAssembly architecture,
+/// This is a target description file for the WebAssembly architecture,
 /// which is also known as "wasm".
 ///
 //===----------------------------------------------------------------------===//
@@ -23,10 +22,18 @@ include "llvm/Target/Target.td"
 // WebAssembly Subtarget features.
 //===----------------------------------------------------------------------===//
 
-def FeatureSIMD128 : SubtargetFeature<"simd128", "HasSIMD128", "true",
+def FeatureSIMD128 : SubtargetFeature<"simd128", "SIMDLevel", "SIMD128",
                                       "Enable 128-bit SIMD">;
+
+def FeatureUnimplementedSIMD128 :
+      SubtargetFeature<"unimplemented-simd128",
+                       "SIMDLevel", "UnimplementedSIMD128",
+                       "Enable 128-bit SIMD not yet implemented in engines",
+                       [FeatureSIMD128]>;
+
 def FeatureAtomics : SubtargetFeature<"atomics", "HasAtomics", "true",
                                       "Enable Atomics">;
+
 def FeatureNontrappingFPToInt :
       SubtargetFeature<"nontrapping-fptoint",
                        "HasNontrappingFPToInt", "true",
@@ -37,9 +44,27 @@ def FeatureSignExt :
                        "HasSignExt", "true",
                        "Enable sign extension operators">;
 
+def FeatureTailCall :
+      SubtargetFeature<"tail-call",
+                       "HasTailCall", "true",
+                       "Enable tail call instructions">;
+
 def FeatureExceptionHandling :
       SubtargetFeature<"exception-handling", "HasExceptionHandling", "true",
                        "Enable Wasm exception handling">;
+
+def FeatureBulkMemory :
+      SubtargetFeature<"bulk-memory", "HasBulkMemory", "true",
+                       "Enable bulk memory operations">;
+
+def FeatureMultivalue :
+      SubtargetFeature<"multivalue",
+                       "HasMultivalue", "true",
+                       "Enable multivalue blocks, instructions, and functions">;
+
+def FeatureMutableGlobals :
+      SubtargetFeature<"mutable-globals", "HasMutableGlobals", "true",
+                       "Enable mutable globals">;
 
 //===----------------------------------------------------------------------===//
 // Architectures.
@@ -71,7 +96,9 @@ def : ProcessorModel<"generic", NoSchedModel, []>;
 
 // Latest and greatest experimental version of WebAssembly. Bugs included!
 def : ProcessorModel<"bleeding-edge", NoSchedModel,
-                      [FeatureSIMD128, FeatureAtomics]>;
+                      [FeatureSIMD128, FeatureAtomics,
+                       FeatureNontrappingFPToInt, FeatureSignExt,
+                       FeatureMutableGlobals]>;
 
 //===----------------------------------------------------------------------===//
 // Target Declaration
@@ -82,7 +109,15 @@ def WebAssemblyAsmParser : AsmParser {
   let ShouldEmitMatchRegisterName = 0;
 }
 
+def WebAssemblyAsmWriter : AsmWriter {
+  string AsmWriterClassName  = "InstPrinter";
+  int PassSubtarget = 0;
+  int Variant = 0;
+  bit isMCAsmWriter = 1;
+}
+
 def WebAssembly : Target {
   let InstructionSet = WebAssemblyInstrInfo;
   let AssemblyParsers  = [WebAssemblyAsmParser];
+  let AssemblyWriters = [WebAssemblyAsmWriter];
 }

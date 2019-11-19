@@ -1,7 +1,7 @@
-; RUN: llc < %s -asm-verbose=false | FileCheck %s
+; RUN: llc < %s -asm-verbose=false -wasm-keep-registers | FileCheck %s
 
 target datalayout = "e-m:e-p:32:32-i64:64-n32:64-S128"
-target triple = "wasm32-unknown-unknown-wasm"
+target triple = "wasm32-unknown-unknown"
 
 define void @test() {
   call void @foo()
@@ -12,8 +12,9 @@ define void @test() {
 declare void @foo() #0
 declare void @plain()
 
-attributes #0 = { "wasm-import-module"="bar" }
+attributes #0 = { "wasm-import-module"="bar" "wasm-import-name"="qux" }
 
 ; CHECK-NOT: .import_module plain
 ;     CHECK: .import_module foo, bar
+;     CHECK: .import_name foo, qux
 ; CHECK-NOT: .import_module plain

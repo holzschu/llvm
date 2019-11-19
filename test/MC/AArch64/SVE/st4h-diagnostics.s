@@ -30,11 +30,50 @@ st4h {z7.h, z8.h, z9.h, z10.h}, p3, [x1, #5, MUL VL]
 
 
 // --------------------------------------------------------------------------//
-// error: restricted predicate has range [0, 7].
+// Invalid scalar + scalar addressing modes
+
+st4h { z0.h, z1.h, z2.h, z3.h }, p0, [x0, x0]
+// CHECK: [[@LINE-1]]:{{[0-9]+}}: error: register must be x0..x30 with required shift 'lsl #1'
+// CHECK-NEXT: st4h { z0.h, z1.h, z2.h, z3.h }, p0, [x0, x0]
+// CHECK-NOT: [[@LINE-1]]:{{[0-9]+}}:
+
+st4h { z0.h, z1.h, z2.h, z3.h }, p0, [x0, xzr]
+// CHECK: [[@LINE-1]]:{{[0-9]+}}: error: register must be x0..x30 with required shift 'lsl #1'
+// CHECK-NEXT: st4h { z0.h, z1.h, z2.h, z3.h }, p0, [x0, xzr]
+// CHECK-NOT: [[@LINE-1]]:{{[0-9]+}}:
+
+st4h { z0.h, z1.h, z2.h, z3.h }, p0, [x0, x0, lsl #2]
+// CHECK: [[@LINE-1]]:{{[0-9]+}}: error: register must be x0..x30 with required shift 'lsl #1'
+// CHECK-NEXT: st4h { z0.h, z1.h, z2.h, z3.h }, p0, [x0, x0, lsl #2]
+// CHECK-NOT: [[@LINE-1]]:{{[0-9]+}}:
+
+st4h { z0.h, z1.h, z2.h, z3.h }, p0, [x0, w0]
+// CHECK: [[@LINE-1]]:{{[0-9]+}}: error: register must be x0..x30 with required shift 'lsl #1'
+// CHECK-NEXT: st4h { z0.h, z1.h, z2.h, z3.h }, p0, [x0, w0]
+// CHECK-NOT: [[@LINE-1]]:{{[0-9]+}}:
+
+st4h { z0.h, z1.h, z2.h, z3.h }, p0, [x0, w0, uxtw]
+// CHECK: [[@LINE-1]]:{{[0-9]+}}: error: register must be x0..x30 with required shift 'lsl #1'
+// CHECK-NEXT: st4h { z0.h, z1.h, z2.h, z3.h }, p0, [x0, w0, uxtw]
+// CHECK-NOT: [[@LINE-1]]:{{[0-9]+}}:
+
+
+// --------------------------------------------------------------------------//
+// Invalid predicate
 
 st4h {z2.h, z3.h, z4.h, z5.h}, p8, [x15, #10, MUL VL]
-// CHECK: [[@LINE-1]]:{{[0-9]+}}: error: restricted predicate has range [0, 7].
+// CHECK: [[@LINE-1]]:{{[0-9]+}}: error: invalid restricted predicate register, expected p0..p7 (without element suffix)
 // CHECK-NEXT: st4h {z2.h, z3.h, z4.h, z5.h}, p8, [x15, #10, MUL VL]
+// CHECK-NOT: [[@LINE-1]]:{{[0-9]+}}:
+
+st4h {z2.h, z3.h, z4.h, z5.h}, p7.b, [x15, #10, MUL VL]
+// CHECK: [[@LINE-1]]:{{[0-9]+}}: error: invalid restricted predicate register, expected p0..p7 (without element suffix)
+// CHECK-NEXT: st4h {z2.h, z3.h, z4.h, z5.h}, p7.b, [x15, #10, MUL VL]
+// CHECK-NOT: [[@LINE-1]]:{{[0-9]+}}:
+
+st4h {z2.h, z3.h, z4.h, z5.h}, p7.q, [x15, #10, MUL VL]
+// CHECK: [[@LINE-1]]:{{[0-9]+}}: error: invalid restricted predicate register, expected p0..p7 (without element suffix)
+// CHECK-NEXT: st4h {z2.h, z3.h, z4.h, z5.h}, p7.q, [x15, #10, MUL VL]
 // CHECK-NOT: [[@LINE-1]]:{{[0-9]+}}:
 
 
@@ -64,4 +103,20 @@ st4h { z0.h, z1.h, z3.h, z5.h }, p0, [x0]
 st4h { v0.8h, v1.8h, v2.8h }, p0, [x0]
 // CHECK: [[@LINE-1]]:{{[0-9]+}}: error: invalid operand
 // CHECK-NEXT: st4h { v0.8h, v1.8h, v2.8h }, p0, [x0]
+// CHECK-NOT: [[@LINE-1]]:{{[0-9]+}}:
+
+
+// --------------------------------------------------------------------------//
+// Negative tests for instructions that are incompatible with movprfx
+
+movprfx z21.h, p5/z, z28.h
+st4h    { z21.h, z22.h, z23.h, z24.h }, p5, [x10, #20, mul vl]
+// CHECK: [[@LINE-1]]:{{[0-9]+}}: error: instruction is unpredictable when following a movprfx, suggest replacing movprfx with mov
+// CHECK-NEXT: st4h    { z21.h, z22.h, z23.h, z24.h }, p5, [x10, #20, mul vl]
+// CHECK-NOT: [[@LINE-1]]:{{[0-9]+}}:
+
+movprfx z21, z28
+st4h    { z21.h, z22.h, z23.h, z24.h }, p5, [x10, #20, mul vl]
+// CHECK: [[@LINE-1]]:{{[0-9]+}}: error: instruction is unpredictable when following a movprfx, suggest replacing movprfx with mov
+// CHECK-NEXT: st4h    { z21.h, z22.h, z23.h, z24.h }, p5, [x10, #20, mul vl]
 // CHECK-NOT: [[@LINE-1]]:{{[0-9]+}}:

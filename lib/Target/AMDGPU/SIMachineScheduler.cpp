@@ -1,14 +1,13 @@
 //===-- SIMachineScheduler.cpp - SI Scheduler Interface -------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
 /// \file
-/// \brief SI Machine Scheduler interface
+/// SI Machine Scheduler interface
 //
 //===----------------------------------------------------------------------===//
 
@@ -16,6 +15,7 @@
 #include "AMDGPU.h"
 #include "SIInstrInfo.h"
 #include "SIRegisterInfo.h"
+#include "MCTargetDesc/AMDGPUMCTargetDesc.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/CodeGen/LiveInterval.h"
@@ -348,7 +348,7 @@ void SIScheduleBlock::initRegPressure(MachineBasicBlock::iterator BeginBlock,
 
   // Do not Track Physical Registers, because it messes up.
   for (const auto &RegMaskPair : RPTracker.getPressure().LiveInRegs) {
-    if (TargetRegisterInfo::isVirtualRegister(RegMaskPair.RegUnit))
+    if (Register::isVirtualRegister(RegMaskPair.RegUnit))
       LiveInRegs.insert(RegMaskPair.RegUnit);
   }
   LiveOutRegs.clear();
@@ -376,7 +376,7 @@ void SIScheduleBlock::initRegPressure(MachineBasicBlock::iterator BeginBlock,
   // The use of findDefBetween removes the case 4.
   for (const auto &RegMaskPair : RPTracker.getPressure().LiveOutRegs) {
     unsigned Reg = RegMaskPair.RegUnit;
-    if (TargetRegisterInfo::isVirtualRegister(Reg) &&
+    if (Register::isVirtualRegister(Reg) &&
         isDefBetween(Reg, LIS->getInstructionIndex(*BeginBlock).getRegSlot(),
                      LIS->getInstructionIndex(*EndBlock).getRegSlot(), MRI,
                      LIS)) {
@@ -470,7 +470,7 @@ void SIScheduleBlock::releaseSucc(SUnit *SU, SDep *SuccEdge) {
 #ifndef NDEBUG
   if (SuccSU->NumPredsLeft == 0) {
     dbgs() << "*** Scheduling failed! ***\n";
-    SuccSU->dump(DAG);
+    DAG->dumpNode(*SuccSU);
     dbgs() << " has been released too many times!\n";
     llvm_unreachable(nullptr);
   }
@@ -610,13 +610,11 @@ void SIScheduleBlock::printDebug(bool full) {
 
   dbgs() << "\nInstructions:\n";
   if (!Scheduled) {
-    for (SUnit* SU : SUnits) {
-      SU->dump(DAG);
-    }
+    for (const SUnit* SU : SUnits)
+      DAG->dumpNode(*SU);
   } else {
-    for (SUnit* SU : SUnits) {
-      SU->dump(DAG);
-    }
+    for (const SUnit* SU : SUnits)
+      DAG->dumpNode(*SU);
   }
 
   dbgs() << "///////////////////////\n";
@@ -1207,7 +1205,7 @@ void SIScheduleBlockCreator::createBlocksForVariant(SISchedulerBlockCreatorVaria
   NextReservedID = 1;
   NextNonReservedID = DAGSize + 1;
 
-  DEBUG(dbgs() << "Coloring the graph\n");
+  LLVM_DEBUG(dbgs() << "Coloring the graph\n");
 
   if (BlockVariant == SISchedulerBlockCreatorVariant::LatenciesGrouped)
     colorHighLatenciesGroups();
@@ -1230,7 +1228,7 @@ void SIScheduleBlockCreator::createBlocksForVariant(SISchedulerBlockCreatorVaria
     unsigned Color = CurrentColoring[SU->NodeNum];
     if (RealID.find(Color) == RealID.end()) {
       int ID = CurrentBlocks.size();
-      BlockPtrs.push_back(llvm::make_unique<SIScheduleBlock>(DAG, this, ID));
+      BlockPtrs.push_back(std::make_unique<SIScheduleBlock>(DAG, this, ID));
       CurrentBlocks.push_back(BlockPtrs.rbegin()->get());
       RealID[Color] = ID;
     }
@@ -1264,13 +1262,11 @@ void SIScheduleBlockCreator::createBlocksForVariant(SISchedulerBlockCreatorVaria
     SIScheduleBlock *Block = CurrentBlocks[i];
     Block->finalizeUnits();
   }
-  DEBUG(
-    dbgs() << "Blocks created:\n\n";
-    for (unsigned i = 0, e = CurrentBlocks.size(); i != e; ++i) {
-      SIScheduleBlock *Block = CurrentBlocks[i];
-      Block->printDebug(true);
-    }
-  );
+  LLVM_DEBUG(dbgs() << "Blocks created:\n\n";
+             for (unsigned i = 0, e = CurrentBlocks.size(); i != e; ++i) {
+               SIScheduleBlock *Block = CurrentBlocks[i];
+               Block->printDebug(true);
+             });
 }
 
 // Two functions taken from Codegen/MachineScheduler.cpp
@@ -1280,7 +1276,7 @@ static MachineBasicBlock::iterator
 nextIfDebug(MachineBasicBlock::iterator I,
             MachineBasicBlock::const_iterator End) {
   for (; I != End; ++I) {
-    if (!I->isDebugValue())
+    if (!I->isDebugInstr())
       break;
   }
   return I;
@@ -1290,7 +1286,7 @@ void SIScheduleBlockCreator::topologicalSort() {
   unsigned DAGSize = CurrentBlocks.size();
   std::vector<int> WorkList;
 
-  DEBUG(dbgs() << "Topological Sort\n");
+  LLVM_DEBUG(dbgs() << "Topological Sort\n");
 
   WorkList.reserve(DAGSize);
   TopDownIndex2Block.resize(DAGSize);
@@ -1337,11 +1333,11 @@ void SIScheduleBlockCreator::topologicalSort() {
 void SIScheduleBlockCreator::scheduleInsideBlocks() {
   unsigned DAGSize = CurrentBlocks.size();
 
-  DEBUG(dbgs() << "\nScheduling Blocks\n\n");
+  LLVM_DEBUG(dbgs() << "\nScheduling Blocks\n\n");
 
   // We do schedule a valid scheduling such that a Block corresponds
   // to a range of instructions.
-  DEBUG(dbgs() << "First phase: Fast scheduling for Reg Liveness\n");
+  LLVM_DEBUG(dbgs() << "First phase: Fast scheduling for Reg Liveness\n");
   for (unsigned i = 0, e = DAGSize; i != e; ++i) {
     SIScheduleBlock *Block = CurrentBlocks[i];
     Block->fastSchedule();
@@ -1395,7 +1391,7 @@ void SIScheduleBlockCreator::scheduleInsideBlocks() {
     Block->schedule((*SUs.begin())->getInstr(), (*SUs.rbegin())->getInstr());
   }
 
-  DEBUG(dbgs() << "Restoring MI Pos\n");
+  LLVM_DEBUG(dbgs() << "Restoring MI Pos\n");
   // Restore old ordering (which prevents a LIS->handleMove bug).
   for (unsigned i = PosOld.size(), e = 0; i != e; --i) {
     MachineBasicBlock::iterator POld = PosOld[i-1];
@@ -1409,12 +1405,10 @@ void SIScheduleBlockCreator::scheduleInsideBlocks() {
     }
   }
 
-  DEBUG(
-    for (unsigned i = 0, e = CurrentBlocks.size(); i != e; ++i) {
-      SIScheduleBlock *Block = CurrentBlocks[i];
-      Block->printDebug(true);
-    }
-  );
+  LLVM_DEBUG(for (unsigned i = 0, e = CurrentBlocks.size(); i != e; ++i) {
+    SIScheduleBlock *Block = CurrentBlocks[i];
+    Block->printDebug(true);
+  });
 }
 
 void SIScheduleBlockCreator::fillStats() {
@@ -1565,13 +1559,10 @@ SIScheduleBlockScheduler::SIScheduleBlockScheduler(SIScheduleDAGMI *DAG,
     blockScheduled(Block);
   }
 
-  DEBUG(
-    dbgs() << "Block Order:";
-    for (SIScheduleBlock* Block : BlocksScheduled) {
-      dbgs() << ' ' << Block->getID();
-    }
-    dbgs() << '\n';
-  );
+  LLVM_DEBUG(dbgs() << "Block Order:"; for (SIScheduleBlock *Block
+                                            : BlocksScheduled) {
+    dbgs() << ' ' << Block->getID();
+  } dbgs() << '\n';);
 }
 
 bool SIScheduleBlockScheduler::tryCandidateLatency(SIBlockSchedCandidate &Cand,
@@ -1634,18 +1625,17 @@ SIScheduleBlock *SIScheduleBlockScheduler::pickBlock() {
     maxVregUsage = VregCurrentUsage;
   if (SregCurrentUsage > maxSregUsage)
     maxSregUsage = SregCurrentUsage;
-  DEBUG(
-    dbgs() << "Picking New Blocks\n";
-    dbgs() << "Available: ";
-    for (SIScheduleBlock* Block : ReadyBlocks)
-      dbgs() << Block->getID() << ' ';
-    dbgs() << "\nCurrent Live:\n";
-    for (unsigned Reg : LiveRegs)
-      dbgs() << printVRegOrUnit(Reg, DAG->getTRI()) << ' ';
-    dbgs() << '\n';
-    dbgs() << "Current VGPRs: " << VregCurrentUsage << '\n';
-    dbgs() << "Current SGPRs: " << SregCurrentUsage << '\n';
-  );
+  LLVM_DEBUG(dbgs() << "Picking New Blocks\n"; dbgs() << "Available: ";
+             for (SIScheduleBlock *Block
+                  : ReadyBlocks) dbgs()
+             << Block->getID() << ' ';
+             dbgs() << "\nCurrent Live:\n";
+             for (unsigned Reg
+                  : LiveRegs) dbgs()
+             << printVRegOrUnit(Reg, DAG->getTRI()) << ' ';
+             dbgs() << '\n';
+             dbgs() << "Current VGPRs: " << VregCurrentUsage << '\n';
+             dbgs() << "Current SGPRs: " << SregCurrentUsage << '\n';);
 
   Cand.Block = nullptr;
   for (std::vector<SIScheduleBlock*>::iterator I = ReadyBlocks.begin(),
@@ -1677,20 +1667,18 @@ SIScheduleBlock *SIScheduleBlockScheduler::pickBlock() {
     if (TryCand.Reason != NoCand) {
       Cand.setBest(TryCand);
       Best = I;
-      DEBUG(dbgs() << "Best Current Choice: " << Cand.Block->getID() << ' '
-                   << getReasonStr(Cand.Reason) << '\n');
+      LLVM_DEBUG(dbgs() << "Best Current Choice: " << Cand.Block->getID() << ' '
+                        << getReasonStr(Cand.Reason) << '\n');
     }
   }
 
-  DEBUG(
-    dbgs() << "Picking: " << Cand.Block->getID() << '\n';
-    dbgs() << "Is a block with high latency instruction: "
-      << (Cand.IsHighLatency ? "yes\n" : "no\n");
-    dbgs() << "Position of last high latency dependency: "
-           << Cand.LastPosHighLatParentScheduled << '\n';
-    dbgs() << "VGPRUsageDiff: " << Cand.VGPRUsageDiff << '\n';
-    dbgs() << '\n';
-  );
+  LLVM_DEBUG(dbgs() << "Picking: " << Cand.Block->getID() << '\n';
+             dbgs() << "Is a block with high latency instruction: "
+                    << (Cand.IsHighLatency ? "yes\n" : "no\n");
+             dbgs() << "Position of last high latency dependency: "
+                    << Cand.LastPosHighLatParentScheduled << '\n';
+             dbgs() << "VGPRUsageDiff: " << Cand.VGPRUsageDiff << '\n';
+             dbgs() << '\n';);
 
   Block = Cand.Block;
   ReadyBlocks.erase(Best);
@@ -1702,7 +1690,7 @@ SIScheduleBlock *SIScheduleBlockScheduler::pickBlock() {
 void SIScheduleBlockScheduler::addLiveRegs(std::set<unsigned> &Regs) {
   for (unsigned Reg : Regs) {
     // For now only track virtual registers.
-    if (!TargetRegisterInfo::isVirtualRegister(Reg))
+    if (!Register::isVirtualRegister(Reg))
       continue;
     // If not already in the live set, then add it.
     (void) LiveRegs.insert(Reg);
@@ -1762,7 +1750,7 @@ SIScheduleBlockScheduler::checkRegUsageImpact(std::set<unsigned> &InRegs,
 
   for (unsigned Reg : InRegs) {
     // For now only track virtual registers.
-    if (!TargetRegisterInfo::isVirtualRegister(Reg))
+    if (!Register::isVirtualRegister(Reg))
       continue;
     if (LiveRegsConsumers[Reg] > 1)
       continue;
@@ -1774,7 +1762,7 @@ SIScheduleBlockScheduler::checkRegUsageImpact(std::set<unsigned> &InRegs,
 
   for (unsigned Reg : OutRegs) {
     // For now only track virtual registers.
-    if (!TargetRegisterInfo::isVirtualRegister(Reg))
+    if (!Register::isVirtualRegister(Reg))
       continue;
     PSetIterator PSetI = DAG->getMRI()->getPressureSets(Reg);
     for (; PSetI.isValid(); ++PSetI) {
@@ -1813,7 +1801,7 @@ SIScheduler::scheduleVariant(SISchedulerBlockCreatorVariant BlockVariant,
 // SIScheduleDAGMI //
 
 SIScheduleDAGMI::SIScheduleDAGMI(MachineSchedContext *C) :
-  ScheduleDAGMILive(C, llvm::make_unique<GenericScheduler>(C)) {
+  ScheduleDAGMILive(C, std::make_unique<GenericScheduler>(C)) {
   SITII = static_cast<const SIInstrInfo*>(TII);
   SITRI = static_cast<const SIRegisterInfo*>(TRI);
 
@@ -1886,6 +1874,8 @@ void SIScheduleDAGMI::moveLowLatencies() {
       bool CopyForLowLat = false;
       for (SDep& SuccDep : SU->Succs) {
         SUnit *Succ = SuccDep.getSUnit();
+        if (SuccDep.isWeak() || Succ->NodeNum >= DAGSize)
+          continue;
         if (SITII->isLowLatencyInstruction(*Succ->getInstr())) {
           CopyForLowLat = true;
         }
@@ -1923,7 +1913,7 @@ SIScheduleDAGMI::fillVgprSgprCost(_Iterator First, _Iterator End,
   for (_Iterator RegI = First; RegI != End; ++RegI) {
     unsigned Reg = *RegI;
     // For now only track virtual registers
-    if (!TargetRegisterInfo::isVirtualRegister(Reg))
+    if (!Register::isVirtualRegister(Reg))
       continue;
     PSetIterator PSetI = MRI.getPressureSets(Reg);
     for (; PSetI.isValid(); ++PSetI) {
@@ -1939,13 +1929,10 @@ void SIScheduleDAGMI::schedule()
 {
   SmallVector<SUnit*, 8> TopRoots, BotRoots;
   SIScheduleBlockResult Best, Temp;
-  DEBUG(dbgs() << "Preparing Scheduling\n");
+  LLVM_DEBUG(dbgs() << "Preparing Scheduling\n");
 
   buildDAGWithRegPressure();
-  DEBUG(
-    for(SUnit& SU : SUnits)
-       SU.dumpAll(this)
-  );
+  LLVM_DEBUG(dump());
 
   topologicalSort();
   findRootsAndBiasEdges(TopRoots, BotRoots);
@@ -1969,12 +1956,12 @@ void SIScheduleDAGMI::schedule()
 
   for (unsigned i = 0, e = (unsigned)SUnits.size(); i != e; ++i) {
     SUnit *SU = &SUnits[i];
-    unsigned BaseLatReg;
+    const MachineOperand *BaseLatOp;
     int64_t OffLatReg;
     if (SITII->isLowLatencyInstruction(*SU->getInstr())) {
       IsLowLatencySU[i] = 1;
-      if (SITII->getMemOpBaseRegImmOfs(*SU->getInstr(), BaseLatReg, OffLatReg,
-                                       TRI))
+      if (SITII->getMemOperandWithOffset(*SU->getInstr(), BaseLatOp, OffLatReg,
+                                         TRI))
         LowLatencyOffset[i] = OffLatReg;
     } else if (SITII->isHighLatencyInstruction(*SU->getInstr()))
       IsHighLatencySU[i] = 1;
@@ -2047,15 +2034,15 @@ void SIScheduleDAGMI::schedule()
 
     scheduleMI(SU, true);
 
-    DEBUG(dbgs() << "Scheduling SU(" << SU->NodeNum << ") "
-                 << *SU->getInstr());
+    LLVM_DEBUG(dbgs() << "Scheduling SU(" << SU->NodeNum << ") "
+                      << *SU->getInstr());
   }
 
   assert(CurrentTop == CurrentBottom && "Nonempty unscheduled zone.");
 
   placeDebugValues();
 
-  DEBUG({
+  LLVM_DEBUG({
     dbgs() << "*** Final schedule for "
            << printMBBReference(*begin()->getParent()) << " ***\n";
     dumpSchedule();

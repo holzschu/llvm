@@ -1,9 +1,8 @@
 //===- MipsDSPInstrInfo.td - DSP ASE instructions -*- tablegen ------------*-=//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -13,12 +12,19 @@
 
 // ImmLeaf
 def immZExt1 : ImmLeaf<i32, [{return isUInt<1>(Imm);}]>;
+def timmZExt1 : ImmLeaf<i32, [{return isUInt<1>(Imm);}], NOOP_SDNodeXForm, timm>;
 def immZExt2 : ImmLeaf<i32, [{return isUInt<2>(Imm);}]>;
+def timmZExt2 : ImmLeaf<i32, [{return isUInt<2>(Imm);}], NOOP_SDNodeXForm, timm>;
 def immZExt3 : ImmLeaf<i32, [{return isUInt<3>(Imm);}]>;
+def timmZExt3 : ImmLeaf<i32, [{return isUInt<3>(Imm);}], NOOP_SDNodeXForm, timm>;
 def immZExt4 : ImmLeaf<i32, [{return isUInt<4>(Imm);}]>;
+def timmZExt4 : ImmLeaf<i32, [{return isUInt<4>(Imm);}], NOOP_SDNodeXForm, timm>;
 def immZExt8 : ImmLeaf<i32, [{return isUInt<8>(Imm);}]>;
+def timmZExt8 : ImmLeaf<i32, [{return isUInt<8>(Imm);}], NOOP_SDNodeXForm, timm>;
 def immZExt10 : ImmLeaf<i32, [{return isUInt<10>(Imm);}]>;
+def timmZExt10 : ImmLeaf<i32, [{return isUInt<10>(Imm);}], NOOP_SDNodeXForm, timm>;
 def immSExt6 : ImmLeaf<i32, [{return isInt<6>(Imm);}]>;
+def timmSExt6 : ImmLeaf<i32, [{return isInt<6>(Imm);}], NOOP_SDNodeXForm, timm>;
 def immSExt10 : ImmLeaf<i32, [{return isInt<10>(Imm);}]>;
 
 // Mips-specific dsp nodes
@@ -307,7 +313,7 @@ class PRECR_SRA_PH_W_DESC_BASE<string instr_asm, SDPatternOperator OpNode,
   dag OutOperandList = (outs ROT:$rt);
   dag InOperandList = (ins ROS:$rs, uimm5:$sa, ROS:$src);
   string AsmString = !strconcat(instr_asm, "\t$rt, $rs, $sa");
-  list<dag> Pattern = [(set ROT:$rt, (OpNode ROS:$src, ROS:$rs, immZExt5:$sa))];
+  list<dag> Pattern = [(set ROT:$rt, (OpNode ROS:$src, ROS:$rs, timmZExt5:$sa))];
   InstrItinClass Itinerary = itin;
   string Constraints = "$src = $rt";
   string BaseOpcode = instr_asm;
@@ -444,9 +450,10 @@ class RDDSP_DESC_BASE<string instr_asm, SDPatternOperator OpNode,
   dag OutOperandList = (outs GPR32Opnd:$rd);
   dag InOperandList = (ins uimm10:$mask);
   string AsmString = !strconcat(instr_asm, "\t$rd, $mask");
-  list<dag> Pattern = [(set GPR32Opnd:$rd, (OpNode immZExt10:$mask))];
+  list<dag> Pattern = [(set GPR32Opnd:$rd, (OpNode timmZExt10:$mask))];
   InstrItinClass Itinerary = itin;
   string BaseOpcode = instr_asm;
+  bit isMoveReg = 1;
 }
 
 class WRDSP_DESC_BASE<string instr_asm, SDPatternOperator OpNode,
@@ -454,9 +461,10 @@ class WRDSP_DESC_BASE<string instr_asm, SDPatternOperator OpNode,
   dag OutOperandList = (outs);
   dag InOperandList = (ins GPR32Opnd:$rs, uimm10:$mask);
   string AsmString = !strconcat(instr_asm, "\t$rs, $mask");
-  list<dag> Pattern = [(OpNode GPR32Opnd:$rs, immZExt10:$mask)];
+  list<dag> Pattern = [(OpNode GPR32Opnd:$rs, timmZExt10:$mask)];
   InstrItinClass Itinerary = itin;
   string BaseOpcode = instr_asm;
+  bit isMoveReg = 1;
 }
 
 class DPA_W_PH_DESC_BASE<string instr_asm, SDPatternOperator OpNode> {
@@ -500,6 +508,7 @@ class MFHI_DESC_BASE<string instr_asm, RegisterOperand RO, SDNode OpNode,
   list<dag> Pattern = [(set GPR32Opnd:$rd, (OpNode RO:$ac))];
   InstrItinClass Itinerary = itin;
   string BaseOpcode = instr_asm;
+  bit isMoveReg = 1;
 }
 
 class MTHI_DESC_BASE<string instr_asm, RegisterOperand RO, InstrItinClass itin> {
@@ -508,10 +517,12 @@ class MTHI_DESC_BASE<string instr_asm, RegisterOperand RO, InstrItinClass itin> 
   string AsmString = !strconcat(instr_asm, "\t$rs, $ac");
   InstrItinClass Itinerary = itin;
   string BaseOpcode = instr_asm;
+  bit isMoveReg = 1;
 }
 
 class BPOSGE32_PSEUDO_DESC_BASE<SDPatternOperator OpNode, InstrItinClass itin> :
   MipsPseudo<(outs GPR32Opnd:$dst), (ins), [(set GPR32Opnd:$dst, (OpNode))]> {
+  bit hasNoSchedulingInfo = 1;
   bit usesCustomInserter = 1;
 }
 
@@ -1092,14 +1103,14 @@ class SHRLV_PH_DESC : SHLL_QB_R3_DESC_BASE<"shrlv.ph", int_mips_shrl_ph,
                                            NoItinerary, DSPROpnd>;
 
 // Misc
-class APPEND_DESC : APPEND_DESC_BASE<"append", int_mips_append, uimm5, immZExt5,
+class APPEND_DESC : APPEND_DESC_BASE<"append", int_mips_append, uimm5, timmZExt5,
                                      NoItinerary>;
 
-class BALIGN_DESC : APPEND_DESC_BASE<"balign", int_mips_balign, uimm2, immZExt2,
+class BALIGN_DESC : APPEND_DESC_BASE<"balign", int_mips_balign, uimm2, timmZExt2,
                                      NoItinerary>;
 
 class PREPEND_DESC : APPEND_DESC_BASE<"prepend", int_mips_prepend, uimm5,
-                                      immZExt5, NoItinerary>;
+                                      timmZExt5, NoItinerary>;
 
 // Pseudos.
 def BPOSGE32_PSEUDO : BPOSGE32_PSEUDO_DESC_BASE<int_mips_bposge32,
@@ -1285,7 +1296,7 @@ let isPseudo = 1, isCodeGenOnly = 1, hasNoSchedulingInfo = 1 in {
 }
 
 let DecoderNamespace = "MipsDSP", Arch = "dsp",
-    AdditionalPredicates = [HasDSP] in {
+    ASEPredicate = [HasDSP] in {
   def LWDSP : Load<"lw", DSPROpnd, null_frag, II_LW>, DspMMRel, LW_FM<0x23>;
   def SWDSP : Store<"sw", DSPROpnd, null_frag, II_SW>, DspMMRel, LW_FM<0x2b>;
 }
@@ -1310,7 +1321,9 @@ def PseudoCMPU_LE_QB : PseudoCMP<CMPU_LE_QB>;
 def PseudoPICK_PH : PseudoPICK<PICK_PH>;
 def PseudoPICK_QB : PseudoPICK<PICK_QB>;
 
-def PseudoMTLOHI_DSP : PseudoMTLOHI<ACC64DSP, GPR32>;
+let AdditionalPredicates = [HasDSP] in {
+  def PseudoMTLOHI_DSP : PseudoMTLOHI<ACC64DSP, GPR32>;
+}
 
 // Patterns.
 class DSPPat<dag pattern, dag result, Predicate pred = HasDSP> :

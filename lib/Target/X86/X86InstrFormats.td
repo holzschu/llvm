@@ -1,9 +1,8 @@
 //===-- X86InstrFormats.td - X86 Instruction Formats -------*- tablegen -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -27,10 +26,13 @@ def RawFrmDst     : Format<5>;
 def RawFrmDstSrc  : Format<6>;
 def RawFrmImm8    : Format<7>;
 def RawFrmImm16   : Format<8>;
+def AddCCFrm      : Format<9>;
 def MRMDestMem     : Format<32>;
 def MRMSrcMem      : Format<33>;
 def MRMSrcMem4VOp3 : Format<34>;
 def MRMSrcMemOp4   : Format<35>;
+def MRMSrcMemCC    : Format<36>;
+def MRMXmCC: Format<38>;
 def MRMXm  : Format<39>;
 def MRM0m  : Format<40>;  def MRM1m  : Format<41>;  def MRM2m  : Format<42>;
 def MRM3m  : Format<43>;  def MRM4m  : Format<44>;  def MRM5m  : Format<45>;
@@ -39,6 +41,8 @@ def MRMDestReg     : Format<48>;
 def MRMSrcReg      : Format<49>;
 def MRMSrcReg4VOp3 : Format<50>;
 def MRMSrcRegOp4   : Format<51>;
+def MRMSrcRegCC    : Format<52>;
+def MRMXrCC: Format<54>;
 def MRMXr  : Format<55>;
 def MRM0r  : Format<56>;  def MRM1r  : Format<57>;  def MRM2r  : Format<58>;
 def MRM3r  : Format<59>;  def MRM4r  : Format<60>;  def MRM5r  : Format<61>;
@@ -206,8 +210,10 @@ class TAPS : TA { Prefix OpPrefix = PS; }
 class TAPD : TA { Prefix OpPrefix = PD; }
 class TAXD : TA { Prefix OpPrefix = XD; }
 class VEX    { Encoding OpEnc = EncVEX; }
-class VEX_W    { bits<2> VEX_WPrefix = 1; }
-class VEX_WIG  { bits<2> VEX_WPrefix = 2; }
+class VEX_W    { bit HasVEX_W = 1; }
+class VEX_WIG  { bit IgnoresVEX_W = 1; }
+// Special version of VEX_W that can be changed to VEX.W==0 for EVEX2VEX.
+class VEX_W1X  { bit HasVEX_W = 1; bit EVEX_W1_VEX_W0 = 1; }
 class VEX_4V : VEX { bit hasVEX_4V = 1; }
 class VEX_L  { bit hasVEX_L = 1; }
 class VEX_LIG { bit ignoresVEX_L = 1; }
@@ -235,11 +241,19 @@ class XOP_4V : XOP { bit hasVEX_4V = 1; }
 // Specify the alternative register form instruction to replace the current
 // instruction in case it was picked during generation of memory folding tables
 class FoldGenData<string _RegisterForm> {
-    string FoldGenRegForm = _RegisterForm;
+  string FoldGenRegForm = _RegisterForm;
+}
+
+// Provide a specific instruction to be used by the EVEX2VEX conversion.
+class EVEX2VEXOverride<string VEXInstrName> {
+  string EVEX2VEXOverride = VEXInstrName;
 }
 
 // Mark the instruction as "illegal to memory fold/unfold"
 class NotMemoryFoldable { bit isMemoryFoldable = 0; }
+
+// Prevent EVEX->VEX conversion from considering this instruction.
+class NotEVEX2VEXConvertible { bit notEVEX2VEXConvertible = 1; }
 
 class X86Inst<bits<8> opcod, Format f, ImmType i, dag outs, dag ins,
               string AsmStr, Domain d = GenericDomain>
@@ -283,7 +297,10 @@ class X86Inst<bits<8> opcod, Format f, ImmType i, dag outs, dag ins,
   bit hasREPPrefix = 0;     // Does this inst have a REP prefix?
   Encoding OpEnc = EncNormal; // Encoding used by this instruction
   bits<2> OpEncBits = OpEnc.Value;
-  bits<2> VEX_WPrefix = 0;  // Does this inst set the VEX_W field?
+  bit HasVEX_W = 0;         // Does this inst set the VEX_W field?
+  bit IgnoresVEX_W = 0;     // Does this inst ignore VEX_W field?
+  bit EVEX_W1_VEX_W0 = 0;   // This EVEX inst with VEX.W==1 can become a VEX
+                            // instruction with VEX.W == 0.
   bit hasVEX_4V = 0;        // Does this inst require the VEX.VVVV field?
   bit hasVEX_L = 0;         // Does this inst use large (256-bit) registers?
   bit ignoresVEX_L = 0;     // Does this instruction ignore the L-bit
@@ -298,11 +315,8 @@ class X86Inst<bits<8> opcod, Format f, ImmType i, dag outs, dag ins,
   bit hasEVEX_RC = 0;       // Explicitly specified rounding control in FP instruction.
   bit hasNoTrackPrefix = 0; // Does this inst has 0x3E (NoTrack) prefix?
 
-  bits<2> EVEX_LL;
-  let EVEX_LL{0} = hasVEX_L;
-  let EVEX_LL{1} = hasEVEX_L2;
   // Vector size in bytes.
-  bits<7> VectSize = !shl(16, EVEX_LL);
+  bits<7> VectSize = !if(hasEVEX_L2, 64, !if(hasVEX_L, 32, 16));
 
   // The scaling factor for AVX512's compressed displacement is either
   //   - the size of a  power-of-two number of elements or
@@ -320,7 +334,11 @@ class X86Inst<bits<8> opcod, Format f, ImmType i, dag outs, dag ins,
   // instruction to replace the current one in case it got picked during generation.
   string FoldGenRegForm = ?;
 
+  // Used to prevent an explicit EVEX2VEX override for this instruction.
+  string EVEX2VEXOverride = ?;
+
   bit isMemoryFoldable = 1;     // Is it allowed to memory fold/unfold this instruction?
+  bit notEVEX2VEXConvertible = 0; // Prevent EVEX->VEX conversion.
 
   // TSFlags layout should be kept in sync with X86BaseInfo.h.
   let TSFlags{6-0}   = FormBits;
@@ -338,7 +356,7 @@ class X86Inst<bits<8> opcod, Format f, ImmType i, dag outs, dag ins,
   let TSFlags{29-28} = OpEncBits;
   let TSFlags{37-30} = Opcode;
   // Currently no need for second bit in TSFlags - W Ignore is equivalent to 0.
-  let TSFlags{38}    = VEX_WPrefix{0};
+  let TSFlags{38}    = HasVEX_W;
   let TSFlags{39}    = hasVEX_4V;
   let TSFlags{40}    = hasVEX_L;
   let TSFlags{41}    = hasEVEX_K;
@@ -518,8 +536,8 @@ class PI<bits<8> o, Format F, dag outs, dag ins, string asm, list<dag> pattern,
 class MMXPI<bits<8> o, Format F, dag outs, dag ins, string asm, list<dag> pattern,
             Domain d>
       : I<o, F, outs, ins, asm, pattern, d> {
-  let Predicates = !if(!eq(OpPrefix.Value, PD.Value), [HasSSE2],
-                       [HasSSE1]);
+  let Predicates = !if(!eq(OpPrefix.Value, PD.Value), [HasMMX, HasSSE2],
+                       [HasMMX, HasSSE1]);
 }
 
 // PIi8 - SSE 1 & 2 packed instructions with immediate
@@ -627,10 +645,10 @@ class S2I<bits<8> o, Format F, dag outs, dag ins, string asm,
       : I<o, F, outs, ins, asm, pattern>, PD, Requires<[UseSSE2]>;
 class MMXSDIi8<bits<8> o, Format F, dag outs, dag ins, string asm,
                list<dag> pattern>
-      : Ii8<o, F, outs, ins, asm, pattern>, XD, Requires<[HasSSE2]>;
+      : Ii8<o, F, outs, ins, asm, pattern>, XD, Requires<[HasMMX, HasSSE2]>;
 class MMXS2SIi8<bits<8> o, Format F, dag outs, dag ins, string asm,
                 list<dag> pattern>
-      : Ii8<o, F, outs, ins, asm, pattern>, XS, Requires<[HasSSE2]>;
+      : Ii8<o, F, outs, ins, asm, pattern>, XS, Requires<[HasMMX, HasSSE2]>;
 
 // SSE3 Instruction Templates:
 //
@@ -674,11 +692,11 @@ class SS3AI<bits<8> o, Format F, dag outs, dag ins, string asm,
 class MMXSS38I<bits<8> o, Format F, dag outs, dag ins, string asm,
                list<dag> pattern>
       : I<o, F, outs, ins, asm, pattern, SSEPackedInt>, T8PS,
-        Requires<[HasSSSE3]>;
+        Requires<[HasMMX, HasSSSE3]>;
 class MMXSS3AI<bits<8> o, Format F, dag outs, dag ins, string asm,
                list<dag> pattern>
       : Ii8<o, F, outs, ins, asm, pattern, SSEPackedInt>, TAPS,
-        Requires<[HasSSSE3]>;
+        Requires<[HasMMX, HasSSSE3]>;
 
 // SSE4.1 Instruction Templates:
 //

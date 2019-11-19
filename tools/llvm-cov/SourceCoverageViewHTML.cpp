@@ -1,9 +1,8 @@
 //===- SourceCoverageViewHTML.cpp - A html code coverage view -------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
@@ -25,38 +24,36 @@ namespace {
 
 // Return a string with the special characters in \p Str escaped.
 std::string escape(StringRef Str, const CoverageViewOptions &Opts) {
-  std::string Result;
+  std::string TabExpandedResult;
   unsigned ColNum = 0; // Record the column number.
   for (char C : Str) {
-    ++ColNum;
-    if (C == '&')
-      Result += "&amp;";
-    else if (C == '<')
-      Result += "&lt;";
-    else if (C == '>')
-      Result += "&gt;";
-    else if (C == '\"')
-      Result += "&quot;";
-    else if (C == '\n' || C == '\r') {
-      Result += C;
-      ColNum = 0;
-    } else if (C == '\t') {
-      // Replace '\t' with TabSize spaces.
-      unsigned NumSpaces = Opts.TabSize - (--ColNum % Opts.TabSize);
+    if (C == '\t') {
+      // Replace '\t' with up to TabSize spaces.
+      unsigned NumSpaces = Opts.TabSize - (ColNum % Opts.TabSize);
       for (unsigned I = 0; I < NumSpaces; ++I)
-        Result += "&nbsp;";
+        TabExpandedResult += ' ';
       ColNum += NumSpaces;
-    } else
-      Result += C;
+    } else {
+      TabExpandedResult += C;
+      if (C == '\n' || C == '\r')
+        ColNum = 0;
+      else
+        ++ColNum;
+    }
   }
-  return Result;
+  std::string EscapedHTML;
+  {
+    raw_string_ostream OS{EscapedHTML};
+    printHTMLEscaped(TabExpandedResult, OS);
+  }
+  return EscapedHTML;
 }
 
 // Create a \p Name tag around \p Str, and optionally set its \p ClassName.
 std::string tag(const std::string &Name, const std::string &Str,
                 const std::string &ClassName = "") {
   std::string Tag = "<" + Name;
-  if (ClassName != "")
+  if (!ClassName.empty())
     Tag += " class='" + ClassName + "'";
   return Tag + ">" + Str + "</" + Name + ">";
 }
@@ -204,6 +201,9 @@ th, td {
   border-right: solid 1px #eee;
   border-left: solid 1px #eee;
   text-align: left;
+}
+td pre {
+  display: inline-block;
 }
 td:first-child {
   border-left: none;

@@ -1,9 +1,8 @@
 //===--- lib/CodeGen/DIE.cpp - DWARF Info Entries -------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -17,6 +16,7 @@
 #include "DwarfUnit.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/CodeGen/AsmPrinter.h"
+#include "llvm/Config/llvm-config.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCContext.h"
@@ -86,8 +86,9 @@ void DIEAbbrev::Emit(const AsmPrinter *AP) const {
     // easily, which helps track down where it came from.
     if (!dwarf::isValidFormForVersion(AttrData.getForm(),
                                       AP->getDwarfVersion())) {
-      DEBUG(dbgs() << "Invalid form " << format("0x%x", AttrData.getForm())
-                   << " for DWARF version " << AP->getDwarfVersion() << "\n");
+      LLVM_DEBUG(dbgs() << "Invalid form " << format("0x%x", AttrData.getForm())
+                        << " for DWARF version " << AP->getDwarfVersion()
+                        << "\n");
       llvm_unreachable("Invalid form for specified DWARF version");
     }
 #endif
@@ -210,7 +211,7 @@ const DIE *DIE::getUnitDie() const {
   return nullptr;
 }
 
-const DIEUnit *DIE::getUnit() const {
+DIEUnit *DIE::getUnit() const {
   const DIE *UnitDie = getUnitDie();
   if (UnitDie)
     return UnitDie->Owner.dyn_cast<DIEUnit*>();
@@ -412,6 +413,8 @@ void DIEInteger::EmitValue(const AsmPrinter *Asm, dwarf::Form Form) const {
   case dwarf::DW_FORM_GNU_addr_index:
   case dwarf::DW_FORM_ref_udata:
   case dwarf::DW_FORM_strx:
+  case dwarf::DW_FORM_addrx:
+  case dwarf::DW_FORM_rnglistx:
   case dwarf::DW_FORM_udata:
     Asm->EmitULEB128(Integer);
     return;
@@ -438,6 +441,8 @@ unsigned DIEInteger::SizeOf(const AsmPrinter *AP, dwarf::Form Form) const {
   case dwarf::DW_FORM_GNU_addr_index:
   case dwarf::DW_FORM_ref_udata:
   case dwarf::DW_FORM_strx:
+  case dwarf::DW_FORM_addrx:
+  case dwarf::DW_FORM_rnglistx:
   case dwarf::DW_FORM_udata:
     return getULEB128Size(Integer);
   case dwarf::DW_FORM_sdata:
@@ -459,7 +464,7 @@ void DIEInteger::print(raw_ostream &O) const {
 /// EmitValue - Emit expression value.
 ///
 void DIEExpr::EmitValue(const AsmPrinter *AP, dwarf::Form Form) const {
-  AP->EmitDebugThreadLocal(Expr, SizeOf(AP, Form));
+  AP->EmitDebugValue(Expr, SizeOf(AP, Form));
 }
 
 /// SizeOf - Determine size of expression value in bytes.
@@ -499,6 +504,23 @@ unsigned DIELabel::SizeOf(const AsmPrinter *AP, dwarf::Form Form) const {
 
 LLVM_DUMP_METHOD
 void DIELabel::print(raw_ostream &O) const { O << "Lbl: " << Label->getName(); }
+
+//===----------------------------------------------------------------------===//
+// DIEBaseTypeRef Implementation
+//===----------------------------------------------------------------------===//
+
+void DIEBaseTypeRef::EmitValue(const AsmPrinter *AP, dwarf::Form Form) const {
+  uint64_t Offset = CU->ExprRefedBaseTypes[Index].Die->getOffset();
+  assert(Offset < (1ULL << (ULEB128PadSize * 7)) && "Offset wont fit");
+  AP->EmitULEB128(Offset, nullptr, ULEB128PadSize);
+}
+
+unsigned DIEBaseTypeRef::SizeOf(const AsmPrinter *AP, dwarf::Form Form) const {
+  return ULEB128PadSize;
+}
+
+LLVM_DUMP_METHOD
+void DIEBaseTypeRef::print(raw_ostream &O) const { O << "BaseTypeRef: " << Index; }
 
 //===----------------------------------------------------------------------===//
 // DIEDelta Implementation
@@ -583,8 +605,7 @@ void DIEString::print(raw_ostream &O) const {
 //===----------------------------------------------------------------------===//
 void DIEInlineString::EmitValue(const AsmPrinter *AP, dwarf::Form Form) const {
   if (Form == dwarf::DW_FORM_string) {
-    for (char ch : S)
-      AP->emitInt8(ch);
+    AP->OutStreamer->EmitBytes(S);
     AP->emitInt8(0);
     return;
   }

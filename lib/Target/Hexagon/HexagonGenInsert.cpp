@@ -1,9 +1,8 @@
 //===- HexagonGenInsert.cpp -----------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -164,11 +163,11 @@ namespace {
     }
 
     static inline unsigned v2x(unsigned v) {
-      return TargetRegisterInfo::virtReg2Index(v);
+      return Register::virtReg2Index(v);
     }
 
     static inline unsigned x2v(unsigned x) {
-      return TargetRegisterInfo::index2VirtReg(x);
+      return Register::index2VirtReg(x);
     }
   };
 
@@ -268,7 +267,7 @@ namespace {
     CellMapShadow(const BitTracker &T) : BT(T) {}
 
     const BitTracker::RegisterCell &lookup(unsigned VR) {
-      unsigned RInd = TargetRegisterInfo::virtReg2Index(VR);
+      unsigned RInd = Register::virtReg2Index(VR);
       // Grow the vector to at least 32 elements.
       if (RInd >= CVect.size())
         CVect.resize(std::max(RInd+16, 32U), nullptr);
@@ -437,7 +436,7 @@ namespace {
 } // end anonymous namespace
 
 void OrderedRegisterList::insert(unsigned VR) {
-  iterator L = std::lower_bound(Seq.begin(), Seq.end(), VR, Ord);
+  iterator L = llvm::lower_bound(Seq, VR, Ord);
   if (L == Seq.end())
     Seq.push_back(VR);
   else
@@ -450,7 +449,7 @@ void OrderedRegisterList::insert(unsigned VR) {
 }
 
 void OrderedRegisterList::remove(unsigned VR) {
-  iterator L = std::lower_bound(Seq.begin(), Seq.end(), VR, Ord);
+  iterator L = llvm::lower_bound(Seq, VR, Ord);
   if (L != Seq.end())
     Seq.erase(L);
 }
@@ -607,9 +606,9 @@ void HexagonGenInsert::buildOrderingMF(RegisterOrdering &RO) const {
       for (unsigned i = 0, n = MI->getNumOperands(); i < n; ++i) {
         const MachineOperand &MO = MI->getOperand(i);
         if (MO.isReg() && MO.isDef()) {
-          unsigned R = MO.getReg();
+          Register R = MO.getReg();
           assert(MO.getSubReg() == 0 && "Unexpected subregister in definition");
-          if (TargetRegisterInfo::isVirtualRegister(R))
+          if (Register::isVirtualRegister(R))
             RO.insert(std::make_pair(R, Index++));
         }
       }
@@ -632,7 +631,7 @@ void HexagonGenInsert::buildOrderingBT(RegisterOrdering &RB,
   SortableVectorType VRs;
   for (RegisterOrdering::iterator I = RB.begin(), E = RB.end(); I != E; ++I)
     VRs.push_back(I->first);
-  llvm::sort(VRs.begin(), VRs.end(), LexCmp);
+  llvm::sort(VRs, LexCmp);
   // Transfer the results to the outgoing register ordering.
   for (unsigned i = 0, n = VRs.size(); i < n; ++i)
     RO.insert(std::make_pair(VRs[i], i));
@@ -725,8 +724,8 @@ void HexagonGenInsert::getInstrDefs(const MachineInstr *MI,
     const MachineOperand &MO = MI->getOperand(i);
     if (!MO.isReg() || !MO.isDef())
       continue;
-    unsigned R = MO.getReg();
-    if (!TargetRegisterInfo::isVirtualRegister(R))
+    Register R = MO.getReg();
+    if (!Register::isVirtualRegister(R))
       continue;
     Defs.insert(R);
   }
@@ -738,8 +737,8 @@ void HexagonGenInsert::getInstrUses(const MachineInstr *MI,
     const MachineOperand &MO = MI->getOperand(i);
     if (!MO.isReg() || !MO.isUse())
       continue;
-    unsigned R = MO.getReg();
-    if (!TargetRegisterInfo::isVirtualRegister(R))
+    Register R = MO.getReg();
+    if (!Register::isVirtualRegister(R))
       continue;
     Uses.insert(R);
   }
@@ -1400,7 +1399,7 @@ bool HexagonGenInsert::generateInserts() {
   for (IFMapType::iterator I = IFMap.begin(), E = IFMap.end(); I != E; ++I) {
     unsigned VR = I->first;
     const TargetRegisterClass *RC = MRI->getRegClass(VR);
-    unsigned NewVR = MRI->createVirtualRegister(RC);
+    Register NewVR = MRI->createVirtualRegister(RC);
     RegMap[VR] = NewVR;
   }
 
@@ -1478,9 +1477,8 @@ bool HexagonGenInsert::removeDeadCode(MachineDomTreeNode *N) {
     for (const MachineOperand &MO : MI->operands()) {
       if (!MO.isReg() || !MO.isDef())
         continue;
-      unsigned R = MO.getReg();
-      if (!TargetRegisterInfo::isVirtualRegister(R) ||
-          !MRI->use_nodbg_empty(R)) {
+      Register R = MO.getReg();
+      if (!Register::isVirtualRegister(R) || !MRI->use_nodbg_empty(R)) {
         AllDead = false;
         break;
       }
@@ -1599,7 +1597,7 @@ bool HexagonGenInsert::runOnMachineFunction(MachineFunction &MF) {
 
     IterListType Out;
     for (IFMapType::iterator I = IFMap.begin(), E = IFMap.end(); I != E; ++I) {
-      unsigned Idx = TargetRegisterInfo::virtReg2Index(I->first);
+      unsigned Idx = Register::virtReg2Index(I->first);
       if (Idx >= Cutoff)
         Out.push_back(I);
     }

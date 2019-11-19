@@ -1,9 +1,8 @@
 //=====-- NVPTXSubtarget.h - Define Subtarget for the NVPTX ---*- C++ -*--====//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -74,12 +73,10 @@ public:
   bool hasAtomBitwise64() const { return SmVersion >= 32; }
   bool hasAtomMinMax64() const { return SmVersion >= 32; }
   bool hasLDG() const { return SmVersion >= 32; }
-  bool hasLDU() const { return ((SmVersion >= 20) && (SmVersion < 30)); }
   inline bool hasHWROT32() const { return SmVersion >= 32; }
   bool hasImageHandles() const;
   bool hasFP16Math() const { return SmVersion >= 53; }
   bool allowFP16Math() const;
-
   unsigned int getSmVersion() const { return SmVersion; }
   std::string getTargetName() const { return TargetName; }
 

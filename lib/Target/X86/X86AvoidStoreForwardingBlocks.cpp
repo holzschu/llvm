@@ -1,9 +1,8 @@
 //===- X86AvoidStoreForwardingBlockis.cpp - Avoid HW Store Forward Block --===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -36,6 +35,7 @@
 
 #include "X86InstrInfo.h"
 #include "X86Subtarget.h"
+#include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
@@ -51,10 +51,6 @@
 using namespace llvm;
 
 #define DEBUG_TYPE "x86-avoid-SFB"
-
-namespace llvm {
-void initializeX86AvoidSFBPassPass(PassRegistry &);
-} // end namespace llvm
 
 static cl::opt<bool> DisableX86AvoidStoreForwardBlocks(
     "x86-disable-avoid-SFB", cl::Hidden,
@@ -73,9 +69,7 @@ using DisplacementSizeMap = std::map<int64_t, unsigned>;
 class X86AvoidSFBPass : public MachineFunctionPass {
 public:
   static char ID;
-  X86AvoidSFBPass() : MachineFunctionPass(ID) {
-    initializeX86AvoidSFBPassPass(*PassRegistry::getPassRegistry());
-  }
+  X86AvoidSFBPass() : MachineFunctionPass(ID) { }
 
   StringRef getPassName() const override {
     return "X86 Avoid Store Forwarding Blocks";
@@ -97,15 +91,15 @@ private:
   SmallVector<MachineInstr *, 2> ForRemoval;
   AliasAnalysis *AA;
 
-  /// \brief Returns couples of Load then Store to memory which look
+  /// Returns couples of Load then Store to memory which look
   ///  like a memcpy.
   void findPotentiallylBlockedCopies(MachineFunction &MF);
-  /// \brief Break the memcpy's load and store into smaller copies
+  /// Break the memcpy's load and store into smaller copies
   /// such that each memory load that was blocked by a smaller store
   /// would now be copied separately.
   void breakBlockedCopies(MachineInstr *LoadInst, MachineInstr *StoreInst,
                           const DisplacementSizeMap &BlockingStoresDispSizeMap);
-  /// \brief Break a copy of size Size to smaller copies.
+  /// Break a copy of size Size to smaller copies.
   void buildCopies(int Size, MachineInstr *LoadInst, int64_t LdDispImm,
                    MachineInstr *StoreInst, int64_t StDispImm,
                    int64_t LMMOffset, int64_t SMMOffset);
@@ -347,6 +341,8 @@ findPotentialBlockers(MachineInstr *LoadInst) {
   for (auto PBInst = std::next(MachineBasicBlock::reverse_iterator(LoadInst)),
             E = LoadInst->getParent()->rend();
        PBInst != E; ++PBInst) {
+    if (PBInst->isMetaInstruction())
+      continue;
     BlockCount++;
     if (BlockCount >= InspectionLimit)
       break;
@@ -370,6 +366,8 @@ findPotentialBlockers(MachineInstr *LoadInst) {
       for (MachineBasicBlock::reverse_iterator PBInst = PMBB->rbegin(),
                                                PME = PMBB->rend();
            PBInst != PME; ++PBInst) {
+        if (PBInst->isMetaInstruction())
+          continue;
         PredCount++;
         if (PredCount >= LimitLeft)
           break;
@@ -393,7 +391,7 @@ void X86AvoidSFBPass::buildCopy(MachineInstr *LoadInst, unsigned NLoadOpcode,
   MachineMemOperand *LMMO = *LoadInst->memoperands_begin();
   MachineMemOperand *SMMO = *StoreInst->memoperands_begin();
 
-  unsigned Reg1 = MRI->createVirtualRegister(
+  Register Reg1 = MRI->createVirtualRegister(
       TII->getRegClass(TII->get(NLoadOpcode), 0, TRI, *(MBB->getParent())));
   MachineInstr *NewLoad =
       BuildMI(*MBB, LoadInst, LoadInst->getDebugLoc(), TII->get(NLoadOpcode),
@@ -407,11 +405,14 @@ void X86AvoidSFBPass::buildCopy(MachineInstr *LoadInst, unsigned NLoadOpcode,
               MBB->getParent()->getMachineMemOperand(LMMO, LMMOffset, Size));
   if (LoadBase.isReg())
     getBaseOperand(NewLoad).setIsKill(false);
-  DEBUG(NewLoad->dump());
+  LLVM_DEBUG(NewLoad->dump());
   // If the load and store are consecutive, use the loadInst location to
   // reduce register pressure.
   MachineInstr *StInst = StoreInst;
-  if (StoreInst->getPrevNode() == LoadInst)
+  auto PrevInstrIt = skipDebugInstructionsBackward(
+      std::prev(MachineBasicBlock::instr_iterator(StoreInst)),
+      MBB->instr_begin());
+  if (PrevInstrIt.getNodePtr() == LoadInst)
     StInst = LoadInst;
   MachineInstr *NewStore =
       BuildMI(*MBB, StInst, StInst->getDebugLoc(), TII->get(NStoreOpcode))
@@ -428,7 +429,7 @@ void X86AvoidSFBPass::buildCopy(MachineInstr *LoadInst, unsigned NLoadOpcode,
   MachineOperand &StoreSrcVReg = StoreInst->getOperand(X86::AddrNumOperands);
   assert(StoreSrcVReg.isReg() && "Expected virtual register");
   NewStore->getOperand(X86::AddrNumOperands).setIsKill(StoreSrcVReg.isKill());
-  DEBUG(NewStore->dump());
+  LLVM_DEBUG(NewStore->dump());
 }
 
 void X86AvoidSFBPass::buildCopies(int Size, MachineInstr *LoadInst,
@@ -496,19 +497,22 @@ void X86AvoidSFBPass::buildCopies(int Size, MachineInstr *LoadInst,
 static void updateKillStatus(MachineInstr *LoadInst, MachineInstr *StoreInst) {
   MachineOperand &LoadBase = getBaseOperand(LoadInst);
   MachineOperand &StoreBase = getBaseOperand(StoreInst);
+  auto StorePrevNonDbgInstr = skipDebugInstructionsBackward(
+          std::prev(MachineBasicBlock::instr_iterator(StoreInst)),
+          LoadInst->getParent()->instr_begin()).getNodePtr();
   if (LoadBase.isReg()) {
     MachineInstr *LastLoad = LoadInst->getPrevNode();
     // If the original load and store to xmm/ymm were consecutive
     // then the partial copies were also created in
     // a consecutive order to reduce register pressure,
     // and the location of the last load is before the last store.
-    if (StoreInst->getPrevNode() == LoadInst)
+    if (StorePrevNonDbgInstr == LoadInst)
       LastLoad = LoadInst->getPrevNode()->getPrevNode();
     getBaseOperand(LastLoad).setIsKill(LoadBase.isKill());
   }
   if (StoreBase.isReg()) {
     MachineInstr *StInst = StoreInst;
-    if (StoreInst->getPrevNode() == LoadInst)
+    if (StorePrevNonDbgInstr == LoadInst)
       StInst = LoadInst;
     getBaseOperand(StInst->getPrevNode()).setIsKill(StoreBase.isKill());
   }
@@ -535,7 +539,7 @@ void X86AvoidSFBPass::findPotentiallylBlockedCopies(MachineFunction &MF) {
       if (!isPotentialBlockedMemCpyLd(MI.getOpcode()))
         continue;
       int DefVR = MI.getOperand(0).getReg();
-      if (!MRI->hasOneUse(DefVR))
+      if (!MRI->hasOneNonDBGUse(DefVR))
         continue;
       for (auto UI = MRI->use_nodbg_begin(DefVR), UE = MRI->use_nodbg_end();
            UI != UE;) {
@@ -568,8 +572,8 @@ void X86AvoidSFBPass::breakBlockedCopies(
     const DisplacementSizeMap &BlockingStoresDispSizeMap) {
   int64_t LdDispImm = getDispOperand(LoadInst).getImm();
   int64_t StDispImm = getDispOperand(StoreInst).getImm();
-  int64_t LMMOffset = (*LoadInst->memoperands_begin())->getOffset();
-  int64_t SMMOffset = (*StoreInst->memoperands_begin())->getOffset();
+  int64_t LMMOffset = 0;
+  int64_t SMMOffset = 0;
 
   int64_t LdDisp1 = LdDispImm;
   int64_t LdDisp2 = 0;
@@ -590,7 +594,7 @@ void X86AvoidSFBPass::breakBlockedCopies(
       StDisp2 += OverlapDelta;
       Size2 -= OverlapDelta;
     }
-    Size1 = std::abs(std::abs(LdDisp2) - std::abs(LdDisp1));
+    Size1 = LdDisp2 - LdDisp1;
 
     // Build a copy for the point until the current blocking store's
     // displacement.
@@ -645,21 +649,22 @@ removeRedundantBlockingStores(DisplacementSizeMap &BlockingStoresDispSizeMap) {
   if (BlockingStoresDispSizeMap.size() <= 1)
     return;
 
-  int64_t PrevDisp = BlockingStoresDispSizeMap.begin()->first;
-  unsigned PrevSize = BlockingStoresDispSizeMap.begin()->second;
-  SmallVector<int64_t, 2> ForRemoval;
-  for (auto DispSizePair = std::next(BlockingStoresDispSizeMap.begin());
-       DispSizePair != BlockingStoresDispSizeMap.end(); ++DispSizePair) {
-    int64_t CurrDisp = DispSizePair->first;
-    unsigned CurrSize = DispSizePair->second;
-    if (CurrDisp + CurrSize <= PrevDisp + PrevSize) {
-      ForRemoval.push_back(PrevDisp);
+  SmallVector<std::pair<int64_t, unsigned>, 0> DispSizeStack;
+  for (auto DispSizePair : BlockingStoresDispSizeMap) {
+    int64_t CurrDisp = DispSizePair.first;
+    unsigned CurrSize = DispSizePair.second;
+    while (DispSizeStack.size()) {
+      int64_t PrevDisp = DispSizeStack.back().first;
+      unsigned PrevSize = DispSizeStack.back().second;
+      if (CurrDisp + CurrSize > PrevDisp + PrevSize)
+        break;
+      DispSizeStack.pop_back();
     }
-    PrevDisp = CurrDisp;
-    PrevSize = CurrSize;
+    DispSizeStack.push_back(DispSizePair);
   }
-  for (auto Disp : ForRemoval)
-    BlockingStoresDispSizeMap.erase(Disp);
+  BlockingStoresDispSizeMap.clear();
+  for (auto Disp : DispSizeStack)
+    BlockingStoresDispSizeMap.insert(Disp);
 }
 
 bool X86AvoidSFBPass::runOnMachineFunction(MachineFunction &MF) {
@@ -674,7 +679,7 @@ bool X86AvoidSFBPass::runOnMachineFunction(MachineFunction &MF) {
   TII = MF.getSubtarget<X86Subtarget>().getInstrInfo();
   TRI = MF.getSubtarget<X86Subtarget>().getRegisterInfo();
   AA = &getAnalysis<AAResultsWrapperPass>().getAAResults();
-  DEBUG(dbgs() << "Start X86AvoidStoreForwardBlocks\n";);
+  LLVM_DEBUG(dbgs() << "Start X86AvoidStoreForwardBlocks\n";);
   // Look for a load then a store to XMM/YMM which look like a memcpy
   findPotentiallylBlockedCopies(MF);
 
@@ -711,10 +716,10 @@ bool X86AvoidSFBPass::runOnMachineFunction(MachineFunction &MF) {
     // into smaller copies such that each smaller store that was causing
     // a store block would now be copied separately.
     MachineInstr *StoreInst = LoadStoreInstPair.second;
-    DEBUG(dbgs() << "Blocked load and store instructions: \n");
-    DEBUG(LoadInst->dump());
-    DEBUG(StoreInst->dump());
-    DEBUG(dbgs() << "Replaced with:\n");
+    LLVM_DEBUG(dbgs() << "Blocked load and store instructions: \n");
+    LLVM_DEBUG(LoadInst->dump());
+    LLVM_DEBUG(StoreInst->dump());
+    LLVM_DEBUG(dbgs() << "Replaced with:\n");
     removeRedundantBlockingStores(BlockingStoresDispSizeMap);
     breakBlockedCopies(LoadInst, StoreInst, BlockingStoresDispSizeMap);
     updateKillStatus(LoadInst, StoreInst);
@@ -726,7 +731,7 @@ bool X86AvoidSFBPass::runOnMachineFunction(MachineFunction &MF) {
   }
   ForRemoval.clear();
   BlockedLoadsStoresPairs.clear();
-  DEBUG(dbgs() << "End X86AvoidStoreForwardBlocks\n";);
+  LLVM_DEBUG(dbgs() << "End X86AvoidStoreForwardBlocks\n";);
 
   return Changed;
 }

@@ -1,9 +1,8 @@
 //===-- ARMExpandPseudoInsts.cpp - Expand pseudo instructions -------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -24,6 +23,7 @@
 #include "llvm/CodeGen/LivePhysRegs.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
+#include "llvm/Support/Debug.h"
 
 using namespace llvm;
 
@@ -110,6 +110,9 @@ namespace {
   // OddDblSpc depending on the lane number operand.
   enum NEONRegSpacing {
     SingleSpc,
+    SingleLowSpc ,  // Single spacing, low registers, three and four vectors.
+    SingleHighQSpc, // Single spacing, high registers, four vectors.
+    SingleHighTSpc, // Single spacing, high registers, three vectors.
     EvenDblSpc,
     OddDblSpc
   };
@@ -154,12 +157,41 @@ static const NEONLdStTableEntry NEONLdStTable[] = {
 { ARM::VLD1LNq8Pseudo,      ARM::VLD1LNd8,      true, false, false, EvenDblSpc, 1, 8 ,true},
 { ARM::VLD1LNq8Pseudo_UPD,  ARM::VLD1LNd8_UPD, true, true, true,  EvenDblSpc, 1, 8 ,true},
 
+{ ARM::VLD1d16QPseudo,      ARM::VLD1d16Q,     true,  false, false, SingleSpc,  4, 4 ,false},
+{ ARM::VLD1d16TPseudo,      ARM::VLD1d16T,     true,  false, false, SingleSpc,  3, 4 ,false},
+{ ARM::VLD1d32QPseudo,      ARM::VLD1d32Q,     true,  false, false, SingleSpc,  4, 2 ,false},
+{ ARM::VLD1d32TPseudo,      ARM::VLD1d32T,     true,  false, false, SingleSpc,  3, 2 ,false},
 { ARM::VLD1d64QPseudo,      ARM::VLD1d64Q,     true,  false, false, SingleSpc,  4, 1 ,false},
 { ARM::VLD1d64QPseudoWB_fixed,  ARM::VLD1d64Qwb_fixed,   true,  true, false, SingleSpc,  4, 1 ,false},
 { ARM::VLD1d64QPseudoWB_register,  ARM::VLD1d64Qwb_register,   true,  true, true, SingleSpc,  4, 1 ,false},
 { ARM::VLD1d64TPseudo,      ARM::VLD1d64T,     true,  false, false, SingleSpc,  3, 1 ,false},
 { ARM::VLD1d64TPseudoWB_fixed,  ARM::VLD1d64Twb_fixed,   true,  true, false, SingleSpc,  3, 1 ,false},
 { ARM::VLD1d64TPseudoWB_register,  ARM::VLD1d64Twb_register, true, true, true,  SingleSpc,  3, 1 ,false},
+{ ARM::VLD1d8QPseudo,       ARM::VLD1d8Q,      true,  false, false, SingleSpc,  4, 8 ,false},
+{ ARM::VLD1d8TPseudo,       ARM::VLD1d8T,      true,  false, false, SingleSpc,  3, 8 ,false},
+{ ARM::VLD1q16HighQPseudo,  ARM::VLD1d16Q,     true,  false, false, SingleHighQSpc,  4, 4 ,false},
+{ ARM::VLD1q16HighTPseudo,  ARM::VLD1d16T,     true,  false, false, SingleHighTSpc,  3, 4 ,false},
+{ ARM::VLD1q16LowQPseudo_UPD,  ARM::VLD1d16Qwb_fixed,   true,  true, true, SingleLowSpc,  4, 4 ,false},
+{ ARM::VLD1q16LowTPseudo_UPD,  ARM::VLD1d16Twb_fixed,   true,  true, true, SingleLowSpc,  3, 4 ,false},
+{ ARM::VLD1q32HighQPseudo,  ARM::VLD1d32Q,     true,  false, false, SingleHighQSpc,  4, 2 ,false},
+{ ARM::VLD1q32HighTPseudo,  ARM::VLD1d32T,     true,  false, false, SingleHighTSpc,  3, 2 ,false},
+{ ARM::VLD1q32LowQPseudo_UPD,  ARM::VLD1d32Qwb_fixed,   true,  true, true, SingleLowSpc,  4, 2 ,false},
+{ ARM::VLD1q32LowTPseudo_UPD,  ARM::VLD1d32Twb_fixed,   true,  true, true, SingleLowSpc,  3, 2 ,false},
+{ ARM::VLD1q64HighQPseudo,  ARM::VLD1d64Q,     true,  false, false, SingleHighQSpc,  4, 1 ,false},
+{ ARM::VLD1q64HighTPseudo,  ARM::VLD1d64T,     true,  false, false, SingleHighTSpc,  3, 1 ,false},
+{ ARM::VLD1q64LowQPseudo_UPD,  ARM::VLD1d64Qwb_fixed,   true,  true, true, SingleLowSpc,  4, 1 ,false},
+{ ARM::VLD1q64LowTPseudo_UPD,  ARM::VLD1d64Twb_fixed,   true,  true, true, SingleLowSpc,  3, 1 ,false},
+{ ARM::VLD1q8HighQPseudo,   ARM::VLD1d8Q,     true,  false, false, SingleHighQSpc,  4, 8 ,false},
+{ ARM::VLD1q8HighTPseudo,   ARM::VLD1d8T,     true,  false, false, SingleHighTSpc,  3, 8 ,false},
+{ ARM::VLD1q8LowQPseudo_UPD,  ARM::VLD1d8Qwb_fixed,   true,  true, true, SingleLowSpc,  4, 8 ,false},
+{ ARM::VLD1q8LowTPseudo_UPD,  ARM::VLD1d8Twb_fixed,   true,  true, true, SingleLowSpc,  3, 8 ,false},
+
+{ ARM::VLD2DUPq16EvenPseudo,  ARM::VLD2DUPd16x2,  true, false, false, EvenDblSpc, 2, 4 ,false},
+{ ARM::VLD2DUPq16OddPseudo,   ARM::VLD2DUPd16x2,  true, false, false, OddDblSpc,  2, 4 ,false},
+{ ARM::VLD2DUPq32EvenPseudo,  ARM::VLD2DUPd32x2,  true, false, false, EvenDblSpc, 2, 2 ,false},
+{ ARM::VLD2DUPq32OddPseudo,   ARM::VLD2DUPd32x2,  true, false, false, OddDblSpc,  2, 2 ,false},
+{ ARM::VLD2DUPq8EvenPseudo,   ARM::VLD2DUPd8x2,   true, false, false, EvenDblSpc, 2, 8 ,false},
+{ ARM::VLD2DUPq8OddPseudo,    ARM::VLD2DUPd8x2,   true, false, false, OddDblSpc,  2, 8 ,false},
 
 { ARM::VLD2LNd16Pseudo,     ARM::VLD2LNd16,     true, false, false, SingleSpc,  2, 4 ,true},
 { ARM::VLD2LNd16Pseudo_UPD, ARM::VLD2LNd16_UPD, true, true, true,  SingleSpc,  2, 4 ,true},
@@ -188,6 +220,12 @@ static const NEONLdStTableEntry NEONLdStTable[] = {
 { ARM::VLD3DUPd32Pseudo_UPD, ARM::VLD3DUPd32_UPD, true, true, true,  SingleSpc, 3, 2,true},
 { ARM::VLD3DUPd8Pseudo,      ARM::VLD3DUPd8,      true, false, false, SingleSpc, 3, 8,true},
 { ARM::VLD3DUPd8Pseudo_UPD,  ARM::VLD3DUPd8_UPD, true, true, true,  SingleSpc, 3, 8,true},
+{ ARM::VLD3DUPq16EvenPseudo, ARM::VLD3DUPq16,     true, false, false, EvenDblSpc, 3, 4 ,true},
+{ ARM::VLD3DUPq16OddPseudo,  ARM::VLD3DUPq16,     true, false, false, OddDblSpc,  3, 4 ,true},
+{ ARM::VLD3DUPq32EvenPseudo, ARM::VLD3DUPq32,     true, false, false, EvenDblSpc, 3, 2 ,true},
+{ ARM::VLD3DUPq32OddPseudo,  ARM::VLD3DUPq32,     true, false, false, OddDblSpc,  3, 2 ,true},
+{ ARM::VLD3DUPq8EvenPseudo,  ARM::VLD3DUPq8,      true, false, false, EvenDblSpc, 3, 8 ,true},
+{ ARM::VLD3DUPq8OddPseudo,   ARM::VLD3DUPq8,      true, false, false, OddDblSpc,  3, 8 ,true},
 
 { ARM::VLD3LNd16Pseudo,     ARM::VLD3LNd16,     true, false, false, SingleSpc,  3, 4 ,true},
 { ARM::VLD3LNd16Pseudo_UPD, ARM::VLD3LNd16_UPD, true, true, true,  SingleSpc,  3, 4 ,true},
@@ -223,6 +261,12 @@ static const NEONLdStTableEntry NEONLdStTable[] = {
 { ARM::VLD4DUPd32Pseudo_UPD, ARM::VLD4DUPd32_UPD, true, true, true,  SingleSpc, 4, 2,true},
 { ARM::VLD4DUPd8Pseudo,      ARM::VLD4DUPd8,      true, false, false, SingleSpc, 4, 8,true},
 { ARM::VLD4DUPd8Pseudo_UPD,  ARM::VLD4DUPd8_UPD, true, true, true,  SingleSpc, 4, 8,true},
+{ ARM::VLD4DUPq16EvenPseudo, ARM::VLD4DUPq16,     true, false, false, EvenDblSpc, 4, 4 ,true},
+{ ARM::VLD4DUPq16OddPseudo,  ARM::VLD4DUPq16,     true, false, false, OddDblSpc,  4, 4 ,true},
+{ ARM::VLD4DUPq32EvenPseudo, ARM::VLD4DUPq32,     true, false, false, EvenDblSpc, 4, 2 ,true},
+{ ARM::VLD4DUPq32OddPseudo,  ARM::VLD4DUPq32,     true, false, false, OddDblSpc,  4, 2 ,true},
+{ ARM::VLD4DUPq8EvenPseudo,  ARM::VLD4DUPq8,      true, false, false, EvenDblSpc, 4, 8 ,true},
+{ ARM::VLD4DUPq8OddPseudo,   ARM::VLD4DUPq8,      true, false, false, OddDblSpc,  4, 8 ,true},
 
 { ARM::VLD4LNd16Pseudo,     ARM::VLD4LNd16,     true, false, false, SingleSpc,  4, 4 ,true},
 { ARM::VLD4LNd16Pseudo_UPD, ARM::VLD4LNd16_UPD, true, true, true,  SingleSpc,  4, 4 ,true},
@@ -259,12 +303,34 @@ static const NEONLdStTableEntry NEONLdStTable[] = {
 { ARM::VST1LNq8Pseudo,      ARM::VST1LNd8,     false, false, false, EvenDblSpc, 1, 8 ,true},
 { ARM::VST1LNq8Pseudo_UPD,  ARM::VST1LNd8_UPD, false, true, true,  EvenDblSpc, 1, 8 ,true},
 
+{ ARM::VST1d16QPseudo,      ARM::VST1d16Q,     false, false, false, SingleSpc,  4, 4 ,false},
+{ ARM::VST1d16TPseudo,      ARM::VST1d16T,     false, false, false, SingleSpc,  3, 4 ,false},
+{ ARM::VST1d32QPseudo,      ARM::VST1d32Q,     false, false, false, SingleSpc,  4, 2 ,false},
+{ ARM::VST1d32TPseudo,      ARM::VST1d32T,     false, false, false, SingleSpc,  3, 2 ,false},
 { ARM::VST1d64QPseudo,      ARM::VST1d64Q,     false, false, false, SingleSpc,  4, 1 ,false},
 { ARM::VST1d64QPseudoWB_fixed,  ARM::VST1d64Qwb_fixed, false, true, false,  SingleSpc,  4, 1 ,false},
 { ARM::VST1d64QPseudoWB_register, ARM::VST1d64Qwb_register, false, true, true,  SingleSpc,  4, 1 ,false},
 { ARM::VST1d64TPseudo,      ARM::VST1d64T,     false, false, false, SingleSpc,  3, 1 ,false},
 { ARM::VST1d64TPseudoWB_fixed,  ARM::VST1d64Twb_fixed, false, true, false,  SingleSpc,  3, 1 ,false},
 { ARM::VST1d64TPseudoWB_register,  ARM::VST1d64Twb_register, false, true, true,  SingleSpc,  3, 1 ,false},
+{ ARM::VST1d8QPseudo,       ARM::VST1d8Q,      false, false, false, SingleSpc,  4, 8 ,false},
+{ ARM::VST1d8TPseudo,       ARM::VST1d8T,      false, false, false, SingleSpc,  3, 8 ,false},
+{ ARM::VST1q16HighQPseudo,  ARM::VST1d16Q,      false, false, false, SingleHighQSpc,   4, 4 ,false},
+{ ARM::VST1q16HighTPseudo,  ARM::VST1d16T,      false, false, false, SingleHighTSpc,   3, 4 ,false},
+{ ARM::VST1q16LowQPseudo_UPD,   ARM::VST1d16Qwb_fixed,  false, true, true, SingleLowSpc,   4, 4 ,false},
+{ ARM::VST1q16LowTPseudo_UPD,   ARM::VST1d16Twb_fixed,  false, true, true, SingleLowSpc,   3, 4 ,false},
+{ ARM::VST1q32HighQPseudo,  ARM::VST1d32Q,      false, false, false, SingleHighQSpc,   4, 2 ,false},
+{ ARM::VST1q32HighTPseudo,  ARM::VST1d32T,      false, false, false, SingleHighTSpc,   3, 2 ,false},
+{ ARM::VST1q32LowQPseudo_UPD,   ARM::VST1d32Qwb_fixed,  false, true, true, SingleLowSpc,   4, 2 ,false},
+{ ARM::VST1q32LowTPseudo_UPD,   ARM::VST1d32Twb_fixed,  false, true, true, SingleLowSpc,   3, 2 ,false},
+{ ARM::VST1q64HighQPseudo,  ARM::VST1d64Q,      false, false, false, SingleHighQSpc,   4, 1 ,false},
+{ ARM::VST1q64HighTPseudo,  ARM::VST1d64T,      false, false, false, SingleHighTSpc,   3, 1 ,false},
+{ ARM::VST1q64LowQPseudo_UPD,   ARM::VST1d64Qwb_fixed,  false, true, true, SingleLowSpc,   4, 1 ,false},
+{ ARM::VST1q64LowTPseudo_UPD,   ARM::VST1d64Twb_fixed,  false, true, true, SingleLowSpc,   3, 1 ,false},
+{ ARM::VST1q8HighQPseudo,   ARM::VST1d8Q,      false, false, false, SingleHighQSpc,   4, 8 ,false},
+{ ARM::VST1q8HighTPseudo,   ARM::VST1d8T,      false, false, false, SingleHighTSpc,   3, 8 ,false},
+{ ARM::VST1q8LowQPseudo_UPD,   ARM::VST1d8Qwb_fixed,  false, true, true, SingleLowSpc,   4, 8 ,false},
+{ ARM::VST1q8LowTPseudo_UPD,   ARM::VST1d8Twb_fixed,  false, true, true, SingleLowSpc,   3, 8 ,false},
 
 { ARM::VST2LNd16Pseudo,     ARM::VST2LNd16,     false, false, false, SingleSpc, 2, 4 ,true},
 { ARM::VST2LNd16Pseudo_UPD, ARM::VST2LNd16_UPD, false, true, true,  SingleSpc, 2, 4 ,true},
@@ -349,16 +415,15 @@ static const NEONLdStTableEntry NEONLdStTable[] = {
 static const NEONLdStTableEntry *LookupNEONLdSt(unsigned Opcode) {
 #ifndef NDEBUG
   // Make sure the table is sorted.
-  static bool TableChecked = false;
-  if (!TableChecked) {
+  static std::atomic<bool> TableChecked(false);
+  if (!TableChecked.load(std::memory_order_relaxed)) {
     assert(std::is_sorted(std::begin(NEONLdStTable), std::end(NEONLdStTable)) &&
            "NEONLdStTable is not sorted!");
-    TableChecked = true;
+    TableChecked.store(true, std::memory_order_relaxed);
   }
 #endif
 
-  auto I = std::lower_bound(std::begin(NEONLdStTable),
-                            std::end(NEONLdStTable), Opcode);
+  auto I = llvm::lower_bound(NEONLdStTable, Opcode);
   if (I != std::end(NEONLdStTable) && I->PseudoOpc == Opcode)
     return I;
   return nullptr;
@@ -370,11 +435,21 @@ static const NEONLdStTableEntry *LookupNEONLdSt(unsigned Opcode) {
 static void GetDSubRegs(unsigned Reg, NEONRegSpacing RegSpc,
                         const TargetRegisterInfo *TRI, unsigned &D0,
                         unsigned &D1, unsigned &D2, unsigned &D3) {
-  if (RegSpc == SingleSpc) {
+  if (RegSpc == SingleSpc || RegSpc == SingleLowSpc) {
     D0 = TRI->getSubReg(Reg, ARM::dsub_0);
     D1 = TRI->getSubReg(Reg, ARM::dsub_1);
     D2 = TRI->getSubReg(Reg, ARM::dsub_2);
     D3 = TRI->getSubReg(Reg, ARM::dsub_3);
+  } else if (RegSpc == SingleHighQSpc) {
+    D0 = TRI->getSubReg(Reg, ARM::dsub_4);
+    D1 = TRI->getSubReg(Reg, ARM::dsub_5);
+    D2 = TRI->getSubReg(Reg, ARM::dsub_6);
+    D3 = TRI->getSubReg(Reg, ARM::dsub_7);
+  } else if (RegSpc == SingleHighTSpc) {
+    D0 = TRI->getSubReg(Reg, ARM::dsub_3);
+    D1 = TRI->getSubReg(Reg, ARM::dsub_4);
+    D2 = TRI->getSubReg(Reg, ARM::dsub_5);
+    D3 = TRI->getSubReg(Reg, ARM::dsub_6);
   } else if (RegSpc == EvenDblSpc) {
     D0 = TRI->getSubReg(Reg, ARM::dsub_0);
     D1 = TRI->getSubReg(Reg, ARM::dsub_2);
@@ -394,6 +469,7 @@ static void GetDSubRegs(unsigned Reg, NEONRegSpacing RegSpc,
 void ARMExpandPseudo::ExpandVLD(MachineBasicBlock::iterator &MBBI) {
   MachineInstr &MI = *MBBI;
   MachineBasicBlock &MBB = *MI.getParent();
+  LLVM_DEBUG(dbgs() << "Expanding: "; MI.dump());
 
   const NEONLdStTableEntry *TableEntry = LookupNEONLdSt(MI.getOpcode());
   assert(TableEntry && TableEntry->IsLoad && "NEONLdStTable lookup failed");
@@ -405,16 +481,32 @@ void ARMExpandPseudo::ExpandVLD(MachineBasicBlock::iterator &MBBI) {
   unsigned OpIdx = 0;
 
   bool DstIsDead = MI.getOperand(OpIdx).isDead();
-  unsigned DstReg = MI.getOperand(OpIdx++).getReg();
-  unsigned D0, D1, D2, D3;
-  GetDSubRegs(DstReg, RegSpc, TRI, D0, D1, D2, D3);
-  MIB.addReg(D0, RegState::Define | getDeadRegState(DstIsDead));
-  if (NumRegs > 1 && TableEntry->copyAllListRegs)
-    MIB.addReg(D1, RegState::Define | getDeadRegState(DstIsDead));
-  if (NumRegs > 2 && TableEntry->copyAllListRegs)
-    MIB.addReg(D2, RegState::Define | getDeadRegState(DstIsDead));
-  if (NumRegs > 3 && TableEntry->copyAllListRegs)
-    MIB.addReg(D3, RegState::Define | getDeadRegState(DstIsDead));
+  Register DstReg = MI.getOperand(OpIdx++).getReg();
+  if(TableEntry->RealOpc == ARM::VLD2DUPd8x2 ||
+     TableEntry->RealOpc == ARM::VLD2DUPd16x2 ||
+     TableEntry->RealOpc == ARM::VLD2DUPd32x2) {
+    unsigned SubRegIndex;
+    if (RegSpc == EvenDblSpc) {
+      SubRegIndex = ARM::dsub_0;
+    } else {
+      assert(RegSpc == OddDblSpc && "Unexpected spacing!");
+      SubRegIndex = ARM::dsub_1;
+    }
+    Register SubReg = TRI->getSubReg(DstReg, SubRegIndex);
+    unsigned DstRegPair = TRI->getMatchingSuperReg(SubReg, ARM::dsub_0,
+                                                   &ARM::DPairSpcRegClass);
+    MIB.addReg(DstRegPair, RegState::Define | getDeadRegState(DstIsDead));
+  } else {
+    unsigned D0, D1, D2, D3;
+    GetDSubRegs(DstReg, RegSpc, TRI, D0, D1, D2, D3);
+    MIB.addReg(D0, RegState::Define | getDeadRegState(DstIsDead));
+    if (NumRegs > 1 && TableEntry->copyAllListRegs)
+      MIB.addReg(D1, RegState::Define | getDeadRegState(DstIsDead));
+    if (NumRegs > 2 && TableEntry->copyAllListRegs)
+      MIB.addReg(D2, RegState::Define | getDeadRegState(DstIsDead));
+    if (NumRegs > 3 && TableEntry->copyAllListRegs)
+      MIB.addReg(D3, RegState::Define | getDeadRegState(DstIsDead));
+  }
 
   if (TableEntry->isUpdating)
     MIB.add(MI.getOperand(OpIdx++));
@@ -422,16 +514,45 @@ void ARMExpandPseudo::ExpandVLD(MachineBasicBlock::iterator &MBBI) {
   // Copy the addrmode6 operands.
   MIB.add(MI.getOperand(OpIdx++));
   MIB.add(MI.getOperand(OpIdx++));
+
   // Copy the am6offset operand.
-  if (TableEntry->hasWritebackOperand)
-    MIB.add(MI.getOperand(OpIdx++));
+  if (TableEntry->hasWritebackOperand) {
+    // TODO: The writing-back pseudo instructions we translate here are all
+    // defined to take am6offset nodes that are capable to represent both fixed
+    // and register forms. Some real instructions, however, do not rely on
+    // am6offset and have separate definitions for such forms. When this is the
+    // case, fixed forms do not take any offset nodes, so here we skip them for
+    // such instructions. Once all real and pseudo writing-back instructions are
+    // rewritten without use of am6offset nodes, this code will go away.
+    const MachineOperand &AM6Offset = MI.getOperand(OpIdx++);
+    if (TableEntry->RealOpc == ARM::VLD1d8Qwb_fixed ||
+        TableEntry->RealOpc == ARM::VLD1d16Qwb_fixed ||
+        TableEntry->RealOpc == ARM::VLD1d32Qwb_fixed ||
+        TableEntry->RealOpc == ARM::VLD1d64Qwb_fixed ||
+        TableEntry->RealOpc == ARM::VLD1d8Twb_fixed ||
+        TableEntry->RealOpc == ARM::VLD1d16Twb_fixed ||
+        TableEntry->RealOpc == ARM::VLD1d32Twb_fixed ||
+        TableEntry->RealOpc == ARM::VLD1d64Twb_fixed) {
+      assert(AM6Offset.getReg() == 0 &&
+             "A fixed writing-back pseudo instruction provides an offset "
+             "register!");
+    } else {
+      MIB.add(AM6Offset);
+    }
+  }
 
   // For an instruction writing double-spaced subregs, the pseudo instruction
   // has an extra operand that is a use of the super-register.  Record the
   // operand index and skip over it.
   unsigned SrcOpIdx = 0;
-  if (RegSpc == EvenDblSpc || RegSpc == OddDblSpc)
-    SrcOpIdx = OpIdx++;
+  if(TableEntry->RealOpc != ARM::VLD2DUPd8x2 &&
+     TableEntry->RealOpc != ARM::VLD2DUPd16x2 &&
+     TableEntry->RealOpc != ARM::VLD2DUPd32x2) {
+    if (RegSpc == EvenDblSpc || RegSpc == OddDblSpc ||
+        RegSpc == SingleLowSpc || RegSpc == SingleHighQSpc ||
+        RegSpc == SingleHighTSpc)
+      SrcOpIdx = OpIdx++;
+  }
 
   // Copy the predicate operands.
   MIB.add(MI.getOperand(OpIdx++));
@@ -449,9 +570,9 @@ void ARMExpandPseudo::ExpandVLD(MachineBasicBlock::iterator &MBBI) {
   TransferImpOps(MI, MIB, MIB);
 
   // Transfer memoperands.
-  MIB->setMemRefs(MI.memoperands_begin(), MI.memoperands_end());
-
+  MIB.cloneMemRefs(MI);
   MI.eraseFromParent();
+  LLVM_DEBUG(dbgs() << "To:        "; MIB.getInstr()->dump(););
 }
 
 /// ExpandVST - Translate VST pseudo instructions with Q, QQ or QQQQ register
@@ -459,6 +580,7 @@ void ARMExpandPseudo::ExpandVLD(MachineBasicBlock::iterator &MBBI) {
 void ARMExpandPseudo::ExpandVST(MachineBasicBlock::iterator &MBBI) {
   MachineInstr &MI = *MBBI;
   MachineBasicBlock &MBB = *MI.getParent();
+  LLVM_DEBUG(dbgs() << "Expanding: "; MI.dump());
 
   const NEONLdStTableEntry *TableEntry = LookupNEONLdSt(MI.getOpcode());
   assert(TableEntry && !TableEntry->IsLoad && "NEONLdStTable lookup failed");
@@ -474,13 +596,35 @@ void ARMExpandPseudo::ExpandVST(MachineBasicBlock::iterator &MBBI) {
   // Copy the addrmode6 operands.
   MIB.add(MI.getOperand(OpIdx++));
   MIB.add(MI.getOperand(OpIdx++));
-  // Copy the am6offset operand.
-  if (TableEntry->hasWritebackOperand)
-    MIB.add(MI.getOperand(OpIdx++));
+
+  if (TableEntry->hasWritebackOperand) {
+    // TODO: The writing-back pseudo instructions we translate here are all
+    // defined to take am6offset nodes that are capable to represent both fixed
+    // and register forms. Some real instructions, however, do not rely on
+    // am6offset and have separate definitions for such forms. When this is the
+    // case, fixed forms do not take any offset nodes, so here we skip them for
+    // such instructions. Once all real and pseudo writing-back instructions are
+    // rewritten without use of am6offset nodes, this code will go away.
+    const MachineOperand &AM6Offset = MI.getOperand(OpIdx++);
+    if (TableEntry->RealOpc == ARM::VST1d8Qwb_fixed ||
+        TableEntry->RealOpc == ARM::VST1d16Qwb_fixed ||
+        TableEntry->RealOpc == ARM::VST1d32Qwb_fixed ||
+        TableEntry->RealOpc == ARM::VST1d64Qwb_fixed ||
+        TableEntry->RealOpc == ARM::VST1d8Twb_fixed ||
+        TableEntry->RealOpc == ARM::VST1d16Twb_fixed ||
+        TableEntry->RealOpc == ARM::VST1d32Twb_fixed ||
+        TableEntry->RealOpc == ARM::VST1d64Twb_fixed) {
+      assert(AM6Offset.getReg() == 0 &&
+             "A fixed writing-back pseudo instruction provides an offset "
+             "register!");
+    } else {
+      MIB.add(AM6Offset);
+    }
+  }
 
   bool SrcIsKill = MI.getOperand(OpIdx).isKill();
   bool SrcIsUndef = MI.getOperand(OpIdx).isUndef();
-  unsigned SrcReg = MI.getOperand(OpIdx++).getReg();
+  Register SrcReg = MI.getOperand(OpIdx++).getReg();
   unsigned D0, D1, D2, D3;
   GetDSubRegs(SrcReg, RegSpc, TRI, D0, D1, D2, D3);
   MIB.addReg(D0, getUndefRegState(SrcIsUndef));
@@ -502,9 +646,9 @@ void ARMExpandPseudo::ExpandVST(MachineBasicBlock::iterator &MBBI) {
   TransferImpOps(MI, MIB, MIB);
 
   // Transfer memoperands.
-  MIB->setMemRefs(MI.memoperands_begin(), MI.memoperands_end());
-
+  MIB.cloneMemRefs(MI);
   MI.eraseFromParent();
+  LLVM_DEBUG(dbgs() << "To:        "; MIB.getInstr()->dump(););
 }
 
 /// ExpandLaneOp - Translate VLD*LN and VST*LN instructions with Q, QQ or QQQQ
@@ -512,6 +656,7 @@ void ARMExpandPseudo::ExpandVST(MachineBasicBlock::iterator &MBBI) {
 void ARMExpandPseudo::ExpandLaneOp(MachineBasicBlock::iterator &MBBI) {
   MachineInstr &MI = *MBBI;
   MachineBasicBlock &MBB = *MI.getParent();
+  LLVM_DEBUG(dbgs() << "Expanding: "; MI.dump());
 
   const NEONLdStTableEntry *TableEntry = LookupNEONLdSt(MI.getOpcode());
   assert(TableEntry && "NEONLdStTable lookup failed");
@@ -592,7 +737,7 @@ void ARMExpandPseudo::ExpandLaneOp(MachineBasicBlock::iterator &MBBI) {
     MIB.addReg(DstReg, RegState::ImplicitDefine | getDeadRegState(DstIsDead));
   TransferImpOps(MI, MIB, MIB);
   // Transfer memoperands.
-  MIB->setMemRefs(MI.memoperands_begin(), MI.memoperands_end());
+  MIB.cloneMemRefs(MI);
   MI.eraseFromParent();
 }
 
@@ -602,6 +747,7 @@ void ARMExpandPseudo::ExpandVTBL(MachineBasicBlock::iterator &MBBI,
                                  unsigned Opc, bool IsExt) {
   MachineInstr &MI = *MBBI;
   MachineBasicBlock &MBB = *MI.getParent();
+  LLVM_DEBUG(dbgs() << "Expanding: "; MI.dump());
 
   MachineInstrBuilder MIB = BuildMI(MBB, MBBI, MI.getDebugLoc(), TII->get(Opc));
   unsigned OpIdx = 0;
@@ -614,7 +760,7 @@ void ARMExpandPseudo::ExpandVTBL(MachineBasicBlock::iterator &MBBI,
   }
 
   bool SrcIsKill = MI.getOperand(OpIdx).isKill();
-  unsigned SrcReg = MI.getOperand(OpIdx++).getReg();
+  Register SrcReg = MI.getOperand(OpIdx++).getReg();
   unsigned D0, D1, D2, D3;
   GetDSubRegs(SrcReg, SingleSpc, TRI, D0, D1, D2, D3);
   MIB.addReg(D0);
@@ -631,6 +777,7 @@ void ARMExpandPseudo::ExpandVTBL(MachineBasicBlock::iterator &MBBI,
   MIB.addReg(SrcReg, RegState::Implicit | getKillRegState(SrcIsKill));
   TransferImpOps(MI, MIB, MIB);
   MI.eraseFromParent();
+  LLVM_DEBUG(dbgs() << "To:        "; MIB.getInstr()->dump(););
 }
 
 static bool IsAnAddressOperand(const MachineOperand &MO) {
@@ -642,6 +789,7 @@ static bool IsAnAddressOperand(const MachineOperand &MO) {
   case MachineOperand::MO_Immediate:
   case MachineOperand::MO_CImmediate:
   case MachineOperand::MO_FPImmediate:
+  case MachineOperand::MO_ShuffleMask:
     return false;
   case MachineOperand::MO_MachineBasicBlock:
     return true;
@@ -681,12 +829,13 @@ void ARMExpandPseudo::ExpandMOV32BitImm(MachineBasicBlock &MBB,
   unsigned Opcode = MI.getOpcode();
   unsigned PredReg = 0;
   ARMCC::CondCodes Pred = getInstrPredicate(MI, PredReg);
-  unsigned DstReg = MI.getOperand(0).getReg();
+  Register DstReg = MI.getOperand(0).getReg();
   bool DstIsDead = MI.getOperand(0).isDead();
   bool isCC = Opcode == ARM::MOVCCi32imm || Opcode == ARM::t2MOVCCi32imm;
   const MachineOperand &MO = MI.getOperand(isCC ? 2 : 1);
   bool RequiresBundling = STI->isTargetWindows() && IsAnAddressOperand(MO);
   MachineInstrBuilder LO16, HI16;
+  LLVM_DEBUG(dbgs() << "Expanding: "; MI.dump());
 
   if (!STI->hasV6T2Ops() &&
       (Opcode == ARM::MOVi32imm || Opcode == ARM::MOVCCi32imm)) {
@@ -705,8 +854,8 @@ void ARMExpandPseudo::ExpandMOV32BitImm(MachineBasicBlock &MBB,
     unsigned SOImmValV2 = ARM_AM::getSOImmTwoPartSecond(ImmVal);
     LO16 = LO16.addImm(SOImmValV1);
     HI16 = HI16.addImm(SOImmValV2);
-    LO16->setMemRefs(MI.memoperands_begin(), MI.memoperands_end());
-    HI16->setMemRefs(MI.memoperands_begin(), MI.memoperands_end());
+    LO16.cloneMemRefs(MI);
+    HI16.cloneMemRefs(MI);
     LO16.addImm(Pred).addReg(PredReg).add(condCodeOp());
     HI16.addImm(Pred).addReg(PredReg).add(condCodeOp());
     if (isCC)
@@ -756,8 +905,8 @@ void ARMExpandPseudo::ExpandMOV32BitImm(MachineBasicBlock &MBB,
   }
   }
 
-  LO16->setMemRefs(MI.memoperands_begin(), MI.memoperands_end());
-  HI16->setMemRefs(MI.memoperands_begin(), MI.memoperands_end());
+  LO16.cloneMemRefs(MI);
+  HI16.cloneMemRefs(MI);
   LO16.addImm(Pred).addReg(PredReg);
   HI16.addImm(Pred).addReg(PredReg);
 
@@ -768,6 +917,8 @@ void ARMExpandPseudo::ExpandMOV32BitImm(MachineBasicBlock &MBB,
     LO16.add(makeImplicit(MI.getOperand(1)));
   TransferImpOps(MI, LO16, HI16);
   MI.eraseFromParent();
+  LLVM_DEBUG(dbgs() << "To:        "; LO16.getInstr()->dump(););
+  LLVM_DEBUG(dbgs() << "And:       "; HI16.getInstr()->dump(););
 }
 
 /// Expand a CMP_SWAP pseudo-inst to an ldrex/strex loop as simply as
@@ -782,13 +933,13 @@ bool ARMExpandPseudo::ExpandCMP_SWAP(MachineBasicBlock &MBB,
   MachineInstr &MI = *MBBI;
   DebugLoc DL = MI.getDebugLoc();
   const MachineOperand &Dest = MI.getOperand(0);
-  unsigned TempReg = MI.getOperand(1).getReg();
+  Register TempReg = MI.getOperand(1).getReg();
   // Duplicating undef operands into 2 instructions does not guarantee the same
   // value on both; However undef should be replaced by xzr anyway.
   assert(!MI.getOperand(2).isUndef() && "cannot handle undef");
-  unsigned AddrReg = MI.getOperand(2).getReg();
-  unsigned DesiredReg = MI.getOperand(3).getReg();
-  unsigned NewReg = MI.getOperand(4).getReg();
+  Register AddrReg = MI.getOperand(2).getReg();
+  Register DesiredReg = MI.getOperand(3).getReg();
+  Register NewReg = MI.getOperand(4).getReg();
 
   MachineFunction *MF = MBB.getParent();
   auto LoadCmpBB = MF->CreateMachineBasicBlock(MBB.getBasicBlock());
@@ -885,12 +1036,12 @@ static void addExclusiveRegPair(MachineInstrBuilder &MIB, MachineOperand &Reg,
                                 unsigned Flags, bool IsThumb,
                                 const TargetRegisterInfo *TRI) {
   if (IsThumb) {
-    unsigned RegLo = TRI->getSubReg(Reg.getReg(), ARM::gsub_0);
-    unsigned RegHi = TRI->getSubReg(Reg.getReg(), ARM::gsub_1);
-    MIB.addReg(RegLo, Flags | getKillRegState(Reg.isDead()));
-    MIB.addReg(RegHi, Flags | getKillRegState(Reg.isDead()));
+    Register RegLo = TRI->getSubReg(Reg.getReg(), ARM::gsub_0);
+    Register RegHi = TRI->getSubReg(Reg.getReg(), ARM::gsub_1);
+    MIB.addReg(RegLo, Flags);
+    MIB.addReg(RegHi, Flags);
   } else
-    MIB.addReg(Reg.getReg(), Flags | getKillRegState(Reg.isDead()));
+    MIB.addReg(Reg.getReg(), Flags);
 }
 
 /// Expand a 64-bit CMP_SWAP to an ldrexd/strexd loop.
@@ -901,19 +1052,19 @@ bool ARMExpandPseudo::ExpandCMP_SWAP_64(MachineBasicBlock &MBB,
   MachineInstr &MI = *MBBI;
   DebugLoc DL = MI.getDebugLoc();
   MachineOperand &Dest = MI.getOperand(0);
-  unsigned TempReg = MI.getOperand(1).getReg();
+  Register TempReg = MI.getOperand(1).getReg();
   // Duplicating undef operands into 2 instructions does not guarantee the same
   // value on both; However undef should be replaced by xzr anyway.
   assert(!MI.getOperand(2).isUndef() && "cannot handle undef");
-  unsigned AddrReg = MI.getOperand(2).getReg();
-  unsigned DesiredReg = MI.getOperand(3).getReg();
+  Register AddrReg = MI.getOperand(2).getReg();
+  Register DesiredReg = MI.getOperand(3).getReg();
   MachineOperand New = MI.getOperand(4);
   New.setIsKill(false);
 
-  unsigned DestLo = TRI->getSubReg(Dest.getReg(), ARM::gsub_0);
-  unsigned DestHi = TRI->getSubReg(Dest.getReg(), ARM::gsub_1);
-  unsigned DesiredLo = TRI->getSubReg(DesiredReg, ARM::gsub_0);
-  unsigned DesiredHi = TRI->getSubReg(DesiredReg, ARM::gsub_1);
+  Register DestLo = TRI->getSubReg(Dest.getReg(), ARM::gsub_0);
+  Register DestHi = TRI->getSubReg(Dest.getReg(), ARM::gsub_1);
+  Register DesiredLo = TRI->getSubReg(DesiredReg, ARM::gsub_0);
+  Register DesiredHi = TRI->getSubReg(DesiredReg, ARM::gsub_1);
 
   MachineFunction *MF = MBB.getParent();
   auto LoadCmpBB = MF->CreateMachineBasicBlock(MBB.getBasicBlock());
@@ -960,7 +1111,8 @@ bool ARMExpandPseudo::ExpandCMP_SWAP_64(MachineBasicBlock &MBB,
   //     bne .Lloadcmp
   unsigned STREXD = IsThumb ? ARM::t2STREXD : ARM::STREXD;
   MIB = BuildMI(StoreBB, DL, TII->get(STREXD), TempReg);
-  addExclusiveRegPair(MIB, New, 0, IsThumb, TRI);
+  unsigned Flags = getKillRegState(New.isDead());
+  addExclusiveRegPair(MIB, New, Flags, IsThumb, TRI);
   MIB.addReg(AddrReg).add(predOps(ARMCC::AL));
 
   unsigned CMPri = IsThumb ? ARM::t2CMPri : ARM::CMPri;
@@ -1053,8 +1205,11 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
       for (unsigned i = 1, e = MBBI->getNumOperands(); i != e; ++i)
         NewMI->addOperand(MBBI->getOperand(i));
 
-      // Delete the pseudo instruction TCRETURN.
+
+      // Update call site info and delete the pseudo instruction TCRETURN.
+      MBB.getParent()->moveCallSiteInfo(&MI, &*NewMI);
       MBB.erase(MBBI);
+
       MBBI = NewMI;
       return true;
     }
@@ -1185,7 +1340,7 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
       // for us. Otherwise, expand to nothing.
       if (RI.hasBasePointer(MF)) {
         int32_t NumBytes = AFI->getFramePtrSpillOffset();
-        unsigned FramePtr = RI.getFrameRegister(MF);
+        Register FramePtr = RI.getFrameRegister(MF);
         assert(MF.getSubtarget().getFrameLowering()->hasFP(MF) &&
                "base pointer without frame pointer?");
 
@@ -1261,7 +1416,7 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
         MachineConstantPoolValue *CPV =
             ARMConstantPoolSymbol::Create(MF->getFunction().getContext(),
                                           "__aeabi_read_tp", PCLabelID, 0);
-        unsigned Reg = MI.getOperand(0).getReg();
+        Register Reg = MI.getOperand(0).getReg();
         MIB = BuildMI(MBB, MBBI, MI.getDebugLoc(),
                       TII->get(Thumb ? ARM::tLDRpci : ARM::LDRi12), Reg)
                   .addConstantPoolIndex(MCP->getConstantPoolIndex(CPV, 4));
@@ -1282,8 +1437,9 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
         MIB.addExternalSymbol("__aeabi_read_tp", 0);
       }
 
-      MIB->setMemRefs(MI.memoperands_begin(), MI.memoperands_end());
+      MIB.cloneMemRefs(MI);
       TransferImpOps(MI, MIB, MIB);
+      MI.getMF()->moveCallSiteInfo(&MI, &*MIB);
       MI.eraseFromParent();
       return true;
     }
@@ -1291,13 +1447,13 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
     case ARM::t2LDRpci_pic: {
       unsigned NewLdOpc = (Opcode == ARM::tLDRpci_pic)
         ? ARM::tLDRpci : ARM::t2LDRpci;
-      unsigned DstReg = MI.getOperand(0).getReg();
+      Register DstReg = MI.getOperand(0).getReg();
       bool DstIsDead = MI.getOperand(0).isDead();
       MachineInstrBuilder MIB1 =
           BuildMI(MBB, MBBI, MI.getDebugLoc(), TII->get(NewLdOpc), DstReg)
               .add(MI.getOperand(1))
               .add(predOps(ARMCC::AL));
-      MIB1->setMemRefs(MI.memoperands_begin(), MI.memoperands_end());
+      MIB1.cloneMemRefs(MI);
       MachineInstrBuilder MIB2 =
           BuildMI(MBB, MBBI, MI.getDebugLoc(), TII->get(ARM::tPICADD))
               .addReg(DstReg, RegState::Define | getDeadRegState(DstIsDead))
@@ -1313,7 +1469,7 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
     case ARM::LDRLIT_ga_pcrel_ldr:
     case ARM::tLDRLIT_ga_abs:
     case ARM::tLDRLIT_ga_pcrel: {
-      unsigned DstReg = MI.getOperand(0).getReg();
+      Register DstReg = MI.getOperand(0).getReg();
       bool DstIsDead = MI.getOperand(0).isDead();
       const MachineOperand &MO1 = MI.getOperand(1);
       auto Flags = MO1.getTargetFlags();
@@ -1371,7 +1527,7 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
     case ARM::t2MOV_ga_pcrel: {
       // Expand into movw + movw. Also "add pc" / ldr [pc] in PIC mode.
       unsigned LabelId = AFI->createPICLabelUId();
-      unsigned DstReg = MI.getOperand(0).getReg();
+      Register DstReg = MI.getOperand(0).getReg();
       bool DstIsDead = MI.getOperand(0).isDead();
       const MachineOperand &MO1 = MI.getOperand(1);
       const GlobalValue *GV = MO1.getGlobal();
@@ -1401,7 +1557,7 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
       if (isARM) {
         MIB3.add(predOps(ARMCC::AL));
         if (Opcode == ARM::MOV_ga_pcrel_ldr)
-          MIB3->setMemRefs(MI.memoperands_begin(), MI.memoperands_end());
+          MIB3.cloneMemRefs(MI);
       }
       TransferImpOps(MI, MIB1, MIB3);
       MI.eraseFromParent();
@@ -1435,7 +1591,7 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
 
       // Grab the Q register destination.
       bool DstIsDead = MI.getOperand(OpIdx).isDead();
-      unsigned DstReg = MI.getOperand(OpIdx++).getReg();
+      Register DstReg = MI.getOperand(OpIdx++).getReg();
 
       // Copy the source register.
       MIB.add(MI.getOperand(OpIdx++));
@@ -1445,15 +1601,15 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
       MIB.add(MI.getOperand(OpIdx++));
 
       // Add the destination operands (D subregs).
-      unsigned D0 = TRI->getSubReg(DstReg, ARM::dsub_0);
-      unsigned D1 = TRI->getSubReg(DstReg, ARM::dsub_1);
+      Register D0 = TRI->getSubReg(DstReg, ARM::dsub_0);
+      Register D1 = TRI->getSubReg(DstReg, ARM::dsub_1);
       MIB.addReg(D0, RegState::Define | getDeadRegState(DstIsDead))
         .addReg(D1, RegState::Define | getDeadRegState(DstIsDead));
 
       // Add an implicit def for the super-register.
       MIB.addReg(DstReg, RegState::ImplicitDefine | getDeadRegState(DstIsDead));
       TransferImpOps(MI, MIB, MIB);
-      MIB.setMemRefs(MI.memoperands_begin(), MI.memoperands_end());
+      MIB.cloneMemRefs(MI);
       MI.eraseFromParent();
       return true;
     }
@@ -1466,7 +1622,7 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
 
       // Grab the Q register source.
       bool SrcIsKill = MI.getOperand(OpIdx).isKill();
-      unsigned SrcReg = MI.getOperand(OpIdx++).getReg();
+      Register SrcReg = MI.getOperand(OpIdx++).getReg();
 
       // Copy the destination register.
       MachineOperand Dst(MI.getOperand(OpIdx++));
@@ -1477,8 +1633,8 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
       MIB.add(MI.getOperand(OpIdx++));
 
       // Add the source operands (D subregs).
-      unsigned D0 = TRI->getSubReg(SrcReg, ARM::dsub_0);
-      unsigned D1 = TRI->getSubReg(SrcReg, ARM::dsub_1);
+      Register D0 = TRI->getSubReg(SrcReg, ARM::dsub_0);
+      Register D1 = TRI->getSubReg(SrcReg, ARM::dsub_1);
       MIB.addReg(D0, SrcIsKill ? RegState::Kill : 0)
          .addReg(D1, SrcIsKill ? RegState::Kill : 0);
 
@@ -1486,7 +1642,7 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
         MIB->addRegisterKilled(SrcReg, TRI, true);
 
       TransferImpOps(MI, MIB, MIB);
-      MIB.setMemRefs(MI.memoperands_begin(), MI.memoperands_end());
+      MIB.cloneMemRefs(MI);
       MI.eraseFromParent();
       return true;
     }
@@ -1503,6 +1659,9 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
     case ARM::VLD3d8Pseudo:
     case ARM::VLD3d16Pseudo:
     case ARM::VLD3d32Pseudo:
+    case ARM::VLD1d8TPseudo:
+    case ARM::VLD1d16TPseudo:
+    case ARM::VLD1d32TPseudo:
     case ARM::VLD1d64TPseudo:
     case ARM::VLD1d64TPseudoWB_fixed:
     case ARM::VLD1d64TPseudoWB_register:
@@ -1521,9 +1680,28 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
     case ARM::VLD4d8Pseudo:
     case ARM::VLD4d16Pseudo:
     case ARM::VLD4d32Pseudo:
+    case ARM::VLD1d8QPseudo:
+    case ARM::VLD1d16QPseudo:
+    case ARM::VLD1d32QPseudo:
     case ARM::VLD1d64QPseudo:
     case ARM::VLD1d64QPseudoWB_fixed:
     case ARM::VLD1d64QPseudoWB_register:
+    case ARM::VLD1q8HighQPseudo:
+    case ARM::VLD1q8LowQPseudo_UPD:
+    case ARM::VLD1q8HighTPseudo:
+    case ARM::VLD1q8LowTPseudo_UPD:
+    case ARM::VLD1q16HighQPseudo:
+    case ARM::VLD1q16LowQPseudo_UPD:
+    case ARM::VLD1q16HighTPseudo:
+    case ARM::VLD1q16LowTPseudo_UPD:
+    case ARM::VLD1q32HighQPseudo:
+    case ARM::VLD1q32LowQPseudo_UPD:
+    case ARM::VLD1q32HighTPseudo:
+    case ARM::VLD1q32LowTPseudo_UPD:
+    case ARM::VLD1q64HighQPseudo:
+    case ARM::VLD1q64LowQPseudo_UPD:
+    case ARM::VLD1q64HighTPseudo:
+    case ARM::VLD1q64LowTPseudo_UPD:
     case ARM::VLD4d8Pseudo_UPD:
     case ARM::VLD4d16Pseudo_UPD:
     case ARM::VLD4d32Pseudo_UPD:
@@ -1548,6 +1726,24 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
     case ARM::VLD4DUPd8Pseudo_UPD:
     case ARM::VLD4DUPd16Pseudo_UPD:
     case ARM::VLD4DUPd32Pseudo_UPD:
+    case ARM::VLD2DUPq8EvenPseudo:
+    case ARM::VLD2DUPq8OddPseudo:
+    case ARM::VLD2DUPq16EvenPseudo:
+    case ARM::VLD2DUPq16OddPseudo:
+    case ARM::VLD2DUPq32EvenPseudo:
+    case ARM::VLD2DUPq32OddPseudo:
+    case ARM::VLD3DUPq8EvenPseudo:
+    case ARM::VLD3DUPq8OddPseudo:
+    case ARM::VLD3DUPq16EvenPseudo:
+    case ARM::VLD3DUPq16OddPseudo:
+    case ARM::VLD3DUPq32EvenPseudo:
+    case ARM::VLD3DUPq32OddPseudo:
+    case ARM::VLD4DUPq8EvenPseudo:
+    case ARM::VLD4DUPq8OddPseudo:
+    case ARM::VLD4DUPq16EvenPseudo:
+    case ARM::VLD4DUPq16OddPseudo:
+    case ARM::VLD4DUPq32EvenPseudo:
+    case ARM::VLD4DUPq32OddPseudo:
       ExpandVLD(MBBI);
       return true;
 
@@ -1563,6 +1759,9 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
     case ARM::VST3d8Pseudo:
     case ARM::VST3d16Pseudo:
     case ARM::VST3d32Pseudo:
+    case ARM::VST1d8TPseudo:
+    case ARM::VST1d16TPseudo:
+    case ARM::VST1d32TPseudo:
     case ARM::VST1d64TPseudo:
     case ARM::VST3d8Pseudo_UPD:
     case ARM::VST3d16Pseudo_UPD:
@@ -1581,12 +1780,31 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
     case ARM::VST4d8Pseudo:
     case ARM::VST4d16Pseudo:
     case ARM::VST4d32Pseudo:
+    case ARM::VST1d8QPseudo:
+    case ARM::VST1d16QPseudo:
+    case ARM::VST1d32QPseudo:
     case ARM::VST1d64QPseudo:
     case ARM::VST4d8Pseudo_UPD:
     case ARM::VST4d16Pseudo_UPD:
     case ARM::VST4d32Pseudo_UPD:
     case ARM::VST1d64QPseudoWB_fixed:
     case ARM::VST1d64QPseudoWB_register:
+    case ARM::VST1q8HighQPseudo:
+    case ARM::VST1q8LowQPseudo_UPD:
+    case ARM::VST1q8HighTPseudo:
+    case ARM::VST1q8LowTPseudo_UPD:
+    case ARM::VST1q16HighQPseudo:
+    case ARM::VST1q16LowQPseudo_UPD:
+    case ARM::VST1q16HighTPseudo:
+    case ARM::VST1q16LowTPseudo_UPD:
+    case ARM::VST1q32HighQPseudo:
+    case ARM::VST1q32LowQPseudo_UPD:
+    case ARM::VST1q32HighTPseudo:
+    case ARM::VST1q32LowTPseudo_UPD:
+    case ARM::VST1q64HighQPseudo:
+    case ARM::VST1q64LowQPseudo_UPD:
+    case ARM::VST1q64HighTPseudo:
+    case ARM::VST1q64LowTPseudo_UPD:
     case ARM::VST4q8Pseudo_UPD:
     case ARM::VST4q16Pseudo_UPD:
     case ARM::VST4q32Pseudo_UPD:
@@ -1702,6 +1920,37 @@ bool ARMExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
 
     case ARM::CMP_SWAP_64:
       return ExpandCMP_SWAP_64(MBB, MBBI, NextMBBI);
+
+    case ARM::tBL_PUSHLR:
+    case ARM::BL_PUSHLR: {
+      const bool Thumb = Opcode == ARM::tBL_PUSHLR;
+      Register Reg = MI.getOperand(0).getReg();
+      assert(Reg == ARM::LR && "expect LR register!");
+      MachineInstrBuilder MIB;
+      if (Thumb) {
+        // push {lr}
+        BuildMI(MBB, MBBI, MI.getDebugLoc(), TII->get(ARM::tPUSH))
+            .add(predOps(ARMCC::AL))
+            .addReg(Reg);
+
+        // bl __gnu_mcount_nc
+        MIB = BuildMI(MBB, MBBI, MI.getDebugLoc(), TII->get(ARM::tBL));
+      } else {
+        // stmdb   sp!, {lr}
+        BuildMI(MBB, MBBI, MI.getDebugLoc(), TII->get(ARM::STMDB_UPD))
+            .addReg(ARM::SP, RegState::Define)
+            .addReg(ARM::SP)
+            .add(predOps(ARMCC::AL))
+            .addReg(Reg);
+
+        // bl __gnu_mcount_nc
+        MIB = BuildMI(MBB, MBBI, MI.getDebugLoc(), TII->get(ARM::BL));
+      }
+      MIB.cloneMemRefs(MI);
+      for (unsigned i = 1; i < MI.getNumOperands(); ++i) MIB.add(MI.getOperand(i));
+      MI.eraseFromParent();
+      return true;
+    }
   }
 }
 
@@ -1724,11 +1973,16 @@ bool ARMExpandPseudo::runOnMachineFunction(MachineFunction &MF) {
   TRI = STI->getRegisterInfo();
   AFI = MF.getInfo<ARMFunctionInfo>();
 
+  LLVM_DEBUG(dbgs() << "********** ARM EXPAND PSEUDO INSTRUCTIONS **********\n"
+                    << "********** Function: " << MF.getName() << '\n');
+
   bool Modified = false;
   for (MachineBasicBlock &MBB : MF)
     Modified |= ExpandMBB(MBB);
   if (VerifyARMPseudo)
     MF.verify(this, "After expanding ARM pseudo instructions.");
+
+  LLVM_DEBUG(dbgs() << "***************************************************\n");
   return Modified;
 }
 

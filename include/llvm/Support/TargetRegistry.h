@@ -1,9 +1,8 @@
 //===- Support/TargetRegistry.h - Target Registration -----------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -46,6 +45,7 @@ class MCDisassembler;
 class MCInstPrinter;
 class MCInstrAnalysis;
 class MCInstrInfo;
+class MCObjectWriter;
 class MCRegisterInfo;
 class MCRelocationInfo;
 class MCStreamer;
@@ -86,20 +86,25 @@ createAsmStreamer(MCContext &Ctx, std::unique_ptr<formatted_raw_ostream> OS,
 
 MCStreamer *createELFStreamer(MCContext &Ctx,
                               std::unique_ptr<MCAsmBackend> &&TAB,
-                              raw_pwrite_stream &OS,
+                              std::unique_ptr<MCObjectWriter> &&OW,
                               std::unique_ptr<MCCodeEmitter> &&CE,
                               bool RelaxAll);
 MCStreamer *createMachOStreamer(MCContext &Ctx,
                                 std::unique_ptr<MCAsmBackend> &&TAB,
-                                raw_pwrite_stream &OS,
+                                std::unique_ptr<MCObjectWriter> &&OW,
                                 std::unique_ptr<MCCodeEmitter> &&CE,
                                 bool RelaxAll, bool DWARFMustBeAtTheEnd,
                                 bool LabelSections = false);
 MCStreamer *createWasmStreamer(MCContext &Ctx,
                                std::unique_ptr<MCAsmBackend> &&TAB,
-                               raw_pwrite_stream &OS,
+                               std::unique_ptr<MCObjectWriter> &&OW,
                                std::unique_ptr<MCCodeEmitter> &&CE,
                                bool RelaxAll);
+MCStreamer *createXCOFFStreamer(MCContext &Ctx,
+                                std::unique_ptr<MCAsmBackend> &&TAB,
+                                std::unique_ptr<MCObjectWriter> &&OW,
+                                std::unique_ptr<MCCodeEmitter> &&CE,
+                                bool RelaxAll);
 
 MCRelocationInfo *createMCRelocationInfo(const Triple &TT, MCContext &Ctx);
 
@@ -160,22 +165,22 @@ public:
   using ELFStreamerCtorTy =
       MCStreamer *(*)(const Triple &T, MCContext &Ctx,
                       std::unique_ptr<MCAsmBackend> &&TAB,
-                      raw_pwrite_stream &OS,
+                      std::unique_ptr<MCObjectWriter> &&OW,
                       std::unique_ptr<MCCodeEmitter> &&Emitter, bool RelaxAll);
   using MachOStreamerCtorTy =
       MCStreamer *(*)(MCContext &Ctx, std::unique_ptr<MCAsmBackend> &&TAB,
-                      raw_pwrite_stream &OS,
+                      std::unique_ptr<MCObjectWriter> &&OW,
                       std::unique_ptr<MCCodeEmitter> &&Emitter, bool RelaxAll,
                       bool DWARFMustBeAtTheEnd);
   using COFFStreamerCtorTy =
       MCStreamer *(*)(MCContext &Ctx, std::unique_ptr<MCAsmBackend> &&TAB,
-                      raw_pwrite_stream &OS,
+                      std::unique_ptr<MCObjectWriter> &&OW,
                       std::unique_ptr<MCCodeEmitter> &&Emitter, bool RelaxAll,
                       bool IncrementalLinkerCompatible);
   using WasmStreamerCtorTy =
       MCStreamer *(*)(const Triple &T, MCContext &Ctx,
                       std::unique_ptr<MCAsmBackend> &&TAB,
-                      raw_pwrite_stream &OS,
+                      std::unique_ptr<MCObjectWriter> &&OW,
                       std::unique_ptr<MCCodeEmitter> &&Emitter, bool RelaxAll);
   using NullTargetStreamerCtorTy = MCTargetStreamer *(*)(MCStreamer &S);
   using AsmTargetStreamerCtorTy = MCTargetStreamer *(*)(
@@ -458,48 +463,55 @@ public:
   /// \param T The target triple.
   /// \param Ctx The target context.
   /// \param TAB The target assembler backend object. Takes ownership.
-  /// \param OS The stream object.
+  /// \param OW The stream object.
   /// \param Emitter The target independent assembler object.Takes ownership.
   /// \param RelaxAll Relax all fixups?
   MCStreamer *createMCObjectStreamer(const Triple &T, MCContext &Ctx,
                                      std::unique_ptr<MCAsmBackend> &&TAB,
-                                     raw_pwrite_stream &OS,
+                                     std::unique_ptr<MCObjectWriter> &&OW,
                                      std::unique_ptr<MCCodeEmitter> &&Emitter,
                                      const MCSubtargetInfo &STI, bool RelaxAll,
                                      bool IncrementalLinkerCompatible,
                                      bool DWARFMustBeAtTheEnd) const {
     MCStreamer *S;
     switch (T.getObjectFormat()) {
-    default:
+    case Triple::UnknownObjectFormat:
       llvm_unreachable("Unknown object format");
     case Triple::COFF:
       assert(T.isOSWindows() && "only Windows COFF is supported");
-      S = COFFStreamerCtorFn(Ctx, std::move(TAB), OS, std::move(Emitter),
-                             RelaxAll, IncrementalLinkerCompatible);
+      S = COFFStreamerCtorFn(Ctx, std::move(TAB), std::move(OW),
+                             std::move(Emitter), RelaxAll,
+                             IncrementalLinkerCompatible);
       break;
     case Triple::MachO:
       if (MachOStreamerCtorFn)
-        S = MachOStreamerCtorFn(Ctx, std::move(TAB), OS, std::move(Emitter),
-                                RelaxAll, DWARFMustBeAtTheEnd);
+        S = MachOStreamerCtorFn(Ctx, std::move(TAB), std::move(OW),
+                                std::move(Emitter), RelaxAll,
+                                DWARFMustBeAtTheEnd);
       else
-        S = createMachOStreamer(Ctx, std::move(TAB), OS, std::move(Emitter),
-                                RelaxAll, DWARFMustBeAtTheEnd);
+        S = createMachOStreamer(Ctx, std::move(TAB), std::move(OW),
+                                std::move(Emitter), RelaxAll,
+                                DWARFMustBeAtTheEnd);
       break;
     case Triple::ELF:
       if (ELFStreamerCtorFn)
-        S = ELFStreamerCtorFn(T, Ctx, std::move(TAB), OS, std::move(Emitter),
-                              RelaxAll);
+        S = ELFStreamerCtorFn(T, Ctx, std::move(TAB), std::move(OW),
+                              std::move(Emitter), RelaxAll);
       else
-        S = createELFStreamer(Ctx, std::move(TAB), OS, std::move(Emitter),
-                              RelaxAll);
+        S = createELFStreamer(Ctx, std::move(TAB), std::move(OW),
+                              std::move(Emitter), RelaxAll);
       break;
     case Triple::Wasm:
       if (WasmStreamerCtorFn)
-        S = WasmStreamerCtorFn(T, Ctx, std::move(TAB), OS, std::move(Emitter),
-                               RelaxAll);
+        S = WasmStreamerCtorFn(T, Ctx, std::move(TAB), std::move(OW),
+                               std::move(Emitter), RelaxAll);
       else
-        S = createWasmStreamer(Ctx, std::move(TAB), OS, std::move(Emitter),
-                               RelaxAll);
+        S = createWasmStreamer(Ctx, std::move(TAB), std::move(OW),
+                               std::move(Emitter), RelaxAll);
+      break;
+    case Triple::XCOFF:
+      S = createXCOFFStreamer(Ctx, std::move(TAB), std::move(OW),
+                              std::move(Emitter), RelaxAll);
       break;
     }
     if (ObjectTargetStreamerCtorFn)

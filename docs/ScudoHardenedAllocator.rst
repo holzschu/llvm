@@ -18,7 +18,8 @@ Currently, the allocator supports (was tested on) the following architectures:
 - i386 (& i686) (32-bit);
 - x86_64 (64-bit);
 - armhf (32-bit);
-- AArch64 (64-bit).
+- AArch64 (64-bit);
+- MIPS (32-bit & 64-bit).
 
 The name "Scudo" has been retained from the initial implementation (Escudo
 meaning Shield in Spanish and Portuguese).
@@ -87,7 +88,7 @@ Randomness
 ----------
 It is important for the allocator to not make use of fixed addresses. We use
 the dynamic base option for the SizeClassAllocator, allowing us to benefit
-from the randomness of mmap.
+from the randomness of the system memory mapping functions.
 
 Usage
 =====
@@ -107,18 +108,18 @@ functions.
 
 You may also build Scudo like this: 
 
-.. code::
+.. code:: console
 
   cd $LLVM/projects/compiler-rt/lib
   clang++ -fPIC -std=c++11 -msse4.2 -O2 -I. scudo/*.cpp \
-    $(\ls sanitizer_common/*.{cc,S} | grep -v "sanitizer_termination\|sanitizer_common_nolibc") \
-    -shared -o scudo-allocator.so -pthread
+    $(\ls sanitizer_common/*.{cc,S} | grep -v "sanitizer_termination\|sanitizer_common_nolibc\|sancov_\|sanitizer_unwind\|sanitizer_symbol") \
+    -shared -o libscudo.so -pthread
 
 and then use it with existing binaries as follows:
 
-.. code::
+.. code:: console
 
-  LD_PRELOAD=`pwd`/scudo-allocator.so ./a.out
+  LD_PRELOAD=`pwd`/libscudo.so ./a.out
 
 Clang
 -----
@@ -130,22 +131,27 @@ Scudo will also enforce PIE for the output binary.
 
 Options
 -------
-Several aspects of the allocator can be configured through the following ways:
+Several aspects of the allocator can be configured on a per process basis
+through the following ways:
+
+- at compile time, by defining ``SCUDO_DEFAULT_OPTIONS`` to the options string
+  you want set by default;
 
 - by defining a ``__scudo_default_options`` function in one's program that
   returns the options string to be parsed. Said function must have the following
-  prototype: ``extern "C" const char* __scudo_default_options(void)``.
+  prototype: ``extern "C" const char* __scudo_default_options(void)``, with a
+  default visibility. This will override the compile time define;
 
 - through the environment variable SCUDO_OPTIONS, containing the options string
   to be parsed. Options defined this way will override any definition made
-  through ``__scudo_default_options``;
+  through ``__scudo_default_options``.
 
 The options string follows a syntax similar to ASan, where distinct options
 can be assigned in the same string, separated by colons.
 
 For example, using the environment variable:
 
-.. code::
+.. code:: console
 
   SCUDO_OPTIONS="DeleteSizeMismatch=1:QuarantineSizeKb=64" ./a.out
 
@@ -167,7 +173,9 @@ The following options are available:
 |                             |                |                | the actual deallocation of chunks. Lower value |
 |                             |                |                | may reduce memory usage but decrease the       |
 |                             |                |                | effectiveness of the mitigation; a negative    |
-|                             |                |                | value will fallback to the defaults.           |
+|                             |                |                | value will fallback to the defaults. Setting   |
+|                             |                |                | *both* this and ThreadLocalQuarantineSizeKb to |
+|                             |                |                | zero will disable the quarantine entirely.     |
 +-----------------------------+----------------+----------------+------------------------------------------------+
 | QuarantineChunksUpToSize    | 2048           | 512            | Size (in bytes) up to which chunks can be      |
 |                             |                |                | quarantined.                                   |
@@ -175,7 +183,9 @@ The following options are available:
 | ThreadLocalQuarantineSizeKb | 1024           | 256            | The size (in Kb) of per-thread cache use to    |
 |                             |                |                | offload the global quarantine. Lower value may |
 |                             |                |                | reduce memory usage but might increase         |
-|                             |                |                | contention on the global quarantine.           |
+|                             |                |                | contention on the global quarantine. Setting   |
+|                             |                |                | *both* this and QuarantineSizeKb to zero will  |
+|                             |                |                | disable the quarantine entirely.               |
 +-----------------------------+----------------+----------------+------------------------------------------------+
 | DeallocationTypeMismatch    | true           | true           | Whether or not we report errors on             |
 |                             |                |                | malloc/delete, new/free, new/delete[], etc.    |
@@ -188,7 +198,56 @@ The following options are available:
 +-----------------------------+----------------+----------------+------------------------------------------------+
 
 Allocator related common Sanitizer options can also be passed through Scudo
-options, such as ``allocator_may_return_null``. A detailed list including those
-can be found here:
+options, such as ``allocator_may_return_null`` or ``abort_on_error``. A detailed
+list including those can be found here:
 https://github.com/google/sanitizers/wiki/SanitizerCommonFlags.
 
+Error Types
+===========
+
+The allocator will output an error message, and potentially terminate the
+process, when an unexpected behavior is detected. The output usually starts with
+``"Scudo ERROR:"`` followed by a short summary of the problem that occurred as
+well as the pointer(s) involved. Once again, Scudo is meant to be a mitigation,
+and might not be the most useful of tools to help you root-cause the issue,
+please consider `ASan <https://github.com/google/sanitizers/wiki/AddressSanitizer>`_
+for this purpose.
+
+Here is a list of the current error messages and their potential cause:
+
+- ``"corrupted chunk header"``: the checksum verification of the chunk header
+  has failed. This is likely due to one of two things: the header was
+  overwritten (partially or totally), or the pointer passed to the function is
+  not a chunk at all;
+
+- ``"race on chunk header"``: two different threads are attempting to manipulate
+  the same header at the same time. This is usually symptomatic of a
+  race-condition or general lack of locking when performing operations on that
+  chunk;
+
+- ``"invalid chunk state"``: the chunk is not in the expected state for a given
+  operation, eg: it is not allocated when trying to free it, or it's not
+  quarantined when trying to recycle it, etc. A double-free is the typical
+  reason this error would occur;
+
+- ``"misaligned pointer"``: we strongly enforce basic alignment requirements, 8
+  bytes on 32-bit platforms, 16 bytes on 64-bit platforms. If a pointer passed
+  to our functions does not fit those, something is definitely wrong.
+
+- ``"allocation type mismatch"``: when the optional deallocation type mismatch
+  check is enabled, a deallocation function called on a chunk has to match the
+  type of function that was called to allocate it. Security implications of such
+  a mismatch are not necessarily obvious but situational at best;
+
+- ``"invalid sized delete"``: when the C++14 sized delete operator is used, and
+  the optional check enabled, this indicates that the size passed when
+  deallocating a chunk is not congruent with the one requested when allocating
+  it. This is likely to be a `compiler issue <https://software.intel.com/en-us/forums/intel-c-compiler/topic/783942>`_,
+  as was the case with Intel C++ Compiler, or some type confusion on the object
+  being deallocated;
+
+- ``"RSS limit exhausted"``: the maximum RSS optionally specified has been
+  exceeded;
+
+Several other error messages relate to parameter checking on the libc allocation
+APIs and are fairly straightforward to understand.

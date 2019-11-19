@@ -1,9 +1,8 @@
 //===- CFLAndersAliasAnalysis.cpp - Unification-based Alias Analysis ------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -89,9 +88,11 @@ using namespace llvm::cflaa;
 
 #define DEBUG_TYPE "cfl-anders-aa"
 
-CFLAndersAAResult::CFLAndersAAResult(const TargetLibraryInfo &TLI) : TLI(TLI) {}
+CFLAndersAAResult::CFLAndersAAResult(
+    std::function<const TargetLibraryInfo &(Function &F)> GetTLI)
+    : GetTLI(std::move(GetTLI)) {}
 CFLAndersAAResult::CFLAndersAAResult(CFLAndersAAResult &&RHS)
-    : AAResultBase(std::move(RHS)), TLI(RHS.TLI) {}
+    : AAResultBase(std::move(RHS)), GetTLI(std::move(RHS.GetTLI)) {}
 CFLAndersAAResult::~CFLAndersAAResult() = default;
 
 namespace {
@@ -337,7 +338,7 @@ public:
   FunctionInfo(const Function &, const SmallVectorImpl<Value *> &,
                const ReachabilitySet &, const AliasAttrMap &);
 
-  bool mayAlias(const Value *, uint64_t, const Value *, uint64_t) const;
+  bool mayAlias(const Value *, LocationSize, const Value *, LocationSize) const;
   const AliasSummary &getAliasSummary() const { return Summary; }
 };
 
@@ -395,7 +396,7 @@ populateAliasMap(DenseMap<const Value *, std::vector<OffsetValue>> &AliasMap,
     }
 
     // Sort AliasList for faster lookup
-    llvm::sort(AliasList.begin(), AliasList.end());
+    llvm::sort(AliasList);
   }
 }
 
@@ -479,7 +480,7 @@ static void populateExternalRelations(
   }
 
   // Remove duplicates in ExtRelations
-  llvm::sort(ExtRelations.begin(), ExtRelations.end());
+  llvm::sort(ExtRelations);
   ExtRelations.erase(std::unique(ExtRelations.begin(), ExtRelations.end()),
                      ExtRelations.end());
 }
@@ -515,10 +516,9 @@ CFLAndersAAResult::FunctionInfo::getAttrs(const Value *V) const {
   return None;
 }
 
-bool CFLAndersAAResult::FunctionInfo::mayAlias(const Value *LHS,
-                                               uint64_t LHSSize,
-                                               const Value *RHS,
-                                               uint64_t RHSSize) const {
+bool CFLAndersAAResult::FunctionInfo::mayAlias(
+    const Value *LHS, LocationSize MaybeLHSSize, const Value *RHS,
+    LocationSize MaybeRHSSize) const {
   assert(LHS && RHS);
 
   // Check if we've seen LHS and RHS before. Sometimes LHS or RHS can be created
@@ -557,10 +557,13 @@ bool CFLAndersAAResult::FunctionInfo::mayAlias(const Value *LHS,
                                       OffsetValue{RHS, 0}, Comparator);
 
     if (RangePair.first != RangePair.second) {
-      // Be conservative about UnknownSize
-      if (LHSSize == MemoryLocation::UnknownSize ||
-          RHSSize == MemoryLocation::UnknownSize)
+      // Be conservative about unknown sizes
+      if (MaybeLHSSize == LocationSize::unknown() ||
+          MaybeRHSSize == LocationSize::unknown())
         return true;
+
+      const uint64_t LHSSize = MaybeLHSSize.getValue();
+      const uint64_t RHSSize = MaybeRHSSize.getValue();
 
       for (const auto &OVal : make_range(RangePair)) {
         // Be conservative about UnknownOffset
@@ -611,7 +614,7 @@ static void initializeWorkList(std::vector<WorkListItem> &WorkList,
     for (unsigned I = 0, E = ValueInfo.getNumLevels(); I < E; ++I) {
       auto Src = InstantiatedValue{Val, I};
       // If there's an assignment edge from X to Y, it means Y is reachable from
-      // X at S2 and X is reachable from Y at S1
+      // X at S3 and X is reachable from Y at S1
       for (auto &Edge : ValueInfo.getNodeInfoAtLevel(I).Edges) {
         propagate(Edge.Other, Src, MatchState::FlowFromReadOnly, ReachSet,
                   WorkList);
@@ -778,7 +781,7 @@ static AliasAttrMap buildAttrMap(const CFLGraph &Graph,
 CFLAndersAAResult::FunctionInfo
 CFLAndersAAResult::buildInfoFrom(const Function &Fn) {
   CFLGraphBuilder<CFLAndersAAResult> GraphBuilder(
-      *this, TLI,
+      *this, GetTLI(const_cast<Function &>(Fn)),
       // Cast away the constness here due to GraphBuilder's API requirement
       const_cast<Function &>(Fn));
   auto &Graph = GraphBuilder.getCFLGraph();
@@ -855,8 +858,9 @@ AliasResult CFLAndersAAResult::query(const MemoryLocation &LocA,
     if (!Fn) {
       // The only times this is known to happen are when globals + InlineAsm are
       // involved
-      DEBUG(dbgs()
-            << "CFLAndersAA: could not extract parent function information.\n");
+      LLVM_DEBUG(
+          dbgs()
+          << "CFLAndersAA: could not extract parent function information.\n");
       return MayAlias;
     }
   } else {
@@ -873,7 +877,8 @@ AliasResult CFLAndersAAResult::query(const MemoryLocation &LocA,
 }
 
 AliasResult CFLAndersAAResult::alias(const MemoryLocation &LocA,
-                                     const MemoryLocation &LocB) {
+                                     const MemoryLocation &LocB,
+                                     AAQueryInfo &AAQI) {
   if (LocA.Ptr == LocB.Ptr)
     return MustAlias;
 
@@ -883,11 +888,11 @@ AliasResult CFLAndersAAResult::alias(const MemoryLocation &LocA,
   // ConstantExpr, but every query needs to have at least one Value tied to a
   // Function, and neither GlobalValues nor ConstantExprs are.
   if (isa<Constant>(LocA.Ptr) && isa<Constant>(LocB.Ptr))
-    return AAResultBase::alias(LocA, LocB);
+    return AAResultBase::alias(LocA, LocB, AAQI);
 
   AliasResult QueryResult = query(LocA, LocB);
   if (QueryResult == MayAlias)
-    return AAResultBase::alias(LocA, LocB);
+    return AAResultBase::alias(LocA, LocB, AAQI);
 
   return QueryResult;
 }
@@ -895,7 +900,10 @@ AliasResult CFLAndersAAResult::alias(const MemoryLocation &LocA,
 AnalysisKey CFLAndersAA::Key;
 
 CFLAndersAAResult CFLAndersAA::run(Function &F, FunctionAnalysisManager &AM) {
-  return CFLAndersAAResult(AM.getResult<TargetLibraryAnalysis>(F));
+  auto GetTLI = [&AM](Function &F) -> TargetLibraryInfo & {
+    return AM.getResult<TargetLibraryAnalysis>(F);
+  };
+  return CFLAndersAAResult(GetTLI);
 }
 
 char CFLAndersAAWrapperPass::ID = 0;
@@ -911,8 +919,10 @@ CFLAndersAAWrapperPass::CFLAndersAAWrapperPass() : ImmutablePass(ID) {
 }
 
 void CFLAndersAAWrapperPass::initializePass() {
-  auto &TLIWP = getAnalysis<TargetLibraryInfoWrapperPass>();
-  Result.reset(new CFLAndersAAResult(TLIWP.getTLI()));
+  auto GetTLI = [this](Function &F) -> TargetLibraryInfo & {
+    return this->getAnalysis<TargetLibraryInfoWrapperPass>().getTLI(F);
+  };
+  Result.reset(new CFLAndersAAResult(GetTLI));
 }
 
 void CFLAndersAAWrapperPass::getAnalysisUsage(AnalysisUsage &AU) const {

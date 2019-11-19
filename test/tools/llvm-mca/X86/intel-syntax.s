@@ -5,33 +5,36 @@
 
   .intel_syntax noprefix
   mov	eax, 1
-  mov	ebx, 0ffh
+  mov	ebx, 0xff
   imul	esi, edi
   lea	eax, [rsi + rdi]
 
-# ALL:      Iterations:     100
-# ALL-NEXT: Instructions:   400
-# ALL-NEXT: Total Cycles:   305
-# ALL-NEXT: Dispatch Width: 2
-# ALL-NEXT: IPC:            1.31
+# ALL:        Iterations:        100
+# ALL-NEXT:   Instructions:      400
+# ALL-NEXT:   Total Cycles:      306
+# ALL-NEXT:   Total uOps:        400
 
-# ALL:      Instruction Info:
-# ALL-NEXT: [1]: #uOps
-# ALL-NEXT: [2]: Latency
-# ALL-NEXT: [3]: RThroughput
-# ALL-NEXT: [4]: MayLoad
-# ALL-NEXT: [5]: MayStore
-# ALL-NEXT: [6]: HasSideEffects
+# ALL:        Dispatch Width:    2
+# ALL-NEXT:   uOps Per Cycle:    1.31
+# ALL-NEXT:   IPC:               1.31
+# ALL-NEXT:   Block RThroughput: 2.0
 
-# INTEL:      [1]    [2]    [3]    [4]    [5]    [6]	Instructions:
-# INTEL-NEXT:  1      1     0.50                    	mov	eax, 1
-# INTEL-NEXT:  1      1     0.50                    	mov	ebx, 255
-# INTEL-NEXT:  2      3     1.00                    	imul	esi, edi
-# INTEL-NEXT:  1      1     0.50                    	lea	eax, [rsi + rdi]
+# ALL:        Instruction Info:
+# ALL-NEXT:   [1]: #uOps
+# ALL-NEXT:   [2]: Latency
+# ALL-NEXT:   [3]: RThroughput
+# ALL-NEXT:   [4]: MayLoad
+# ALL-NEXT:   [5]: MayStore
+# ALL-NEXT:   [6]: HasSideEffects (U)
 
-# ATT:      [1]    [2]    [3]    [4]    [5]    [6]	Instructions:
-# ATT-NEXT:  1      1     0.50                    	movl	$1, %eax
-# ATT-NEXT:  1      1     0.50                    	movl	$255, %ebx
-# ATT-NEXT:  2      3     1.00                    	imull	%edi, %esi
-# ATT-NEXT:  1      1     0.50                    	leal	(%rsi,%rdi), %eax
+# ALL:        [1]    [2]    [3]    [4]    [5]    [6]    Instructions:
 
+# ATT-NEXT:    1      1     0.50                        movl	$1, %eax
+# ATT-NEXT:    1      1     0.50                        movl	$255, %ebx
+# ATT-NEXT:    1      3     1.00                        imull	%edi, %esi
+# ATT-NEXT:    1      1     0.50                        leal	(%rsi,%rdi), %eax
+
+# INTEL-NEXT:  1      1     0.50                        mov	eax, 1
+# INTEL-NEXT:  1      1     0.50                        mov	ebx, 255
+# INTEL-NEXT:  1      3     1.00                        imul	esi, edi
+# INTEL-NEXT:  1      1     0.50                        lea	eax, [rsi + rdi]

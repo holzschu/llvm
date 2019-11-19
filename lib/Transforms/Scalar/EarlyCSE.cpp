@@ -1,9 +1,8 @@
 //===- EarlyCSE.cpp - Simple and fast CSE pass ----------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -22,12 +21,13 @@
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/GlobalsModRef.h"
+#include "llvm/Analysis/GuardUtils.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/Analysis/MemorySSA.h"
 #include "llvm/Analysis/MemorySSAUpdater.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
-#include "llvm/Analysis/Utils/Local.h"
+#include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constants.h"
@@ -54,6 +54,7 @@
 #include "llvm/Support/RecyclingAllocator.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/Utils/GuardUtils.h"
 #include <cassert>
 #include <deque>
 #include <memory>
@@ -74,13 +75,23 @@ STATISTIC(NumDSE,      "Number of trivial dead stores removed");
 DEBUG_COUNTER(CSECounter, "early-cse",
               "Controls which instructions are removed");
 
+static cl::opt<unsigned> EarlyCSEMssaOptCap(
+    "earlycse-mssa-optimization-cap", cl::init(500), cl::Hidden,
+    cl::desc("Enable imprecision in EarlyCSE in pathological cases, in exchange "
+             "for faster compile. Caps the MemorySSA clobbering calls."));
+
+static cl::opt<bool> EarlyCSEDebugHash(
+    "earlycse-debug-hash", cl::init(false), cl::Hidden,
+    cl::desc("Perform extra assertion checking to verify that SimpleValue's hash "
+             "function is well-behaved w.r.t. its isEqual predicate"));
+
 //===----------------------------------------------------------------------===//
 // SimpleValue
 //===----------------------------------------------------------------------===//
 
 namespace {
 
-/// \brief Struct representing the available values in the scoped hash table.
+/// Struct representing the available values in the scoped hash table.
 struct SimpleValue {
   Instruction *Inst;
 
@@ -97,11 +108,12 @@ struct SimpleValue {
     // This can only handle non-void readnone functions.
     if (CallInst *CI = dyn_cast<CallInst>(Inst))
       return CI->doesNotAccessMemory() && !CI->getType()->isVoidTy();
-    return isa<CastInst>(Inst) || isa<BinaryOperator>(Inst) ||
-           isa<GetElementPtrInst>(Inst) || isa<CmpInst>(Inst) ||
-           isa<SelectInst>(Inst) || isa<ExtractElementInst>(Inst) ||
-           isa<InsertElementInst>(Inst) || isa<ShuffleVectorInst>(Inst) ||
-           isa<ExtractValueInst>(Inst) || isa<InsertValueInst>(Inst);
+    return isa<CastInst>(Inst) || isa<UnaryOperator>(Inst) ||
+           isa<BinaryOperator>(Inst) || isa<GetElementPtrInst>(Inst) ||
+           isa<CmpInst>(Inst) || isa<SelectInst>(Inst) ||
+           isa<ExtractElementInst>(Inst) || isa<InsertElementInst>(Inst) ||
+           isa<ShuffleVectorInst>(Inst) || isa<ExtractValueInst>(Inst) ||
+           isa<InsertValueInst>(Inst);
   }
 };
 
@@ -124,7 +136,33 @@ template <> struct DenseMapInfo<SimpleValue> {
 
 } // end namespace llvm
 
-unsigned DenseMapInfo<SimpleValue>::getHashValue(SimpleValue Val) {
+/// Match a 'select' including an optional 'not's of the condition.
+static bool matchSelectWithOptionalNotCond(Value *V, Value *&Cond, Value *&A,
+                                           Value *&B,
+                                           SelectPatternFlavor &Flavor) {
+  // Return false if V is not even a select.
+  if (!match(V, m_Select(m_Value(Cond), m_Value(A), m_Value(B))))
+    return false;
+
+  // Look through a 'not' of the condition operand by swapping A/B.
+  Value *CondNot;
+  if (match(Cond, m_Not(m_Value(CondNot)))) {
+    Cond = CondNot;
+    std::swap(A, B);
+  }
+
+  // Set flavor if we find a match, or set it to unknown otherwise; in
+  // either case, return true to indicate that this is a select we can
+  // process.
+  if (auto *CmpI = dyn_cast<ICmpInst>(Cond))
+    Flavor = matchDecomposedSelectPattern(CmpI, A, B, A, B).Flavor;
+  else
+    Flavor = SPF_UNKNOWN;
+
+  return true;
+}
+
+static unsigned getHashValueImpl(SimpleValue Val) {
   Instruction *Inst = Val.Inst;
   // Hash in all of the operands as pointers.
   if (BinaryOperator *BinOp = dyn_cast<BinaryOperator>(Inst)) {
@@ -137,29 +175,56 @@ unsigned DenseMapInfo<SimpleValue>::getHashValue(SimpleValue Val) {
   }
 
   if (CmpInst *CI = dyn_cast<CmpInst>(Inst)) {
+    // Compares can be commuted by swapping the comparands and
+    // updating the predicate.  Choose the form that has the
+    // comparands in sorted order, or in the case of a tie, the
+    // one with the lower predicate.
     Value *LHS = CI->getOperand(0);
     Value *RHS = CI->getOperand(1);
     CmpInst::Predicate Pred = CI->getPredicate();
-    if (Inst->getOperand(0) > Inst->getOperand(1)) {
+    CmpInst::Predicate SwappedPred = CI->getSwappedPredicate();
+    if (std::tie(LHS, Pred) > std::tie(RHS, SwappedPred)) {
       std::swap(LHS, RHS);
-      Pred = CI->getSwappedPredicate();
+      Pred = SwappedPred;
     }
     return hash_combine(Inst->getOpcode(), Pred, LHS, RHS);
   }
 
-  // Hash min/max/abs (cmp + select) to allow for commuted operands.
-  // Min/max may also have non-canonical compare predicate (eg, the compare for
-  // smin may use 'sgt' rather than 'slt'), and non-canonical operands in the
-  // compare.
-  Value *A, *B;
-  SelectPatternFlavor SPF = matchSelectPattern(Inst, A, B).Flavor;
-  // TODO: We should also detect FP min/max.
-  if (SPF == SPF_SMIN || SPF == SPF_SMAX ||
-      SPF == SPF_UMIN || SPF == SPF_UMAX ||
-      SPF == SPF_ABS || SPF == SPF_NABS) {
-    if (A > B)
+  // Hash general selects to allow matching commuted true/false operands.
+  SelectPatternFlavor SPF;
+  Value *Cond, *A, *B;
+  if (matchSelectWithOptionalNotCond(Inst, Cond, A, B, SPF)) {
+    // Hash min/max/abs (cmp + select) to allow for commuted operands.
+    // Min/max may also have non-canonical compare predicate (eg, the compare for
+    // smin may use 'sgt' rather than 'slt'), and non-canonical operands in the
+    // compare.
+    // TODO: We should also detect FP min/max.
+    if (SPF == SPF_SMIN || SPF == SPF_SMAX ||
+        SPF == SPF_UMIN || SPF == SPF_UMAX) {
+      if (A > B)
+        std::swap(A, B);
+      return hash_combine(Inst->getOpcode(), SPF, A, B);
+    }
+    if (SPF == SPF_ABS || SPF == SPF_NABS) {
+      // ABS/NABS always puts the input in A and its negation in B.
+      return hash_combine(Inst->getOpcode(), SPF, A, B);
+    }
+
+    // Hash general selects to allow matching commuted true/false operands.
+
+    // If we do not have a compare as the condition, just hash in the condition.
+    CmpInst::Predicate Pred;
+    Value *X, *Y;
+    if (!match(Cond, m_Cmp(Pred, m_Value(X), m_Value(Y))))
+      return hash_combine(Inst->getOpcode(), Cond, A, B);
+
+    // Similar to cmp normalization (above) - canonicalize the predicate value:
+    // select (icmp Pred, X, Y), A, B --> select (icmp InvPred, X, Y), B, A
+    if (CmpInst::getInversePredicate(Pred) < Pred) {
+      Pred = CmpInst::getInversePredicate(Pred);
       std::swap(A, B);
-    return hash_combine(Inst->getOpcode(), SPF, A, B);
+    }
+    return hash_combine(Inst->getOpcode(), Pred, X, Y, A, B);
   }
 
   if (CastInst *CI = dyn_cast<CastInst>(Inst))
@@ -174,10 +239,9 @@ unsigned DenseMapInfo<SimpleValue>::getHashValue(SimpleValue Val) {
                         IVI->getOperand(1),
                         hash_combine_range(IVI->idx_begin(), IVI->idx_end()));
 
-  assert((isa<CallInst>(Inst) || isa<BinaryOperator>(Inst) ||
-          isa<GetElementPtrInst>(Inst) || isa<SelectInst>(Inst) ||
+  assert((isa<CallInst>(Inst) || isa<GetElementPtrInst>(Inst) ||
           isa<ExtractElementInst>(Inst) || isa<InsertElementInst>(Inst) ||
-          isa<ShuffleVectorInst>(Inst)) &&
+          isa<ShuffleVectorInst>(Inst) || isa<UnaryOperator>(Inst)) &&
          "Invalid/unknown instruction");
 
   // Mix in the opcode.
@@ -186,7 +250,19 @@ unsigned DenseMapInfo<SimpleValue>::getHashValue(SimpleValue Val) {
       hash_combine_range(Inst->value_op_begin(), Inst->value_op_end()));
 }
 
-bool DenseMapInfo<SimpleValue>::isEqual(SimpleValue LHS, SimpleValue RHS) {
+unsigned DenseMapInfo<SimpleValue>::getHashValue(SimpleValue Val) {
+#ifndef NDEBUG
+  // If -earlycse-debug-hash was specified, return a constant -- this
+  // will force all hashing to collide, so we'll exhaustively search
+  // the table for a match, and the assertion in isEqual will fire if
+  // there's a bug causing equal keys to hash differently.
+  if (EarlyCSEDebugHash)
+    return 0;
+#endif
+  return getHashValueImpl(Val);
+}
+
+static bool isEqualImpl(SimpleValue LHS, SimpleValue RHS) {
   Instruction *LHSI = LHS.Inst, *RHSI = RHS.Inst;
 
   if (LHS.isSentinel() || RHS.isSentinel())
@@ -222,19 +298,66 @@ bool DenseMapInfo<SimpleValue>::isEqual(SimpleValue LHS, SimpleValue RHS) {
 
   // Min/max/abs can occur with commuted operands, non-canonical predicates,
   // and/or non-canonical operands.
-  Value *LHSA, *LHSB;
-  SelectPatternFlavor LSPF = matchSelectPattern(LHSI, LHSA, LHSB).Flavor;
-  // TODO: We should also detect FP min/max.
-  if (LSPF == SPF_SMIN || LSPF == SPF_SMAX ||
-      LSPF == SPF_UMIN || LSPF == SPF_UMAX ||
-      LSPF == SPF_ABS || LSPF == SPF_NABS) {
-    Value *RHSA, *RHSB;
-    SelectPatternFlavor RSPF = matchSelectPattern(RHSI, RHSA, RHSB).Flavor;
-    return (LSPF == RSPF && ((LHSA == RHSA && LHSB == RHSB) ||
-                             (LHSA == RHSB && LHSB == RHSA)));
+  // Selects can be non-trivially equivalent via inverted conditions and swaps.
+  SelectPatternFlavor LSPF, RSPF;
+  Value *CondL, *CondR, *LHSA, *RHSA, *LHSB, *RHSB;
+  if (matchSelectWithOptionalNotCond(LHSI, CondL, LHSA, LHSB, LSPF) &&
+      matchSelectWithOptionalNotCond(RHSI, CondR, RHSA, RHSB, RSPF)) {
+    if (LSPF == RSPF) {
+      // TODO: We should also detect FP min/max.
+      if (LSPF == SPF_SMIN || LSPF == SPF_SMAX ||
+          LSPF == SPF_UMIN || LSPF == SPF_UMAX)
+        return ((LHSA == RHSA && LHSB == RHSB) ||
+                (LHSA == RHSB && LHSB == RHSA));
+
+      if (LSPF == SPF_ABS || LSPF == SPF_NABS) {
+        // Abs results are placed in a defined order by matchSelectPattern.
+        return LHSA == RHSA && LHSB == RHSB;
+      }
+
+      // select Cond, A, B <--> select not(Cond), B, A
+      if (CondL == CondR && LHSA == RHSA && LHSB == RHSB)
+        return true;
+    }
+
+    // If the true/false operands are swapped and the conditions are compares
+    // with inverted predicates, the selects are equal:
+    // select (icmp Pred, X, Y), A, B <--> select (icmp InvPred, X, Y), B, A
+    //
+    // This also handles patterns with a double-negation in the sense of not +
+    // inverse, because we looked through a 'not' in the matching function and
+    // swapped A/B:
+    // select (cmp Pred, X, Y), A, B <--> select (not (cmp InvPred, X, Y)), B, A
+    //
+    // This intentionally does NOT handle patterns with a double-negation in
+    // the sense of not + not, because doing so could result in values
+    // comparing
+    // as equal that hash differently in the min/max/abs cases like:
+    // select (cmp slt, X, Y), X, Y <--> select (not (not (cmp slt, X, Y))), X, Y
+    //   ^ hashes as min                  ^ would not hash as min
+    // In the context of the EarlyCSE pass, however, such cases never reach
+    // this code, as we simplify the double-negation before hashing the second
+    // select (and so still succeed at CSEing them).
+    if (LHSA == RHSB && LHSB == RHSA) {
+      CmpInst::Predicate PredL, PredR;
+      Value *X, *Y;
+      if (match(CondL, m_Cmp(PredL, m_Value(X), m_Value(Y))) &&
+          match(CondR, m_Cmp(PredR, m_Specific(X), m_Specific(Y))) &&
+          CmpInst::getInversePredicate(PredL) == PredR)
+        return true;
+    }
   }
 
   return false;
+}
+
+bool DenseMapInfo<SimpleValue>::isEqual(SimpleValue LHS, SimpleValue RHS) {
+  // These comparisons are nontrivial, so assert that equality implies
+  // hash equality (DenseMap demands this as an invariant).
+  bool Result = isEqualImpl(LHS, RHS);
+  assert(!Result || (LHS.isSentinel() && LHS.Inst == RHS.Inst) ||
+         getHashValueImpl(LHS) == getHashValueImpl(RHS));
+  return Result;
 }
 
 //===----------------------------------------------------------------------===//
@@ -243,7 +366,7 @@ bool DenseMapInfo<SimpleValue>::isEqual(SimpleValue LHS, SimpleValue RHS) {
 
 namespace {
 
-/// \brief Struct representing the available call values in the scoped hash
+/// Struct representing the available call values in the scoped hash
 /// table.
 struct CallValue {
   Instruction *Inst;
@@ -309,7 +432,7 @@ bool DenseMapInfo<CallValue>::isEqual(CallValue LHS, CallValue RHS) {
 
 namespace {
 
-/// \brief A simple and fast domtree-based CSE pass.
+/// A simple and fast domtree-based CSE pass.
 ///
 /// This pass does a simple depth-first walk over the dominator tree,
 /// eliminating trivially redundant instructions and using instsimplify to
@@ -333,7 +456,7 @@ public:
       ScopedHashTable<SimpleValue, Value *, DenseMapInfo<SimpleValue>,
                       AllocatorTy>;
 
-  /// \brief A scoped hash table of the current values of all of our simple
+  /// A scoped hash table of the current values of all of our simple
   /// scalar expressions.
   ///
   /// As we walk down the domtree, we look to see if instructions are in this:
@@ -341,8 +464,8 @@ public:
   /// that dominated values can succeed in their lookup.
   ScopedHTType AvailableValues;
 
-  /// A scoped hash table of the current values of previously encounted memory
-  /// locations.
+  /// A scoped hash table of the current values of previously encountered
+  /// memory locations.
   ///
   /// This allows us to get efficient access to dominating loads or stores when
   /// we have a fully redundant load.  In addition to the most recent load, we
@@ -376,7 +499,7 @@ public:
                       LoadMapAllocator>;
 
   LoadHTType AvailableLoads;
-  
+
   // A scoped hash table mapping memory locations (represented as typed
   // addresses) to generation numbers at which that memory location became
   // (henceforth indefinitely) invariant.
@@ -388,7 +511,7 @@ public:
                       InvariantMapAllocator>;
   InvariantHTType AvailableInvariants;
 
-  /// \brief A scoped hash table of the current values of read-only call
+  /// A scoped hash table of the current values of read-only call
   /// values.
   ///
   /// It uses the same generation count as loads.
@@ -396,19 +519,20 @@ public:
       ScopedHashTable<CallValue, std::pair<Instruction *, unsigned>>;
   CallHTType AvailableCalls;
 
-  /// \brief This is the current generation of the memory value.
+  /// This is the current generation of the memory value.
   unsigned CurrentGeneration = 0;
 
-  /// \brief Set up the EarlyCSE runner for a particular function.
+  /// Set up the EarlyCSE runner for a particular function.
   EarlyCSE(const DataLayout &DL, const TargetLibraryInfo &TLI,
            const TargetTransformInfo &TTI, DominatorTree &DT,
            AssumptionCache &AC, MemorySSA *MSSA)
       : TLI(TLI), TTI(TTI), DT(DT), AC(AC), SQ(DL, &TLI, &DT, &AC), MSSA(MSSA),
-        MSSAUpdater(llvm::make_unique<MemorySSAUpdater>(MSSA)) {}
+        MSSAUpdater(std::make_unique<MemorySSAUpdater>(MSSA)) {}
 
   bool run();
 
 private:
+  unsigned ClobberCounter = 0;
   // Almost a POD, but needs to call the constructors for the scoped hash
   // tables so that a new scope gets pushed on. These are RAII so that the
   // scope gets popped when the NodeScope is destroyed.
@@ -473,7 +597,7 @@ private:
     bool Processed = false;
   };
 
-  /// \brief Wrapper class to handle memory instructions, including loads,
+  /// Wrapper class to handle memory instructions, including loads,
   /// stores and intrinsic loads and stores defined by the target.
   class ParseMemoryInst {
   public:
@@ -528,7 +652,7 @@ private:
 
     bool isInvariantLoad() const {
       if (auto *LI = dyn_cast<LoadInst>(Inst))
-        return LI->getMetadata(LLVMContext::MD_invariant_load) != nullptr;
+        return LI->hasMetadata(LLVMContext::MD_invariant_load);
       return false;
     }
 
@@ -571,6 +695,9 @@ private:
 
   bool processNode(DomTreeNode *Node);
 
+  bool handleBranchCondition(Instruction *CondInst, const BranchInst *BI,
+                             const BasicBlock *BB, const BasicBlock *Pred);
+
   Value *getOrCreateResult(Value *Inst, Type *ExpectedType) const {
     if (auto *LI = dyn_cast<LoadInst>(Inst))
       return LI;
@@ -591,38 +718,15 @@ private:
   void removeMSSA(Instruction *Inst) {
     if (!MSSA)
       return;
+    if (VerifyMemorySSA)
+      MSSA->verifyMemorySSA();
     // Removing a store here can leave MemorySSA in an unoptimized state by
     // creating MemoryPhis that have identical arguments and by creating
-    // MemoryUses whose defining access is not an actual clobber.  We handle the
-    // phi case eagerly here.  The non-optimized MemoryUse case is lazily
-    // updated by MemorySSA getClobberingMemoryAccess.
-    if (MemoryAccess *MA = MSSA->getMemoryAccess(Inst)) {
-      // Optimize MemoryPhi nodes that may become redundant by having all the
-      // same input values once MA is removed.
-      SmallSetVector<MemoryPhi *, 4> PhisToCheck;
-      SmallVector<MemoryAccess *, 8> WorkQueue;
-      WorkQueue.push_back(MA);
-      // Process MemoryPhi nodes in FIFO order using a ever-growing vector since
-      // we shouldn't be processing that many phis and this will avoid an
-      // allocation in almost all cases.
-      for (unsigned I = 0; I < WorkQueue.size(); ++I) {
-        MemoryAccess *WI = WorkQueue[I];
-
-        for (auto *U : WI->users())
-          if (MemoryPhi *MP = dyn_cast<MemoryPhi>(U))
-            PhisToCheck.insert(MP);
-
-        MSSAUpdater->removeMemoryAccess(WI);
-
-        for (MemoryPhi *MP : PhisToCheck) {
-          MemoryAccess *FirstIn = MP->getIncomingValue(0);
-          if (llvm::all_of(MP->incoming_values(),
-                           [=](Use &In) { return In == FirstIn; }))
-            WorkQueue.push_back(MP);
-        }
-        PhisToCheck.clear();
-      }
-    }
+    // MemoryUses whose defining access is not an actual clobber. The phi case
+    // is handled by MemorySSA when passing OptimizePhis = true to
+    // removeMemoryAccess.  The non-optimized MemoryUse case is lazily updated
+    // by MemorySSA's getClobberingMemoryAccess.
+    MSSAUpdater->removeMemoryAccess(Inst, true);
   }
 };
 
@@ -673,8 +777,13 @@ bool EarlyCSE::isSameMemGeneration(unsigned EarlierGeneration,
   // LaterInst, if LaterDef dominates EarlierInst then it can't occur between
   // EarlierInst and LaterInst and neither can any other write that potentially
   // clobbers LaterInst.
-  MemoryAccess *LaterDef =
-      MSSA->getWalker()->getClobberingMemoryAccess(LaterInst);
+  MemoryAccess *LaterDef;
+  if (ClobberCounter < EarlyCSEMssaOptCap) {
+    LaterDef = MSSA->getWalker()->getClobberingMemoryAccess(LaterInst);
+    ClobberCounter++;
+  } else
+    LaterDef = LaterMA->getDefiningAccess();
+
   return MSSA->dominates(LaterDef, EarlierMA);
 }
 
@@ -682,7 +791,7 @@ bool EarlyCSE::isOperatingOnInvariantMemAt(Instruction *I, unsigned GenAt) {
   // A location loaded from with an invariant_load is assumed to *never* change
   // within the visible scope of the compilation.
   if (auto *LI = dyn_cast<LoadInst>(I))
-    if (LI->getMetadata(LLVMContext::MD_invariant_load))
+    if (LI->hasMetadata(LLVMContext::MD_invariant_load))
       return true;
 
   auto MemLocOpt = MemoryLocation::getOrNone(I);
@@ -697,6 +806,58 @@ bool EarlyCSE::isOperatingOnInvariantMemAt(Instruction *I, unsigned GenAt) {
   // Is the generation at which this became invariant older than the
   // current one?
   return AvailableInvariants.lookup(MemLoc) <= GenAt;
+}
+
+bool EarlyCSE::handleBranchCondition(Instruction *CondInst,
+                                     const BranchInst *BI, const BasicBlock *BB,
+                                     const BasicBlock *Pred) {
+  assert(BI->isConditional() && "Should be a conditional branch!");
+  assert(BI->getCondition() == CondInst && "Wrong condition?");
+  assert(BI->getSuccessor(0) == BB || BI->getSuccessor(1) == BB);
+  auto *TorF = (BI->getSuccessor(0) == BB)
+                   ? ConstantInt::getTrue(BB->getContext())
+                   : ConstantInt::getFalse(BB->getContext());
+  auto MatchBinOp = [](Instruction *I, unsigned Opcode) {
+    if (BinaryOperator *BOp = dyn_cast<BinaryOperator>(I))
+      return BOp->getOpcode() == Opcode;
+    return false;
+  };
+  // If the condition is AND operation, we can propagate its operands into the
+  // true branch. If it is OR operation, we can propagate them into the false
+  // branch.
+  unsigned PropagateOpcode =
+      (BI->getSuccessor(0) == BB) ? Instruction::And : Instruction::Or;
+
+  bool MadeChanges = false;
+  SmallVector<Instruction *, 4> WorkList;
+  SmallPtrSet<Instruction *, 4> Visited;
+  WorkList.push_back(CondInst);
+  while (!WorkList.empty()) {
+    Instruction *Curr = WorkList.pop_back_val();
+
+    AvailableValues.insert(Curr, TorF);
+    LLVM_DEBUG(dbgs() << "EarlyCSE CVP: Add conditional value for '"
+                      << Curr->getName() << "' as " << *TorF << " in "
+                      << BB->getName() << "\n");
+    if (!DebugCounter::shouldExecute(CSECounter)) {
+      LLVM_DEBUG(dbgs() << "Skipping due to debug counter\n");
+    } else {
+      // Replace all dominated uses with the known value.
+      if (unsigned Count = replaceDominatedUsesWith(Curr, TorF, DT,
+                                                    BasicBlockEdge(Pred, BB))) {
+        NumCSECVP += Count;
+        MadeChanges = true;
+      }
+    }
+
+    if (MatchBinOp(Curr, PropagateOpcode))
+      for (auto &Op : cast<BinaryOperator>(Curr)->operands())
+        if (Instruction *OPI = dyn_cast<Instruction>(Op))
+          if (SimpleValue::canHandle(OPI) && Visited.insert(OPI).second)
+            WorkList.push_back(OPI);
+  }
+
+  return MadeChanges;
 }
 
 bool EarlyCSE::processNode(DomTreeNode *Node) {
@@ -722,26 +883,8 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
     auto *BI = dyn_cast<BranchInst>(Pred->getTerminator());
     if (BI && BI->isConditional()) {
       auto *CondInst = dyn_cast<Instruction>(BI->getCondition());
-      if (CondInst && SimpleValue::canHandle(CondInst)) {
-        assert(BI->getSuccessor(0) == BB || BI->getSuccessor(1) == BB);
-        auto *TorF = (BI->getSuccessor(0) == BB)
-                         ? ConstantInt::getTrue(BB->getContext())
-                         : ConstantInt::getFalse(BB->getContext());
-        AvailableValues.insert(CondInst, TorF);
-        DEBUG(dbgs() << "EarlyCSE CVP: Add conditional value for '"
-                     << CondInst->getName() << "' as " << *TorF << " in "
-                     << BB->getName() << "\n");
-        if (!DebugCounter::shouldExecute(CSECounter)) {
-          DEBUG(dbgs() << "Skipping due to debug counter\n");
-        } else {
-          // Replace all dominated uses with the known value.
-          if (unsigned Count = replaceDominatedUsesWith(
-                  CondInst, TorF, DT, BasicBlockEdge(Pred, BB))) {
-            Changed = true;
-            NumCSECVP += Count;
-          }
-        }
-      }
+      if (CondInst && SimpleValue::canHandle(CondInst))
+        Changed |= handleBranchCondition(CondInst, BI, BB, Pred);
     }
   }
 
@@ -758,12 +901,13 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
 
     // Dead instructions should just be removed.
     if (isInstructionTriviallyDead(Inst, &TLI)) {
-      DEBUG(dbgs() << "EarlyCSE DCE: " << *Inst << '\n');
+      LLVM_DEBUG(dbgs() << "EarlyCSE DCE: " << *Inst << '\n');
       if (!DebugCounter::shouldExecute(CSECounter)) {
-        DEBUG(dbgs() << "Skipping due to debug counter\n");
+        LLVM_DEBUG(dbgs() << "Skipping due to debug counter\n");
         continue;
       }
-      salvageDebugInfo(*Inst);
+      if (!salvageDebugInfo(*Inst))
+        replaceDbgUsesWithUndef(Inst);
       removeMSSA(Inst);
       Inst->eraseFromParent();
       Changed = true;
@@ -779,16 +923,17 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
       auto *CondI =
           dyn_cast<Instruction>(cast<CallInst>(Inst)->getArgOperand(0));
       if (CondI && SimpleValue::canHandle(CondI)) {
-        DEBUG(dbgs() << "EarlyCSE considering assumption: " << *Inst << '\n');
+        LLVM_DEBUG(dbgs() << "EarlyCSE considering assumption: " << *Inst
+                          << '\n');
         AvailableValues.insert(CondI, ConstantInt::getTrue(BB->getContext()));
       } else
-        DEBUG(dbgs() << "EarlyCSE skipping assumption: " << *Inst << '\n');
+        LLVM_DEBUG(dbgs() << "EarlyCSE skipping assumption: " << *Inst << '\n');
       continue;
     }
 
     // Skip sideeffect intrinsics, for the same reason as assume intrinsics.
     if (match(Inst, m_Intrinsic<Intrinsic::sideeffect>())) {
-      DEBUG(dbgs() << "EarlyCSE skipping sideeffect: " << *Inst << '\n');
+      LLVM_DEBUG(dbgs() << "EarlyCSE skipping sideeffect: " << *Inst << '\n');
       continue;
     }
 
@@ -798,7 +943,7 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
     // start a scope in the current generaton which is true for all future
     // generations.  Also, we dont need to consume the last store since the
     // semantics of invariant.start allow us to perform   DSE of the last
-    // store, if there was a store following invariant.start. Consider: 
+    // store, if there was a store following invariant.start. Consider:
     //
     // store 30, i8* p
     // invariant.start(p)
@@ -806,7 +951,7 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
     // We can DSE the store to 30, since the store 40 to invariant location p
     // causes undefined behaviour.
     if (match(Inst, m_Intrinsic<Intrinsic::invariant_start>())) {
-      // If there are any uses, the scope might end.  
+      // If there are any uses, the scope might end.
       if (!Inst->use_empty())
         continue;
       auto *CI = cast<CallInst>(Inst);
@@ -817,7 +962,7 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
       continue;
     }
 
-    if (match(Inst, m_Intrinsic<Intrinsic::experimental_guard>())) {
+    if (isGuard(Inst)) {
       if (auto *CondI =
               dyn_cast<Instruction>(cast<CallInst>(Inst)->getArgOperand(0))) {
         if (SimpleValue::canHandle(CondI)) {
@@ -826,7 +971,8 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
             // Is the condition known to be true?
             if (isa<ConstantInt>(KnownCond) &&
                 cast<ConstantInt>(KnownCond)->isOne()) {
-              DEBUG(dbgs() << "EarlyCSE removing guard: " << *Inst << '\n');
+              LLVM_DEBUG(dbgs()
+                         << "EarlyCSE removing guard: " << *Inst << '\n');
               removeMSSA(Inst);
               Inst->eraseFromParent();
               Changed = true;
@@ -851,9 +997,10 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
     // If the instruction can be simplified (e.g. X+0 = X) then replace it with
     // its simpler value.
     if (Value *V = SimplifyInstruction(Inst, SQ)) {
-      DEBUG(dbgs() << "EarlyCSE Simplify: " << *Inst << "  to: " << *V << '\n');
+      LLVM_DEBUG(dbgs() << "EarlyCSE Simplify: " << *Inst << "  to: " << *V
+                        << '\n');
       if (!DebugCounter::shouldExecute(CSECounter)) {
-        DEBUG(dbgs() << "Skipping due to debug counter\n");
+        LLVM_DEBUG(dbgs() << "Skipping due to debug counter\n");
       } else {
         bool Killed = false;
         if (!Inst->use_empty()) {
@@ -877,9 +1024,10 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
     if (SimpleValue::canHandle(Inst)) {
       // See if the instruction has an available value.  If so, use it.
       if (Value *V = AvailableValues.lookup(Inst)) {
-        DEBUG(dbgs() << "EarlyCSE CSE: " << *Inst << "  to: " << *V << '\n');
+        LLVM_DEBUG(dbgs() << "EarlyCSE CSE: " << *Inst << "  to: " << *V
+                          << '\n');
         if (!DebugCounter::shouldExecute(CSECounter)) {
-          DEBUG(dbgs() << "Skipping due to debug counter\n");
+          LLVM_DEBUG(dbgs() << "Skipping due to debug counter\n");
           continue;
         }
         if (auto *I = dyn_cast<Instruction>(V))
@@ -937,10 +1085,10 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
                                InVal.DefInst, Inst))) {
         Value *Op = getOrCreateResult(InVal.DefInst, Inst->getType());
         if (Op != nullptr) {
-          DEBUG(dbgs() << "EarlyCSE CSE LOAD: " << *Inst
-                       << "  to: " << *InVal.DefInst << '\n');
+          LLVM_DEBUG(dbgs() << "EarlyCSE CSE LOAD: " << *Inst
+                            << "  to: " << *InVal.DefInst << '\n');
           if (!DebugCounter::shouldExecute(CSECounter)) {
-            DEBUG(dbgs() << "Skipping due to debug counter\n");
+            LLVM_DEBUG(dbgs() << "Skipping due to debug counter\n");
             continue;
           }
           if (!Inst->use_empty())
@@ -980,10 +1128,10 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
       if (InVal.first != nullptr &&
           isSameMemGeneration(InVal.second, CurrentGeneration, InVal.first,
                               Inst)) {
-        DEBUG(dbgs() << "EarlyCSE CSE CALL: " << *Inst
-                     << "  to: " << *InVal.first << '\n');
+        LLVM_DEBUG(dbgs() << "EarlyCSE CSE CALL: " << *Inst
+                          << "  to: " << *InVal.first << '\n');
         if (!DebugCounter::shouldExecute(CSECounter)) {
-          DEBUG(dbgs() << "Skipping due to debug counter\n");
+          LLVM_DEBUG(dbgs() << "Skipping due to debug counter\n");
           continue;
         }
         if (!Inst->use_empty())
@@ -1036,9 +1184,9 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
                     MemInst.getPointerOperand() ||
                 MSSA) &&
                "can't have an intervening store if not using MemorySSA!");
-        DEBUG(dbgs() << "EarlyCSE DSE (writeback): " << *Inst << '\n');
+        LLVM_DEBUG(dbgs() << "EarlyCSE DSE (writeback): " << *Inst << '\n');
         if (!DebugCounter::shouldExecute(CSECounter)) {
-          DEBUG(dbgs() << "Skipping due to debug counter\n");
+          LLVM_DEBUG(dbgs() << "Skipping due to debug counter\n");
           continue;
         }
         removeMSSA(Inst);
@@ -1063,7 +1211,7 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
         // At the moment, we don't remove ordered stores, but do remove
         // unordered atomic stores.  There's no special requirement (for
         // unordered atomics) about removing atomic stores only in favor of
-        // other atomic stores since we we're going to execute the non-atomic
+        // other atomic stores since we were going to execute the non-atomic
         // one anyway and the atomic one might never have become visible.
         if (LastStore) {
           ParseMemoryInst LastStoreMemInst(LastStore, TTI);
@@ -1071,10 +1219,10 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
                  !LastStoreMemInst.isVolatile() &&
                  "Violated invariant");
           if (LastStoreMemInst.isMatchingMemLoc(MemInst)) {
-            DEBUG(dbgs() << "EarlyCSE DEAD STORE: " << *LastStore
-                         << "  due to: " << *Inst << '\n');
+            LLVM_DEBUG(dbgs() << "EarlyCSE DEAD STORE: " << *LastStore
+                              << "  due to: " << *Inst << '\n');
             if (!DebugCounter::shouldExecute(CSECounter)) {
-              DEBUG(dbgs() << "Skipping due to debug counter\n");
+              LLVM_DEBUG(dbgs() << "Skipping due to debug counter\n");
             } else {
               removeMSSA(LastStore);
               LastStore->eraseFromParent();
@@ -1130,8 +1278,7 @@ bool EarlyCSE::run() {
       CurrentGeneration, DT.getRootNode(),
       DT.getRootNode()->begin(), DT.getRootNode()->end()));
 
-  // Save the current generation.
-  unsigned LiveOutGeneration = CurrentGeneration;
+  assert(!CurrentGeneration && "Create a new EarlyCSE instance to rerun it.");
 
   // Process the stack.
   while (!nodesToProcess.empty()) {
@@ -1163,9 +1310,6 @@ bool EarlyCSE::run() {
     }
   } // while (!nodes...)
 
-  // Reset the current generation.
-  CurrentGeneration = LiveOutGeneration;
-
   return Changed;
 }
 
@@ -1193,7 +1337,7 @@ PreservedAnalyses EarlyCSEPass::run(Function &F,
 
 namespace {
 
-/// \brief A simple and fast domtree-based CSE pass.
+/// A simple and fast domtree-based CSE pass.
 ///
 /// This pass does a simple depth-first walk over the dominator tree,
 /// eliminating trivially redundant instructions and using instsimplify to
@@ -1216,7 +1360,7 @@ public:
     if (skipFunction(F))
       return false;
 
-    auto &TLI = getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
+    auto &TLI = getAnalysis<TargetLibraryInfoWrapperPass>().getTLI(F);
     auto &TTI = getAnalysis<TargetTransformInfoWrapperPass>().getTTI(F);
     auto &DT = getAnalysis<DominatorTreeWrapperPass>().getDomTree();
     auto &AC = getAnalysis<AssumptionCacheTracker>().getAssumptionCache(F);
@@ -1238,6 +1382,7 @@ public:
       AU.addPreserved<MemorySSAWrapperPass>();
     }
     AU.addPreserved<GlobalsAAWrapperPass>();
+    AU.addPreserved<AAResultsWrapperPass>();
     AU.setPreservesCFG();
   }
 };

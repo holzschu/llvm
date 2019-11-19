@@ -1,9 +1,8 @@
 //===- KaleidoscopeJIT.h - A simple JIT for Kaleidoscope --------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -78,25 +77,27 @@ using MyRemote = remote::OrcRemoteTargetClient;
 
 class KaleidoscopeJIT {
 private:
-  ExecutionSession ES;
+  ExecutionSession &ES;
   std::shared_ptr<SymbolResolver> Resolver;
   std::unique_ptr<TargetMachine> TM;
   const DataLayout DL;
-  RTDyldObjectLinkingLayer ObjectLayer;
-  IRCompileLayer<decltype(ObjectLayer), SimpleCompiler> CompileLayer;
+  LegacyRTDyldObjectLinkingLayer ObjectLayer;
+  LegacyIRCompileLayer<decltype(ObjectLayer), SimpleCompiler> CompileLayer;
 
   using OptimizeFunction =
       std::function<std::unique_ptr<Module>(std::unique_ptr<Module>)>;
 
-  IRTransformLayer<decltype(CompileLayer), OptimizeFunction> OptimizeLayer;
+  LegacyIRTransformLayer<decltype(CompileLayer), OptimizeFunction> OptimizeLayer;
 
   JITCompileCallbackManager *CompileCallbackMgr;
   std::unique_ptr<IndirectStubsManager> IndirectStubsMgr;
   MyRemote &Remote;
 
 public:
-  KaleidoscopeJIT(MyRemote &Remote)
-      : Resolver(createLegacyLookupResolver(
+  KaleidoscopeJIT(ExecutionSession &ES, MyRemote &Remote)
+      : ES(ES),
+        Resolver(createLegacyLookupResolver(
+            ES,
             [this](const std::string &Name) -> JITSymbol {
               if (auto Sym = IndirectStubsMgr->findStub(Name, false))
                 return Sym;
@@ -112,14 +113,15 @@ public:
         TM(EngineBuilder().selectTarget(Triple(Remote.getTargetTriple()), "",
                                         "", SmallVector<std::string, 0>())),
         DL(TM->createDataLayout()),
-        ObjectLayer(ES,
+        ObjectLayer(AcknowledgeORCv1Deprecation, ES,
                     [this](VModuleKey K) {
-                      return RTDyldObjectLinkingLayer::Resources{
+                      return LegacyRTDyldObjectLinkingLayer::Resources{
                           cantFail(this->Remote.createRemoteMemoryManager()),
                           Resolver};
                     }),
-        CompileLayer(ObjectLayer, SimpleCompiler(*TM)),
-        OptimizeLayer(CompileLayer,
+        CompileLayer(AcknowledgeORCv1Deprecation, ObjectLayer,
+                     SimpleCompiler(*TM)),
+        OptimizeLayer(AcknowledgeORCv1Deprecation, CompileLayer,
                       [this](std::unique_ptr<Module> M) {
                         return optimizeModule(std::move(M));
                       }),
@@ -145,22 +147,6 @@ public:
   }
 
   Error addFunctionAST(std::unique_ptr<FunctionAST> FnAST) {
-    // Create a CompileCallback - this is the re-entry point into the compiler
-    // for functions that haven't been compiled yet.
-    auto CCInfo = cantFail(CompileCallbackMgr->getCompileCallback());
-
-    // Create an indirect stub. This serves as the functions "canonical
-    // definition" - an unchanging (constant address) entry point to the
-    // function implementation.
-    // Initially we point the stub's function-pointer at the compile callback
-    // that we just created. In the compile action for the callback (see below)
-    // we will update the stub's function pointer to point at the function
-    // implementation that we just implemented.
-    if (auto Err = IndirectStubsMgr->createStub(mangle(FnAST->getName()),
-                                                CCInfo.getAddress(),
-                                                JITSymbolFlags::Exported))
-      return Err;
-
     // Move ownership of FnAST to a shared pointer - C++11 lambdas don't support
     // capture-by-move, which is be required for unique_ptr.
     auto SharedFnAST = std::shared_ptr<FunctionAST>(std::move(FnAST));
@@ -181,23 +167,37 @@ public:
     //     The JIT runtime (the resolver block) will use the return address of
     //     this function as the address to continue at once it has reset the
     //     CPU state to what it was immediately before the call.
-    CCInfo.setCompileAction(
-      [this, SharedFnAST]() {
-        auto M = irgenAndTakeOwnership(*SharedFnAST, "$impl");
-        addModule(std::move(M));
-        auto Sym = findSymbol(SharedFnAST->getName() + "$impl");
-        assert(Sym && "Couldn't find compiled function?");
-        JITTargetAddress SymAddr = cantFail(Sym.getAddress());
-        if (auto Err =
-              IndirectStubsMgr->updatePointer(mangle(SharedFnAST->getName()),
-                                              SymAddr)) {
-          logAllUnhandledErrors(std::move(Err), errs(),
-                                "Error updating function pointer: ");
-          exit(1);
-        }
+    auto CompileAction = [this, SharedFnAST]() {
+      auto M = irgenAndTakeOwnership(*SharedFnAST, "$impl");
+      addModule(std::move(M));
+      auto Sym = findSymbol(SharedFnAST->getName() + "$impl");
+      assert(Sym && "Couldn't find compiled function?");
+      JITTargetAddress SymAddr = cantFail(Sym.getAddress());
+      if (auto Err = IndirectStubsMgr->updatePointer(
+              mangle(SharedFnAST->getName()), SymAddr)) {
+        logAllUnhandledErrors(std::move(Err), errs(),
+                              "Error updating function pointer: ");
+        exit(1);
+      }
 
-        return SymAddr;
-      });
+      return SymAddr;
+    };
+
+    // Create a CompileCallback suing the CompileAction - this is the re-entry
+    // point into the compiler for functions that haven't been compiled yet.
+    auto CCAddr = cantFail(
+        CompileCallbackMgr->getCompileCallback(std::move(CompileAction)));
+
+    // Create an indirect stub. This serves as the functions "canonical
+    // definition" - an unchanging (constant address) entry point to the
+    // function implementation.
+    // Initially we point the stub's function-pointer at the compile callback
+    // that we just created. In the compile action for the callback we will
+    // update the stub's function pointer to point at the function
+    // implementation that we just implemented.
+    if (auto Err = IndirectStubsMgr->createStub(
+            mangle(SharedFnAST->getName()), CCAddr, JITSymbolFlags::Exported))
+      return Err;
 
     return Error::success();
   }
@@ -224,7 +224,7 @@ private:
 
   std::unique_ptr<Module> optimizeModule(std::unique_ptr<Module> M) {
     // Create a function pass manager.
-    auto FPM = llvm::make_unique<legacy::FunctionPassManager>(M.get());
+    auto FPM = std::make_unique<legacy::FunctionPassManager>(M.get());
 
     // Add some optimizations.
     FPM->add(createInstructionCombiningPass());

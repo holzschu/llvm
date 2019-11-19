@@ -1,9 +1,8 @@
 //===- HexagonLoopIdiomRecognition.cpp ------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -26,7 +25,7 @@
 #include "llvm/Analysis/ScalarEvolutionExpander.h"
 #include "llvm/Analysis/ScalarEvolutionExpressions.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
-#include "llvm/Analysis/Utils/Local.h"
+#include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/BasicBlock.h"
@@ -94,9 +93,9 @@ static cl::opt<bool> OnlyNonNestedMemmove("only-nonnested-memmove-idiom",
   cl::Hidden, cl::init(true),
   cl::desc("Only enable generating memmove in non-nested loops"));
 
-cl::opt<bool> HexagonVolatileMemcpy("disable-hexagon-volatile-memcpy",
-  cl::Hidden, cl::init(false),
-  cl::desc("Enable Hexagon-specific memcpy for volatile destination."));
+static cl::opt<bool> HexagonVolatileMemcpy(
+    "disable-hexagon-volatile-memcpy", cl::Hidden, cl::init(false),
+    cl::desc("Enable Hexagon-specific memcpy for volatile destination."));
 
 static cl::opt<unsigned> SimplifyLimit("hlir-simplify-limit", cl::init(10000),
   cl::Hidden, cl::desc("Maximum number of simplification steps in HLIR"));
@@ -244,8 +243,8 @@ namespace {
     const Value *V;
   };
 
-  raw_ostream &operator<< (raw_ostream &OS, const PE &P) LLVM_ATTRIBUTE_USED;
-  raw_ostream &operator<< (raw_ostream &OS, const PE &P) {
+  LLVM_ATTRIBUTE_USED
+  raw_ostream &operator<<(raw_ostream &OS, const PE &P) {
     P.C.print(OS, P.V ? P.V : P.C.Root);
     return OS;
   }
@@ -633,9 +632,9 @@ Value *PolynomialMultiplyRecognize::getCountIV(BasicBlock *BB) {
     if (!isa<ConstantInt>(InitV) || !cast<ConstantInt>(InitV)->isZero())
       continue;
     Value *IterV = PN->getIncomingValueForBlock(BB);
-    if (!isa<BinaryOperator>(IterV))
-      continue;
     auto *BO = dyn_cast<BinaryOperator>(IterV);
+    if (!BO)
+      continue;
     if (BO->getOpcode() != Instruction::Add)
       continue;
     Value *IncV = nullptr;
@@ -1001,6 +1000,7 @@ bool PolynomialMultiplyRecognize::isPromotableTo(Value *Val,
 void PolynomialMultiplyRecognize::promoteTo(Instruction *In,
       IntegerType *DestTy, BasicBlock *LoopB) {
   Type *OrigTy = In->getType();
+  assert(!OrigTy->isVoidTy() && "Invalid instruction to promote");
 
   // Leave boolean values alone.
   if (!In->getType()->isIntegerTy(1))
@@ -1081,7 +1081,8 @@ bool PolynomialMultiplyRecognize::promoteTypes(BasicBlock *LoopB,
   std::transform(LoopB->begin(), LoopB->end(), std::back_inserter(LoopIns),
                  [](Instruction &In) { return &In; });
   for (Instruction *In : LoopIns)
-    promoteTo(In, DestTy, LoopB);
+    if (!In->isTerminator())
+      promoteTo(In, DestTy, LoopB);
 
   // Fix up the PHI nodes in the exit block.
   Instruction *EndI = ExitB->getFirstNonPHI();
@@ -1522,7 +1523,7 @@ Value *PolynomialMultiplyRecognize::generate(BasicBlock::iterator At,
       ParsedValues &PV) {
   IRBuilder<> B(&*At);
   Module *M = At->getParent()->getParent()->getParent();
-  Value *PMF = Intrinsic::getDeclaration(M, Intrinsic::hexagon_M4_pmpyw);
+  Function *PMF = Intrinsic::getDeclaration(M, Intrinsic::hexagon_M4_pmpyw);
 
   Value *P = PV.P, *Q = PV.Q, *P0 = P;
   unsigned IC = PV.IterCount;
@@ -1758,15 +1759,15 @@ void PolynomialMultiplyRecognize::setupPostSimplifier(Simplifier &S) {
 }
 
 bool PolynomialMultiplyRecognize::recognize() {
-  DEBUG(dbgs() << "Starting PolynomialMultiplyRecognize on loop\n"
-               << *CurLoop << '\n');
+  LLVM_DEBUG(dbgs() << "Starting PolynomialMultiplyRecognize on loop\n"
+                    << *CurLoop << '\n');
   // Restrictions:
   // - The loop must consist of a single block.
   // - The iteration count must be known at compile-time.
   // - The loop must have an induction variable starting from 0, and
   //   incremented in each iteration of the loop.
   BasicBlock *LoopB = CurLoop->getHeader();
-  DEBUG(dbgs() << "Loop header:\n" << *LoopB);
+  LLVM_DEBUG(dbgs() << "Loop header:\n" << *LoopB);
 
   if (LoopB != CurLoop->getLoopLatch())
     return false;
@@ -1788,7 +1789,8 @@ bool PolynomialMultiplyRecognize::recognize() {
   ParsedValues PV;
   Simplifier PreSimp;
   PV.IterCount = IterCount;
-  DEBUG(dbgs() << "Loop IV: " << *CIV << "\nIterCount: " << IterCount << '\n');
+  LLVM_DEBUG(dbgs() << "Loop IV: " << *CIV << "\nIterCount: " << IterCount
+                    << '\n');
 
   setupPreSimplifier(PreSimp);
 
@@ -1815,7 +1817,7 @@ bool PolynomialMultiplyRecognize::recognize() {
     Simplifier::Context C(SI);
     Value *T = PreSimp.simplify(C);
     SelectInst *SelI = (T && isa<SelectInst>(T)) ? cast<SelectInst>(T) : SI;
-    DEBUG(dbgs() << "scanSelect(pre-scan): " << PE(C, SelI) << '\n');
+    LLVM_DEBUG(dbgs() << "scanSelect(pre-scan): " << PE(C, SelI) << '\n');
     if (scanSelect(SelI, LoopB, EntryB, CIV, PV, true)) {
       FoundPreScan = true;
       if (SelI != SI) {
@@ -1828,7 +1830,7 @@ bool PolynomialMultiplyRecognize::recognize() {
   }
 
   if (!FoundPreScan) {
-    DEBUG(dbgs() << "Have not found candidates for pmpy\n");
+    LLVM_DEBUG(dbgs() << "Have not found candidates for pmpy\n");
     return false;
   }
 
@@ -1868,14 +1870,14 @@ bool PolynomialMultiplyRecognize::recognize() {
     SelectInst *SelI = dyn_cast<SelectInst>(&In);
     if (!SelI)
       continue;
-    DEBUG(dbgs() << "scanSelect: " << *SelI << '\n');
+    LLVM_DEBUG(dbgs() << "scanSelect: " << *SelI << '\n');
     FoundScan = scanSelect(SelI, LoopB, EntryB, CIV, PV, false);
     if (FoundScan)
       break;
   }
   assert(FoundScan);
 
-  DEBUG({
+  LLVM_DEBUG({
     StringRef PP = (PV.M ? "(P+M)" : "P");
     if (!PV.Inv)
       dbgs() << "Found pmpy idiom: R = " << PP << ".Q\n";
@@ -1969,12 +1971,13 @@ mayLoopAccessLocation(Value *Ptr, ModRefInfo Access, Loop *L,
   // Get the location that may be stored across the loop.  Since the access
   // is strided positively through memory, we say that the modified location
   // starts at the pointer and has infinite size.
-  uint64_t AccessSize = MemoryLocation::UnknownSize;
+  LocationSize AccessSize = LocationSize::unknown();
 
   // If the loop iterates a fixed number of times, we can refine the access
   // size to be exactly the size of the memset, which is (BECount+1)*StoreSize
   if (const SCEVConstant *BECst = dyn_cast<SCEVConstant>(BECount))
-    AccessSize = (BECst->getValue()->getZExtValue() + 1) * StoreSize;
+    AccessSize = LocationSize::precise((BECst->getValue()->getZExtValue() + 1) *
+                                       StoreSize);
 
   // TODO: For this to be really effective, we have to dive into the pointer
   // operand in the store.  Store to &A[i] of 100 will always return may alias
@@ -2017,7 +2020,7 @@ bool HexagonLoopIdiomRecognize::processCopyingStore(Loop *CurLoop,
   // See if the pointer expression is an AddRec like {base,+,1} on the current
   // loop, which indicates a strided load.  If we have something else, it's a
   // random load we can't handle.
-  LoadInst *LI = dyn_cast<LoadInst>(SI->getValueOperand());
+  auto *LI = cast<LoadInst>(SI->getValueOperand());
   auto *LoadEv = cast<SCEVAddRecExpr>(SE->getSCEV(LI->getPointerOperand()));
 
   // The trip count of the loop and the base pointer of the addrec SCEV is
@@ -2250,10 +2253,8 @@ CleanupAndExit:
       Type *Int32PtrTy = Type::getInt32PtrTy(Ctx);
       Type *VoidTy = Type::getVoidTy(Ctx);
       Module *M = Func->getParent();
-      Constant *CF = M->getOrInsertFunction(HexagonVolatileMemcpyName, VoidTy,
-                                            Int32PtrTy, Int32PtrTy, Int32Ty);
-      Function *Fn = cast<Function>(CF);
-      Fn->setLinkage(Function::ExternalLinkage);
+      FunctionCallee Fn = M->getOrInsertFunction(
+          HexagonVolatileMemcpyName, VoidTy, Int32PtrTy, Int32PtrTy, Int32Ty);
 
       const SCEV *OneS = SE->getConstant(Int32Ty, 1);
       const SCEV *BECount32 = SE->getTruncateOrZeroExtend(BECount, Int32Ty);
@@ -2287,15 +2288,16 @@ CleanupAndExit:
 
   NewCall->setDebugLoc(DLoc);
 
-  DEBUG(dbgs() << "  Formed " << (Overlap ? "memmove: " : "memcpy: ")
-               << *NewCall << "\n"
-               << "    from load ptr=" << *LoadEv << " at: " << *LI << "\n"
-               << "    from store ptr=" << *StoreEv << " at: " << *SI << "\n");
+  LLVM_DEBUG(dbgs() << "  Formed " << (Overlap ? "memmove: " : "memcpy: ")
+                    << *NewCall << "\n"
+                    << "    from load ptr=" << *LoadEv << " at: " << *LI << "\n"
+                    << "    from store ptr=" << *StoreEv << " at: " << *SI
+                    << "\n");
 
   return true;
 }
 
-// \brief Check if the instructions in Insts, together with their dependencies
+// Check if the instructions in Insts, together with their dependencies
 // cover the loop in the sense that the loop could be safely eliminated once
 // the instructions in Insts are removed.
 bool HexagonLoopIdiomRecognize::coverLoop(Loop *L,
@@ -2358,7 +2360,7 @@ bool HexagonLoopIdiomRecognize::runOnLoopBlock(Loop *CurLoop, BasicBlock *BB,
   auto DominatedByBB = [this,BB] (BasicBlock *EB) -> bool {
     return DT->dominates(BB, EB);
   };
-  if (!std::all_of(ExitBlocks.begin(), ExitBlocks.end(), DominatedByBB))
+  if (!all_of(ExitBlocks, DominatedByBB))
     return false;
 
   bool MadeChange = false;
@@ -2424,7 +2426,8 @@ bool HexagonLoopIdiomRecognize::runOnLoop(Loop *L, LPPassManager &LPM) {
   DL = &L->getHeader()->getModule()->getDataLayout();
   DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
   LF = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
-  TLI = &getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
+  TLI = &getAnalysis<TargetLibraryInfoWrapperPass>().getTLI(
+      *L->getHeader()->getParent());
   SE = &getAnalysis<ScalarEvolutionWrapperPass>().getSE();
 
   HasMemcpy = TLI->has(LibFunc_memcpy);

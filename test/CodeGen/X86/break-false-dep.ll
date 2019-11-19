@@ -1,6 +1,7 @@
 ; RUN: llc < %s -mtriple=x86_64-linux -mattr=+sse2 -mcpu=nehalem | FileCheck %s --check-prefix=SSE
 ; RUN: llc < %s -mtriple=x86_64-win32 -mattr=+sse2 -mcpu=nehalem | FileCheck %s --check-prefix=SSE
 ; RUN: llc < %s -mtriple=x86_64-win32 -mattr=+avx -mcpu=corei7-avx | FileCheck %s --check-prefix=AVX
+; RUN: llc < %s -mtriple=x86_64-win32 -mattr=+avx512vl -mcpu=skx | FileCheck %s --check-prefix=AVX
 
 define double @t1(float* nocapture %x) nounwind readonly ssp {
 entry:
@@ -74,11 +75,11 @@ declare double @llvm.sqrt.f64(double)
 ; instructions, they are still dependent on themselves.
 ; SSE: xorps [[XMM1:%xmm[0-9]+]]
 ; SSE: , [[XMM1]]
-; SSE: cvtsi2ssl %{{.*}}, [[XMM1]]
+; SSE: cvtsi2ss %{{.*}}, [[XMM1]]
 ; SSE: xorps [[XMM2:%xmm[0-9]+]]
 ; SSE: , [[XMM2]]
-; SSE: cvtsi2ssl %{{.*}}, [[XMM2]]
-;
+; SSE: cvtsi2ss %{{.*}}, [[XMM2]]
+
 define float @loopdep1(i32 %m) nounwind uwtable readnone ssp {
 entry:
   %tobool3 = icmp eq i32 %m, 0
@@ -106,18 +107,18 @@ for.end:                                          ; preds = %for.body, %entry
 }
 
 ; rdar:15221834 False AVX register dependencies cause 5x slowdown on
-; flops-6. Make sure the unused register read by vcvtsi2sdq is zeroed
+; flops-6. Make sure the unused register read by vcvtsi2sd is zeroed
 ; to avoid cyclic dependence on a write to the same register in a
 ; previous iteration.
 
 ; AVX-LABEL: loopdep2:
 ; AVX-LABEL: %loop
 ; AVX: vxorps %[[REG:xmm.]], %{{xmm.}}, %{{xmm.}}
-; AVX: vcvtsi2sdq %{{r[0-9a-x]+}}, %[[REG]], %{{xmm.}}
+; AVX: vcvtsi2sd %{{r[0-9a-x]+}}, %[[REG]], %{{xmm.}}
 ; SSE-LABEL: loopdep2:
 ; SSE-LABEL: %loop
 ; SSE: xorps %[[REG:xmm.]], %[[REG]]
-; SSE: cvtsi2sdq %{{r[0-9a-x]+}}, %[[REG]]
+; SSE: cvtsi2sd %{{r[0-9a-x]+}}, %[[REG]]
 define i64 @loopdep2(i64* nocapture %x, double* nocapture %y) nounwind {
 entry:
   %vx = load i64, i64* %x
@@ -126,7 +127,7 @@ loop:
   %i = phi i64 [ 1, %entry ], [ %inc, %loop ]
   %s1 = phi i64 [ %vx, %entry ], [ %s2, %loop ]
   %fi = sitofp i64 %i to double
-  tail call void asm sideeffect "", "~{xmm0},~{xmm1},~{xmm2},~{xmm3},~{xmm4},~{xmm5},~{xmm6},~{xmm7},~{xmm8},~{xmm9},~{xmm10},~{xmm11},~{xmm12},~{xmm13},~{xmm14},~{xmm15},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm0},~{xmm1},~{xmm2},~{xmm3},~{xmm4},~{xmm5},~{xmm6},~{xmm7},~{xmm8},~{xmm9},~{xmm10},~{xmm11},~{xmm12},~{xmm13},~{xmm14},~{xmm15},~{xmm16},~{xmm17},~{xmm18},~{xmm19},~{xmm20},~{xmm21},~{xmm22},~{xmm23},~{xmm24},~{xmm25},~{xmm26},~{xmm27},~{xmm28},~{xmm29},~{xmm30},~{xmm31},~{dirflag},~{fpsr},~{flags}"()
   %vy = load double, double* %y
   %fipy = fadd double %fi, %vy
   %iipy = fptosi double %fipy to i64
@@ -175,7 +176,7 @@ for.body3:
   store double %mul11, double* %arrayidx13, align 8
   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
   %exitcond = icmp eq i64 %indvars.iv.next, 1024
-  tail call void asm sideeffect "", "~{xmm0},~{xmm1},~{xmm2},~{xmm3},~{xmm4},~{xmm5},~{xmm6},~{xmm7},~{xmm8},~{xmm9},~{xmm10},~{xmm11},~{xmm12},~{xmm13},~{xmm14},~{xmm15},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm0},~{xmm1},~{xmm2},~{xmm3},~{xmm4},~{xmm5},~{xmm6},~{xmm7},~{xmm8},~{xmm9},~{xmm10},~{xmm11},~{xmm12},~{xmm13},~{xmm14},~{xmm15},~{xmm16},~{xmm17},~{xmm18},~{xmm19},~{xmm20},~{xmm21},~{xmm22},~{xmm23},~{xmm24},~{xmm25},~{xmm26},~{xmm27},~{xmm28},~{xmm29},~{xmm30},~{xmm31},~{dirflag},~{fpsr},~{flags}"()
   br i1 %exitcond, label %for.inc14, label %for.body3
 
 for.inc14:                                        ; preds = %for.body3
@@ -208,11 +209,15 @@ top:
   tail call void asm sideeffect "", "~{xmm4},~{xmm5},~{xmm6},~{xmm7},~{dirflag},~{fpsr},~{flags}"()
   tail call void asm sideeffect "", "~{xmm8},~{xmm9},~{xmm10},~{xmm11},~{dirflag},~{fpsr},~{flags}"()
   tail call void asm sideeffect "", "~{xmm12},~{xmm13},~{xmm14},~{xmm15},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm16},~{xmm17},~{xmm18},~{xmm19},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm20},~{xmm21},~{xmm22},~{xmm23},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm24},~{xmm25},~{xmm26},~{xmm27},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm28},~{xmm29},~{xmm30},~{xmm31},~{dirflag},~{fpsr},~{flags}"()
   %tmp1 = sitofp i64 %arg to double
   ret double %tmp1
 ;AVX-LABEL:@inlineasmdep
 ;AVX: vxorps  [[XMM0:%xmm[0-9]+]], [[XMM0]], [[XMM0]]
-;AVX-NEXT: vcvtsi2sdq {{.*}}, [[XMM0]], {{%xmm[0-9]+}}
+;AVX-NEXT: vcvtsi2sd {{.*}}, [[XMM0]], {{%xmm[0-9]+}}
 }
 
 ; Make sure we are making a smart choice regarding undef registers and
@@ -224,6 +229,10 @@ top:
   tail call void asm sideeffect "", "~{xmm4},~{xmm5},~{xmm7},~{dirflag},~{fpsr},~{flags}"()
   tail call void asm sideeffect "", "~{xmm8},~{xmm9},~{xmm10},~{xmm11},~{dirflag},~{fpsr},~{flags}"()
   tail call void asm sideeffect "", "~{xmm12},~{xmm13},~{xmm14},~{xmm15},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm16},~{xmm17},~{xmm18},~{xmm19},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm20},~{xmm21},~{xmm22},~{xmm23},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm24},~{xmm25},~{xmm26},~{xmm27},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm28},~{xmm29},~{xmm30},~{xmm31},~{dirflag},~{fpsr},~{flags}"()
   %tmp1 = fpext float %arg to double
   ret double %tmp1
 ;AVX-LABEL:@truedeps
@@ -240,11 +249,15 @@ top:
   tail call void asm sideeffect "", "~{xmm4},~{xmm5},~{xmm7},~{dirflag},~{fpsr},~{flags}"()
   tail call void asm sideeffect "", "~{xmm8},~{xmm9},~{xmm10},~{xmm11},~{dirflag},~{fpsr},~{flags}"()
   tail call void asm sideeffect "", "~{xmm12},~{xmm13},~{xmm14},~{xmm15},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm16},~{xmm17},~{xmm18},~{xmm19},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm20},~{xmm21},~{xmm22},~{xmm23},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm24},~{xmm25},~{xmm26},~{xmm27},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm28},~{xmm29},~{xmm30},~{xmm31},~{dirflag},~{fpsr},~{flags}"()
   %tmp1 = sitofp i64 %arg to double
   ret double %tmp1
 ;AVX-LABEL:@clearence
 ;AVX: vxorps  [[XMM6:%xmm6]], [[XMM6]], [[XMM6]]
-;AVX-NEXT: vcvtsi2sdq {{.*}}, [[XMM6]], {{%xmm[0-9]+}}
+;AVX-NEXT: vcvtsi2sd {{.*}}, [[XMM6]], {{%xmm[0-9]+}}
 }
 
 ; Make sure we are making a smart choice regarding undef registers in order to
@@ -262,6 +275,10 @@ loop:
   tail call void asm sideeffect "", "~{xmm0},~{xmm1},~{xmm2},~{xmm3},~{dirflag},~{fpsr},~{flags}"()
   tail call void asm sideeffect "", "~{xmm8},~{xmm9},~{xmm10},~{xmm11},~{dirflag},~{fpsr},~{flags}"()
   tail call void asm sideeffect "", "~{xmm12},~{xmm13},~{xmm14},~{xmm15},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm16},~{xmm17},~{xmm18},~{xmm19},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm20},~{xmm21},~{xmm22},~{xmm23},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm24},~{xmm25},~{xmm26},~{xmm27},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm28},~{xmm29},~{xmm30},~{xmm31},~{dirflag},~{fpsr},~{flags}"()
   %vy = load double, double* %y
   %fipy = fadd double %fi, %vy
   %iipy = fptosi double %fipy to i64
@@ -274,7 +291,7 @@ ret:
 ;AVX-LABEL:@loopclearence
 ;Registers 4-7 are not used and therefore one of them should be chosen
 ;AVX-NOT: {{%xmm[4-7]}}
-;AVX: vcvtsi2sdq {{.*}}, [[XMM4_7:%xmm[4-7]]], {{%xmm[0-9]+}}
+;AVX: vcvtsi2sd {{.*}}, [[XMM4_7:%xmm[4-7]]], {{%xmm[0-9]+}}
 ;AVX-NOT: [[XMM4_7]]
 }
 
@@ -287,6 +304,10 @@ entry:
   tail call void asm sideeffect "", "~{xmm7},~{dirflag},~{fpsr},~{flags}"()
   tail call void asm sideeffect "", "~{xmm8},~{xmm9},~{xmm10},~{xmm11},~{dirflag},~{fpsr},~{flags}"()
   tail call void asm sideeffect "", "~{xmm12},~{xmm13},~{xmm14},~{xmm15},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm16},~{xmm17},~{xmm18},~{xmm19},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm20},~{xmm21},~{xmm22},~{xmm23},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm24},~{xmm25},~{xmm26},~{xmm27},~{dirflag},~{fpsr},~{flags}"()
+  tail call void asm sideeffect "", "~{xmm28},~{xmm29},~{xmm30},~{xmm31},~{dirflag},~{fpsr},~{flags}"()
   br label %loop
 
 loop:
@@ -314,12 +335,12 @@ loop_end:
   ; the only reasonable choice. The primary thing we care about is that it's
   ; not one of the registers used in the loop (e.g. not the output reg here)
 ;AVX-NOT: %xmm6
-;AVX: vcvtsi2sdq {{.*}}, %xmm6, {{%xmm[0-9]+}}
+;AVX: vcvtsi2sd {{.*}}, %xmm6, {{%xmm[0-9]+}}
 ;AVX-NOT: %xmm6
   %nexti_f = sitofp i64 %nexti to double
   %sub = fsub double %c1, %nexti_f
   %mul = fmul double %sub, %c2
-;AVX: vcvtsi2sdq {{.*}}, %xmm6, {{%xmm[0-9]+}}
+;AVX: vcvtsi2sd {{.*}}, %xmm6, {{%xmm[0-9]+}}
 ;AVX-NOT: %xmm6
   %phi_f = sitofp i64 %phi to double
   %mul2 = fmul double %phi_f, %c3

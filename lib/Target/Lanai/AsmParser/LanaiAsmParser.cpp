@@ -1,16 +1,16 @@
 //===-- LanaiAsmParser.cpp - Parse Lanai assembly to MCInst instructions --===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
-#include "Lanai.h"
 #include "LanaiAluCode.h"
 #include "LanaiCondCode.h"
+#include "LanaiInstrInfo.h"
 #include "MCTargetDesc/LanaiMCExpr.h"
+#include "TargetInfo/LanaiTargetInfo.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSwitch.h"
@@ -469,14 +469,15 @@ public:
     else if (isa<LanaiMCExpr>(getImm())) {
 #ifndef NDEBUG
       const LanaiMCExpr *SymbolRefExpr = dyn_cast<LanaiMCExpr>(getImm());
-      assert(SymbolRefExpr->getKind() == LanaiMCExpr::VK_Lanai_ABS_LO);
+      assert(SymbolRefExpr &&
+             SymbolRefExpr->getKind() == LanaiMCExpr::VK_Lanai_ABS_LO);
 #endif
       Inst.addOperand(MCOperand::createExpr(getImm()));
     } else if (isa<MCBinaryExpr>(getImm())) {
 #ifndef NDEBUG
       const MCBinaryExpr *BinaryExpr = dyn_cast<MCBinaryExpr>(getImm());
-      assert(dyn_cast<LanaiMCExpr>(BinaryExpr->getLHS()) &&
-             dyn_cast<LanaiMCExpr>(BinaryExpr->getLHS())->getKind() ==
+      assert(BinaryExpr && isa<LanaiMCExpr>(BinaryExpr->getLHS()) &&
+             cast<LanaiMCExpr>(BinaryExpr->getLHS())->getKind() ==
                  LanaiMCExpr::VK_Lanai_ABS_LO);
 #endif
       Inst.addOperand(MCOperand::createExpr(getImm()));
@@ -499,14 +500,15 @@ public:
     else if (isa<LanaiMCExpr>(getImm())) {
 #ifndef NDEBUG
       const LanaiMCExpr *SymbolRefExpr = dyn_cast<LanaiMCExpr>(getImm());
-      assert(SymbolRefExpr->getKind() == LanaiMCExpr::VK_Lanai_ABS_HI);
+      assert(SymbolRefExpr &&
+             SymbolRefExpr->getKind() == LanaiMCExpr::VK_Lanai_ABS_HI);
 #endif
       Inst.addOperand(MCOperand::createExpr(getImm()));
     } else if (isa<MCBinaryExpr>(getImm())) {
 #ifndef NDEBUG
       const MCBinaryExpr *BinaryExpr = dyn_cast<MCBinaryExpr>(getImm());
-      assert(dyn_cast<LanaiMCExpr>(BinaryExpr->getLHS()) &&
-             dyn_cast<LanaiMCExpr>(BinaryExpr->getLHS())->getKind() ==
+      assert(BinaryExpr && isa<LanaiMCExpr>(BinaryExpr->getLHS()) &&
+             cast<LanaiMCExpr>(BinaryExpr->getLHS())->getKind() ==
                  LanaiMCExpr::VK_Lanai_ABS_HI);
 #endif
       Inst.addOperand(MCOperand::createExpr(getImm()));
@@ -544,10 +546,9 @@ public:
     } else if (isa<MCBinaryExpr>(getImm())) {
 #ifndef NDEBUG
       const MCBinaryExpr *BinaryExpr = dyn_cast<MCBinaryExpr>(getImm());
-      const LanaiMCExpr *SymbolRefExpr =
-          dyn_cast<LanaiMCExpr>(BinaryExpr->getLHS());
-      assert(SymbolRefExpr &&
-             SymbolRefExpr->getKind() == LanaiMCExpr::VK_Lanai_None);
+      assert(BinaryExpr && isa<LanaiMCExpr>(BinaryExpr->getLHS()) &&
+             cast<LanaiMCExpr>(BinaryExpr->getLHS())->getKind() ==
+                 LanaiMCExpr::VK_Lanai_None);
 #endif
       Inst.addOperand(MCOperand::createExpr(getImm()));
     } else
@@ -580,7 +581,7 @@ public:
   }
 
   static std::unique_ptr<LanaiOperand> CreateToken(StringRef Str, SMLoc Start) {
-    auto Op = make_unique<LanaiOperand>(TOKEN);
+    auto Op = std::make_unique<LanaiOperand>(TOKEN);
     Op->Tok.Data = Str.data();
     Op->Tok.Length = Str.size();
     Op->StartLoc = Start;
@@ -590,7 +591,7 @@ public:
 
   static std::unique_ptr<LanaiOperand> createReg(unsigned RegNum, SMLoc Start,
                                                  SMLoc End) {
-    auto Op = make_unique<LanaiOperand>(REGISTER);
+    auto Op = std::make_unique<LanaiOperand>(REGISTER);
     Op->Reg.RegNum = RegNum;
     Op->StartLoc = Start;
     Op->EndLoc = End;
@@ -599,7 +600,7 @@ public:
 
   static std::unique_ptr<LanaiOperand> createImm(const MCExpr *Value,
                                                  SMLoc Start, SMLoc End) {
-    auto Op = make_unique<LanaiOperand>(IMMEDIATE);
+    auto Op = std::make_unique<LanaiOperand>(IMMEDIATE);
     Op->Imm.Value = Value;
     Op->StartLoc = Start;
     Op->EndLoc = End;

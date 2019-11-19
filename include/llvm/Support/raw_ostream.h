@@ -1,9 +1,8 @@
 //===--- raw_ostream.h - Raw output stream ----------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -33,7 +32,9 @@ class FormattedBytes;
 
 namespace sys {
 namespace fs {
+enum FileAccess : unsigned;
 enum OpenFlags : unsigned;
+enum CreationDisposition : unsigned;
 } // end namespace fs
 } // end namespace sys
 
@@ -71,7 +72,7 @@ private:
 
 public:
   // color order matches ANSI escape sequence, don't change
-  enum Colors {
+  enum class Colors {
     BLACK = 0,
     RED,
     GREEN,
@@ -80,8 +81,20 @@ public:
     MAGENTA,
     CYAN,
     WHITE,
-    SAVEDCOLOR
+    SAVEDCOLOR,
+    RESET,
   };
+
+  static const Colors BLACK = Colors::BLACK;
+  static const Colors RED = Colors::RED;
+  static const Colors GREEN = Colors::GREEN;
+  static const Colors YELLOW = Colors::YELLOW;
+  static const Colors BLUE = Colors::BLUE;
+  static const Colors MAGENTA = Colors::MAGENTA;
+  static const Colors CYAN = Colors::CYAN;
+  static const Colors WHITE = Colors::WHITE;
+  static const Colors SAVEDCOLOR = Colors::SAVEDCOLOR;
+  static const Colors RESET = Colors::RESET;
 
   explicit raw_ostream(bool unbuffered = false)
       : BufferMode(unbuffered ? Unbuffered : InternalBuffer) {
@@ -213,12 +226,15 @@ public:
   /// Output \p N in hexadecimal, without any prefix or padding.
   raw_ostream &write_hex(unsigned long long N);
 
+  // Change the foreground color of text.
+  raw_ostream &operator<<(Colors C);
+
   /// Output a formatted UUID with dash separators.
   using uuid_t = uint8_t[16];
   raw_ostream &write_uuid(const uuid_t UUID);
 
   /// Output \p Str, turning '\\', '\t', '\n', '"', and anything that doesn't
-  /// satisfy std::isprint into an escape sequence.
+  /// satisfy llvm::isPrint into an escape sequence.
   raw_ostream &write_escaped(StringRef Str, bool UseHexEscapes = false);
 
   raw_ostream &write(unsigned char C);
@@ -241,6 +257,9 @@ public:
 
   /// indent - Insert 'NumSpaces' spaces.
   raw_ostream &indent(unsigned NumSpaces);
+
+  /// write_zeros - Insert 'NumZeros' nulls.
+  raw_ostream &write_zeros(unsigned NumZeros);
 
   /// Changes the foreground color of text that will be output from this point
   /// forward.
@@ -273,6 +292,10 @@ public:
   /// This function determines if this stream is displayed and supports colors.
   virtual bool has_colors() const { return is_displayed(); }
 
+  // Enable or disable colors. Once disable_colors() is called,
+  // changeColor() has no effect until enable_colors() is called.
+  virtual void enable_colors(bool /*enable*/) {}
+
   //===--------------------------------------------------------------------===//
   // Subclass Interface
   //===--------------------------------------------------------------------===//
@@ -292,9 +315,6 @@ private:
   ///
   /// \invariant { Size > 0 }
   virtual void write_impl(const char *Ptr, size_t Size) = 0;
-
-  // An out of line virtual method to provide a home for the class vtable.
-  virtual void handle();
 
   /// Return the current position within the stream, not counting the bytes
   /// currently in the buffer.
@@ -344,7 +364,7 @@ public:
   explicit raw_pwrite_stream(bool Unbuffered = false)
       : raw_ostream(Unbuffered) {}
   void pwrite(const char *Ptr, size_t Size, uint64_t Offset) {
-#ifndef NDBEBUG
+#ifndef NDEBUG
     uint64_t Pos = tell();
     // /dev/null always reports a pos of 0, so we cannot perform this check
     // in that case.
@@ -364,12 +384,18 @@ public:
 class raw_fd_ostream : public raw_pwrite_stream {
   int FD;
   bool ShouldClose;
+  bool SupportsSeeking;
+  bool ColorEnabled = true;
+
+#ifdef _WIN32
+  /// True if this fd refers to a Windows console device. Mintty and other
+  /// terminal emulators are TTYs, but they are not consoles.
+  bool IsWindowsConsole = false;
+#endif
 
   std::error_code EC;
 
   uint64_t pos;
-
-  bool SupportsSeeking;
 
   /// See raw_ostream::write_impl.
   void write_impl(const char *Ptr, size_t Size) override;
@@ -397,7 +423,15 @@ public:
   /// As a special case, if Filename is "-", then the stream will use
   /// STDOUT_FILENO instead of opening a file. This will not close the stdout
   /// descriptor.
+  raw_fd_ostream(StringRef Filename, std::error_code &EC);
   raw_fd_ostream(StringRef Filename, std::error_code &EC,
+                 sys::fs::CreationDisposition Disp);
+  raw_fd_ostream(StringRef Filename, std::error_code &EC,
+                 sys::fs::FileAccess Access);
+  raw_fd_ostream(StringRef Filename, std::error_code &EC,
+                 sys::fs::OpenFlags Flags);
+  raw_fd_ostream(StringRef Filename, std::error_code &EC,
+                 sys::fs::CreationDisposition Disp, sys::fs::FileAccess Access,
                  sys::fs::OpenFlags Flags);
 
   /// FD is the file descriptor that this writes to.  If ShouldClose is true,
@@ -426,6 +460,8 @@ public:
   bool is_displayed() const override;
 
   bool has_colors() const override;
+
+  void enable_colors(bool enable) override { ColorEnabled = enable; }
 
   std::error_code error() const { return EC; }
 
@@ -537,6 +573,8 @@ public:
 class buffer_ostream : public raw_svector_ostream {
   raw_ostream &OS;
   SmallVector<char, 0> Buffer;
+
+  virtual void anchor() override;
 
 public:
   buffer_ostream(raw_ostream &OS) : raw_svector_ostream(Buffer), OS(OS) {}

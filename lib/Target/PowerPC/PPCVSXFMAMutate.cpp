@@ -1,9 +1,8 @@
 //===--------------- PPCVSXFMAMutate.cpp - VSX FMA Mutation ---------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -127,8 +126,8 @@ protected:
         if (!AddendMI->isFullCopy())
           continue;
 
-        unsigned AddendSrcReg = AddendMI->getOperand(1).getReg();
-        if (TargetRegisterInfo::isVirtualRegister(AddendSrcReg)) {
+        Register AddendSrcReg = AddendMI->getOperand(1).getReg();
+        if (Register::isVirtualRegister(AddendSrcReg)) {
           if (MRI.getRegClass(AddendMI->getOperand(0).getReg()) !=
               MRI.getRegClass(AddendSrcReg))
             continue;
@@ -183,12 +182,12 @@ protected:
         //   %5 = A-form-op %5, %5, %11;
         // where %5 and %11 are both kills. This case would be skipped
         // otherwise.
-        unsigned OldFMAReg = MI.getOperand(0).getReg();
+        Register OldFMAReg = MI.getOperand(0).getReg();
 
         // Find one of the product operands that is killed by this instruction.
         unsigned KilledProdOp = 0, OtherProdOp = 0;
-        unsigned Reg2 = MI.getOperand(2).getReg();
-        unsigned Reg3 = MI.getOperand(3).getReg();
+        Register Reg2 = MI.getOperand(2).getReg();
+        Register Reg3 = MI.getOperand(3).getReg();
         if (LIS->getInterval(Reg2).Query(FMAIdx).isKill()
             && Reg2 != OldFMAReg) {
           KilledProdOp = 2;
@@ -209,14 +208,14 @@ protected:
         // legality checks above, the live range for the addend source register
         // could be extended), but it seems likely that such a trivial copy can
         // be coalesced away later, and thus is not worth the effort.
-        if (TargetRegisterInfo::isVirtualRegister(AddendSrcReg) &&
+        if (Register::isVirtualRegister(AddendSrcReg) &&
             !LIS->getInterval(AddendSrcReg).liveAt(FMAIdx))
           continue;
 
         // Transform: (O2 * O3) + O1 -> (O2 * O1) + O3.
 
-        unsigned KilledProdReg = MI.getOperand(KilledProdOp).getReg();
-        unsigned OtherProdReg = MI.getOperand(OtherProdOp).getReg();
+        Register KilledProdReg = MI.getOperand(KilledProdOp).getReg();
+        Register OtherProdReg = MI.getOperand(OtherProdOp).getReg();
 
         unsigned AddSubReg = AddendMI->getOperand(1).getSubReg();
         unsigned KilledProdSubReg = MI.getOperand(KilledProdOp).getSubReg();
@@ -241,7 +240,7 @@ protected:
         assert(OldFMAReg == AddendMI->getOperand(0).getReg() &&
                "Addend copy not tied to old FMA output!");
 
-        DEBUG(dbgs() << "VSX FMA Mutation:\n    " << MI);
+        LLVM_DEBUG(dbgs() << "VSX FMA Mutation:\n    " << MI);
 
         MI.getOperand(0).setReg(KilledProdReg);
         MI.getOperand(1).setReg(KilledProdReg);
@@ -273,7 +272,7 @@ protected:
           MI.getOperand(2).setIsUndef(OtherProdRegUndef);
         }
 
-        DEBUG(dbgs() << " -> " << MI);
+        LLVM_DEBUG(dbgs() << " -> " << MI);
 
         // The killed product operand was killed here, so we can reuse it now
         // for the result of the fma.
@@ -310,12 +309,12 @@ protected:
           NewFMAInt.addSegment(LiveInterval::Segment(AI->start, AI->end,
                                                      NewFMAValNo));
         }
-        DEBUG(dbgs() << "  extended: " << NewFMAInt << '\n');
+        LLVM_DEBUG(dbgs() << "  extended: " << NewFMAInt << '\n');
 
         // Extend the live interval of the addend source (it might end at the
         // copy to be removed, or somewhere in between there and here). This
         // is necessary only if it is a physical register.
-        if (!TargetRegisterInfo::isVirtualRegister(AddendSrcReg))
+        if (!Register::isVirtualRegister(AddendSrcReg))
           for (MCRegUnitIterator Units(AddendSrcReg, TRI); Units.isValid();
                ++Units) {
             unsigned Unit = *Units;
@@ -323,15 +322,15 @@ protected:
             LiveRange &AddendSrcRange = LIS->getRegUnit(Unit);
             AddendSrcRange.extendInBlock(LIS->getMBBStartIdx(&MBB),
                                          FMAIdx.getRegSlot());
-            DEBUG(dbgs() << "  extended: " << AddendSrcRange << '\n');
+            LLVM_DEBUG(dbgs() << "  extended: " << AddendSrcRange << '\n');
           }
 
         FMAInt.removeValNo(FMAValNo);
-        DEBUG(dbgs() << "  trimmed:  " << FMAInt << '\n');
+        LLVM_DEBUG(dbgs() << "  trimmed:  " << FMAInt << '\n');
 
         // Remove the (now unused) copy.
 
-        DEBUG(dbgs() << "  removing: " << *AddendMI << '\n');
+        LLVM_DEBUG(dbgs() << "  removing: " << *AddendMI << '\n');
         LIS->RemoveMachineInstrFromMaps(*AddendMI);
         AddendMI->eraseFromParent();
 

@@ -1,9 +1,8 @@
 //===- PowerPCInstrFormats.td - PowerPC Instruction Formats --*- tablegen -*-=//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -38,14 +37,6 @@ class I<bits<6> opcode, dag OOL, dag IOL, string asmstr, InstrItinClass itin>
   let TSFlags{2}   = PPC970_Cracked;
   let TSFlags{5-3} = PPC970_Unit;
 
-  /// Indicate that the VSX instruction is to use VSX numbering/encoding.
-  /// Since ISA 3.0, there are scalar instructions that use the upper
-  /// half of the VSX register set only. Rather than adding further complexity
-  /// to the register class set, the VSX registers just include the Altivec
-  /// registers and this flag decides the numbering to be used for them.
-  bits<1> UseVSXReg = 0;
-  let TSFlags{6}   = UseVSXReg;
-
   // Indicate that this instruction is of type X-Form Load or Store
   bits<1> XFormMemOp = 0;
   let TSFlags{7}  = XFormMemOp;
@@ -74,7 +65,6 @@ class PPC970_Unit_VALU     { bits<3> PPC970_Unit = 5;   }
 class PPC970_Unit_VPERM    { bits<3> PPC970_Unit = 6;   }
 class PPC970_Unit_BRU      { bits<3> PPC970_Unit = 7;   }
 
-class UseVSXReg { bits<1> UseVSXReg = 1; }
 class XFormMemOp { bits<1> XFormMemOp = 1; }
 
 // Two joined instructions; used to emit two adjacent instructions as one.
@@ -730,6 +720,7 @@ class XForm_25_memOp<bits<6> opcode, bits<10> xo, dag OOL, dag IOL,
   : XForm_base_r3xo_memOp<opcode, xo, OOL, IOL, asmstr, itin, pattern> {
 }
 
+// [PO RT /// RB XO RC]
 class XForm_26<bits<6> opcode, bits<10> xo, dag OOL, dag IOL, string asmstr,
                InstrItinClass itin, list<dag> pattern>
   : XForm_base_r3xo<opcode, xo, OOL, IOL, asmstr, itin, pattern> {
@@ -1193,9 +1184,9 @@ class XX2_RD6_DCMX7_RS6<bits<6> opcode, bits<4> xo1, bits<3> xo2,
   let Inst{11-15} = DCMX{4-0};
   let Inst{16-20} = XB{4-0};
   let Inst{21-24} = xo1;
-  let Inst{25}    = DCMX{5};
+  let Inst{25}    = DCMX{6};
   let Inst{26-28} = xo2;
-  let Inst{29}    = DCMX{6};
+  let Inst{29}    = DCMX{5};
   let Inst{30}    = XB{5};
   let Inst{31}    = XT{5};
 }
@@ -1218,18 +1209,11 @@ class XX3Form<bits<6> opcode, bits<8> xo, dag OOL, dag IOL, string asmstr,
   let Inst{31}    = XT{5};
 }
 
-class XX3Form_Zero<bits<6> opcode, bits<8> xo, dag OOL, dag IOL, string asmstr,
+class XX3Form_SameOp<bits<6> opcode, bits<8> xo, dag OOL, dag IOL, string asmstr,
               InstrItinClass itin, list<dag> pattern>
   : XX3Form<opcode, xo, OOL, IOL, asmstr, itin, pattern> {
   let XA = XT;
   let XB = XT;
-}
-
-class XX3Form_SetZero<bits<6> opcode, bits<8> xo, dag OOL, dag IOL, string asmstr,
-               InstrItinClass itin, list<dag> pattern>
-    : XX3Form<opcode, xo, OOL, IOL, asmstr, itin, pattern> {
-  let XB = XT;
-  let XA = XT;
 }
 
 class XX3Form_1<bits<6> opcode, bits<8> xo, dag OOL, dag IOL, string asmstr, 
@@ -2131,8 +2115,31 @@ class Z23Form_3<bits<6> opcode, bits<8> xo, dag OOL, dag IOL, string asmstr,
   let Inst{31}    = RC;
 }
 
+class Z23Form_8<bits<6> opcode, bits<8> xo, dag OOL, dag IOL, string asmstr,
+              InstrItinClass itin, list<dag> pattern>
+         : I<opcode, OOL, IOL, asmstr, itin> {
+  bits<5> VRT;
+  bit R;
+  bits<5> VRB;
+  bits<2> idx;
+
+  let Pattern = pattern;
+
+  bit RC = 0;    // set by isDOT
+
+  let Inst{6-10}  = VRT;
+  let Inst{11-14} = 0;
+  let Inst{15} = R;
+  let Inst{16-20} = VRB;
+  let Inst{21-22} = idx;
+  let Inst{23-30} = xo;
+  let Inst{31}    = RC;
+}
+
 //===----------------------------------------------------------------------===//
-class Pseudo<dag OOL, dag IOL, string asmstr, list<dag> pattern>
+// EmitTimePseudo won't have encoding information for the [MC]CodeEmitter
+// stuff
+class PPCEmitTimePseudo<dag OOL, dag IOL, string asmstr, list<dag> pattern>
     : I<0, OOL, IOL, asmstr, NoItinerary> {
   let isCodeGenOnly = 1;
   let PPC64 = 0;
@@ -2141,6 +2148,21 @@ class Pseudo<dag OOL, dag IOL, string asmstr, list<dag> pattern>
   let hasNoSchedulingInfo = 1;
 }
 
+// Instruction that require custom insertion support
+// a.k.a. ISelPseudos, however, these won't have isPseudo set
+class PPCCustomInserterPseudo<dag OOL, dag IOL, string asmstr,
+                              list<dag> pattern>
+    : PPCEmitTimePseudo<OOL, IOL, asmstr, pattern> {
+  let usesCustomInserter = 1;
+}
+
+// PostRAPseudo will be expanded in expandPostRAPseudo, isPseudo flag in td
+// files is set only for PostRAPseudo
+class PPCPostRAExpPseudo<dag OOL, dag IOL, string asmstr, list<dag> pattern>
+    : PPCEmitTimePseudo<OOL, IOL, asmstr, pattern> {
+  let isPseudo = 1;
+}
+
 class PseudoXFormMemOp<dag OOL, dag IOL, string asmstr, list<dag> pattern>
-    : Pseudo<OOL, IOL, asmstr, pattern>, XFormMemOp;
+    : PPCPostRAExpPseudo<OOL, IOL, asmstr, pattern>, XFormMemOp;
 

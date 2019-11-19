@@ -1,9 +1,8 @@
 //===- llvm/IR/DiagnosticInfo.h - Diagnostic Declaration --------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -39,7 +38,7 @@ class LLVMContext;
 class Module;
 class SMDiagnostic;
 
-/// \brief Defines the different supported severity of a diagnostic.
+/// Defines the different supported severity of a diagnostic.
 enum DiagnosticSeverity : char {
   DS_Error,
   DS_Warning,
@@ -49,7 +48,7 @@ enum DiagnosticSeverity : char {
   DS_Note
 };
 
-/// \brief Defines the different supported kind of a diagnostic.
+/// Defines the different supported kind of a diagnostic.
 /// This enum should be extended with a new ID for each added concrete subclass.
 enum DiagnosticKind {
   DK_InlineAsm,
@@ -75,11 +74,13 @@ enum DiagnosticKind {
   DK_LastMachineRemark = DK_MachineOptimizationRemarkAnalysis,
   DK_MIRParser,
   DK_PGOProfile,
+  DK_MisExpect,
   DK_Unsupported,
-  DK_FirstPluginKind
+  DK_FirstPluginKind // Must be last value to work with
+                     // getNextAvailablePluginDiagnosticKind
 };
 
-/// \brief Get the next available kind ID for a plugin diagnostic.
+/// Get the next available kind ID for a plugin diagnostic.
 /// Each time this function is called, it returns a different number.
 /// Therefore, a plugin that wants to "identify" its own classes
 /// with a dynamic identifier, just have to use this method to get a new ID
@@ -89,7 +90,7 @@ enum DiagnosticKind {
 /// DiagnosticKind values.
 int getNextAvailablePluginDiagnosticKind();
 
-/// \brief This is the base abstract class for diagnostic reporting in
+/// This is the base abstract class for diagnostic reporting in
 /// the backend.
 /// The print method must be overloaded by the subclasses to print a
 /// user-friendly message in the client of the backend (let us call it a
@@ -101,6 +102,7 @@ private:
   /// Severity gives the severity of the diagnostic.
   const DiagnosticSeverity Severity;
 
+  virtual void anchor();
 public:
   DiagnosticInfo(/* DiagnosticKind */ int Kind, DiagnosticSeverity Severity)
       : Kind(Kind), Severity(Severity) {}
@@ -210,6 +212,7 @@ public:
 };
 
 class DiagnosticInfoStackSize : public DiagnosticInfoResourceLimit {
+  virtual void anchor() override;
 public:
   DiagnosticInfoStackSize(const Function &Fn, uint64_t StackSize,
                           DiagnosticSeverity Severity = DS_Warning,
@@ -340,7 +343,7 @@ private:
 };
 
 class DiagnosticLocation {
-  StringRef Filename;
+  DIFile *File = nullptr;
   unsigned Line = 0;
   unsigned Column = 0;
 
@@ -349,14 +352,18 @@ public:
   DiagnosticLocation(const DebugLoc &DL);
   DiagnosticLocation(const DISubprogram *SP);
 
-  bool isValid() const { return !Filename.empty(); }
-  StringRef getFilename() const { return Filename; }
+  bool isValid() const { return File; }
+  /// Return the full path to the file.
+  std::string getAbsolutePath() const;
+  /// Return the file name relative to the compilation directory.
+  StringRef getRelativePath() const;
   unsigned getLine() const { return Line; }
   unsigned getColumn() const { return Column; }
 };
 
 /// Common features for diagnostics with an associated location.
 class DiagnosticInfoWithLocationBase : public DiagnosticInfo {
+  virtual void anchor() override;
 public:
   /// \p Fn is the function where the diagnostic is being emitted. \p Loc is
   /// the location information to use in the diagnostic.
@@ -375,9 +382,13 @@ public:
   const std::string getLocationStr() const;
 
   /// Return location information for this diagnostic in three parts:
-  /// the source file name, line number and column.
-  void getLocation(StringRef *Filename, unsigned *Line, unsigned *Column) const;
+  /// the relative source file path, line number and column.
+  void getLocation(StringRef &RelativePath, unsigned &Line,
+                   unsigned &Column) const;
 
+  /// Return the absolute path tot the file.
+  std::string getAbsolutePath() const;
+  
   const Function &getFunction() const { return Fn; }
   DiagnosticLocation getLocation() const { return Loc; }
 
@@ -389,20 +400,20 @@ private:
   DiagnosticLocation Loc;
 };
 
-/// \brief Common features for diagnostics dealing with optimization remarks
+/// Common features for diagnostics dealing with optimization remarks
 /// that are used by both IR and MIR passes.
 class DiagnosticInfoOptimizationBase : public DiagnosticInfoWithLocationBase {
 public:
-  /// \brief Used to set IsVerbose via the stream interface.
+  /// Used to set IsVerbose via the stream interface.
   struct setIsVerbose {};
 
-  /// \brief When an instance of this is inserted into the stream, the arguments
+  /// When an instance of this is inserted into the stream, the arguments
   /// following will not appear in the remark printed in the compiler output
   /// (-Rpass) but only in the optimization record file
   /// (-fsave-optimization-record).
   struct setExtraArgs {};
 
-  /// \brief Used in the streaming interface as the general argument type.  It
+  /// Used in the streaming interface as the general argument type.  It
   /// internally converts everything into a key-value pair.
   struct Argument {
     std::string Key;
@@ -414,6 +425,7 @@ public:
     Argument(StringRef Key, const Value *V);
     Argument(StringRef Key, const Type *T);
     Argument(StringRef Key, StringRef S);
+    Argument(StringRef Key, const char *S) : Argument(Key, StringRef(S)) {};
     Argument(StringRef Key, int N);
     Argument(StringRef Key, float N);
     Argument(StringRef Key, long N);
@@ -455,11 +467,14 @@ public:
   virtual bool isEnabled() const = 0;
 
   StringRef getPassName() const { return PassName; }
+  StringRef getRemarkName() const { return RemarkName; }
   std::string getMsg() const;
   Optional<uint64_t> getHotness() const { return Hotness; }
   void setHotness(Optional<uint64_t> H) { Hotness = H; }
 
   bool isVerbose() const { return IsVerbose; }
+
+  ArrayRef<Argument> getArgs() const { return Args; }
 
   static bool classof(const DiagnosticInfo *DI) {
     return (DI->getKind() >= DK_FirstRemark &&
@@ -490,7 +505,7 @@ protected:
   const char *PassName;
 
   /// Textual identifier for the remark (single-word, camel-case). Can be used
-  /// by external tools reading the YAML output file for optimization remarks to
+  /// by external tools reading the output file for optimization remarks to
   /// identify the remark.
   StringRef RemarkName;
 
@@ -504,12 +519,10 @@ protected:
   /// The remark is expected to be noisy.
   bool IsVerbose = false;
 
-  /// \brief If positive, the index of the first argument that only appear in
+  /// If positive, the index of the first argument that only appear in
   /// the optimization records and not in the remark printed in the compiler
   /// output.
   int FirstExtraArgIndex = -1;
-
-  friend struct yaml::MappingTraits<DiagnosticInfoOptimizationBase *>;
 };
 
 /// Allow the insertion operator to return the actual remark type rather than a
@@ -587,9 +600,10 @@ operator<<(RemarkT &R,
   return R;
 }
 
-/// \brief Common features for diagnostics dealing with optimization remarks
+/// Common features for diagnostics dealing with optimization remarks
 /// that are used by IR passes.
 class DiagnosticInfoIROptimization : public DiagnosticInfoOptimizationBase {
+  virtual void anchor() override;
 public:
   /// \p PassName is the name of the pass emitting this diagnostic. \p
   /// RemarkName is a textual identifier for the remark (single-word,
@@ -609,7 +623,7 @@ public:
                                        Loc),
         CodeRegion(CodeRegion) {}
 
-  /// \brief This is ctor variant allows a pass to build an optimization remark
+  /// This is ctor variant allows a pass to build an optimization remark
   /// from an existing remark.
   ///
   /// This is useful when a transformation pass (e.g LV) wants to emit a remark
@@ -651,7 +665,7 @@ public:
 private:
   /// The IR value (currently basic block) that the optimization operates on.
   /// This is currently used to provide run-time hotness information with PGO.
-  const Value *CodeRegion;
+  const Value *CodeRegion = nullptr;
 };
 
 /// Diagnostic information for applied optimization remarks.
@@ -712,7 +726,7 @@ public:
                            const DiagnosticLocation &Loc,
                            const Value *CodeRegion);
 
-  /// \brief Same as above but \p Inst is used to derive code region and debug
+  /// Same as above but \p Inst is used to derive code region and debug
   /// location.
   OptimizationRemarkMissed(const char *PassName, StringRef RemarkName,
                            const Instruction *Inst);
@@ -753,7 +767,7 @@ public:
                              const DiagnosticLocation &Loc,
                              const Value *CodeRegion);
 
-  /// \brief This is ctor variant allows a pass to build an optimization remark
+  /// This is ctor variant allows a pass to build an optimization remark
   /// from an existing remark.
   ///
   /// This is useful when a transformation pass (e.g LV) wants to emit a remark
@@ -764,7 +778,7 @@ public:
                              const OptimizationRemarkAnalysis &Orig)
       : DiagnosticInfoIROptimization(PassName, Prepend, Orig) {}
 
-  /// \brief Same as above but \p Inst is used to derive code region and debug
+  /// Same as above but \p Inst is used to derive code region and debug
   /// location.
   OptimizationRemarkAnalysis(const char *PassName, StringRef RemarkName,
                              const Instruction *Inst);
@@ -810,6 +824,7 @@ private:
 /// Diagnostic information for optimization analysis remarks related to
 /// floating-point non-commutativity.
 class OptimizationRemarkAnalysisFPCommute : public OptimizationRemarkAnalysis {
+  virtual void anchor();
 public:
   /// \p PassName is the name of the pass emitting this diagnostic. If this name
   /// matches the regular expression given in -Rpass-analysis=, then the
@@ -851,6 +866,7 @@ private:
 /// Diagnostic information for optimization analysis remarks related to
 /// pointer aliasing.
 class OptimizationRemarkAnalysisAliasing : public OptimizationRemarkAnalysis {
+  virtual void anchor();
 public:
   /// \p PassName is the name of the pass emitting this diagnostic. If this name
   /// matches the regular expression given in -Rpass-analysis=, then the
@@ -988,11 +1004,24 @@ public:
   void print(DiagnosticPrinter &DP) const override;
 };
 
-namespace yaml {
-template <> struct MappingTraits<DiagnosticInfoOptimizationBase *> {
-  static void mapping(IO &io, DiagnosticInfoOptimizationBase *&OptDiag);
+/// Diagnostic information for MisExpect analysis.
+class DiagnosticInfoMisExpect : public DiagnosticInfoWithLocationBase {
+public:
+    DiagnosticInfoMisExpect(const Instruction *Inst, Twine &Msg);
+
+  /// \see DiagnosticInfo::print.
+  void print(DiagnosticPrinter &DP) const override;
+
+  static bool classof(const DiagnosticInfo *DI) {
+    return DI->getKind() == DK_MisExpect;
+  }
+
+  const Twine &getMsg() const { return Msg; }
+
+private:
+  /// Message to report.
+  const Twine &Msg;
 };
-} // namespace yaml
 
 } // end namespace llvm
 

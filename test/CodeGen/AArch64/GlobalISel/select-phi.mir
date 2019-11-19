@@ -1,4 +1,4 @@
-# RUN: llc -mtriple=aarch64-unknown-unknown -o - -global-isel -verify-machineinstrs -run-pass=instruction-select %s | FileCheck %s
+# RUN: llc -mtriple=aarch64-unknown-unknown -o - -verify-machineinstrs -run-pass=instruction-select %s | FileCheck %s
 --- |
   ; ModuleID = '/tmp/test.ll'
   source_filename = "/tmp/test.ll"
@@ -31,7 +31,7 @@
 ...
 ---
 name:            test_phi
-alignment:       2
+alignment:       4
 exposesReturnsTwice: false
 legalized:       true
 regBankSelected: true
@@ -84,7 +84,7 @@ body:             |
 
 ---
 name:            test_phi_ptr
-alignment:       2
+alignment:       4
 exposesReturnsTwice: false
 legalized:       true
 regBankSelected: true

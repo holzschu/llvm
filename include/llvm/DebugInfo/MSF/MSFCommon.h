@@ -1,9 +1,8 @@
 //===- MSFCommon.h - Common types and functions for MSF files ---*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -69,7 +68,7 @@ struct MSFLayout {
   std::vector<ArrayRef<support::ulittle32_t>> StreamMap;
 };
 
-/// \brief Describes the layout of a stream in an MSF layout.  A "stream" here
+/// Describes the layout of a stream in an MSF layout.  A "stream" here
 /// is defined as any logical unit of data which may be arranged inside the MSF
 /// file as a sequence of (possibly discontiguous) blocks.  When we want to read
 /// from a particular MSF Stream, we fill out a stream layout structure and the
@@ -81,7 +80,7 @@ public:
   std::vector<support::ulittle32_t> Blocks;
 };
 
-/// \brief Determine the layout of the FPM stream, given the MSF layout.  An FPM
+/// Determine the layout of the FPM stream, given the MSF layout.  An FPM
 /// stream spans 1 or more blocks, each at equally spaced intervals throughout
 /// the file.
 MSFStreamLayout getFpmStreamLayout(const MSFLayout &Msf,

@@ -1,9 +1,8 @@
 //===- llvm/unittest/Support/raw_ostream_test.cpp - raw_ostream tests -----===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -340,7 +339,7 @@ TEST(raw_ostreamTest, FormattedHexBytes) {
 TEST(raw_fd_ostreamTest, multiple_raw_fd_ostream_to_stdout) {
   std::error_code EC;
 
-  { raw_fd_ostream("-", EC, sys::fs::OpenFlags::F_None); }
-  { raw_fd_ostream("-", EC, sys::fs::OpenFlags::F_None); }
+  { raw_fd_ostream("-", EC, sys::fs::OpenFlags::OF_None); }
+  { raw_fd_ostream("-", EC, sys::fs::OpenFlags::OF_None); }
 }
 }

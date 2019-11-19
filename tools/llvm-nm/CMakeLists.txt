@@ -2,10 +2,12 @@ set(LLVM_LINK_COMPONENTS
   AllTargetsAsmParsers
   AllTargetsDescs
   AllTargetsInfos
+  BinaryFormat
   Core
   Demangle
   Object
   Support
+  TextAPI
   )
 
 add_llvm_tool(llvm-nm

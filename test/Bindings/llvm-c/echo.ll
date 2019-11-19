@@ -22,6 +22,19 @@ module asm "classical GAS"
 @section = global i32 27, section ".custom"
 @align = global i32 31, align 4
 
+@aliased1 = alias i32, i32* @var
+@aliased2 = internal alias i32, i32* @var
+@aliased3 = external alias i32, i32* @var
+@aliased4 = weak alias i32, i32* @var
+@aliased5 = weak_odr alias i32, i32* @var
+
+@ifunc = ifunc i32 (i32), i64 ()* @ifunc_resolver
+
+define i64 @ifunc_resolver() {
+entry:
+  ret i64 0
+}
+
 define { i64, %S* } @unpackrepack(%S %s) {
   %1 = extractvalue %S %s, 0
   %2 = extractvalue %S %s, 1
@@ -125,6 +138,23 @@ done:
   ret i32 %p
 }
 
+define void @memops(i8* %ptr) {
+  %a = load i8, i8* %ptr
+  %b = load volatile i8, i8* %ptr
+  %c = load i8, i8* %ptr, align 8
+  %d = load atomic i8, i8* %ptr acquire, align 32
+  store i8 0, i8* %ptr
+  store volatile i8 0, i8* %ptr
+  store i8 0, i8* %ptr, align 8
+  store atomic i8 0, i8* %ptr release, align 32
+  %e = atomicrmw add i8* %ptr, i8 0 monotonic
+  %f = atomicrmw volatile xchg i8* %ptr, i8 0 acq_rel
+  %g = cmpxchg i8* %ptr, i8 1, i8 2 seq_cst acquire
+  %h = cmpxchg weak i8* %ptr, i8 1, i8 2 seq_cst acquire
+  %i = cmpxchg volatile i8* %ptr, i8 1, i8 2 monotonic monotonic
+  ret void
+}
+
 declare void @personalityFn()
 
 define void @exn() personality void ()* @personalityFn {
@@ -159,3 +189,39 @@ cleanup:
 exit:
   ret void
 }
+
+define void @with_debuginfo() !dbg !4 {
+  ret void, !dbg !7
+}
+
+declare i8* @llvm.stacksave()
+declare void @llvm.stackrestore(i8*)
+declare void @llvm.lifetime.start.p0i8(i64, i8*)
+declare void @llvm.lifetime.end.p0i8(i64, i8*)
+
+define void @test_intrinsics() {
+entry:
+  %sp = call i8* @llvm.stacksave()
+  %x = alloca i32
+  %0 = bitcast i32* %x to i8*
+  call void @llvm.lifetime.start.p0i8(i64 4, i8* %0)
+  call void @llvm.lifetime.end.p0i8(i64 4, i8* %0)
+  call void @llvm.stackrestore(i8* %sp)
+  ret void
+}
+
+!llvm.dbg.cu = !{!0, !2}
+!llvm.module.flags = !{!3}
+
+!0 = distinct !DICompileUnit(language: DW_LANG_C, file: !1, producer: "", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug)
+!1 = !DIFile(filename: "echo.ll", directory: "/llvm/test/Bindings/llvm-c/echo.ll")
+!2 = distinct !DICompileUnit(language: DW_LANG_C, file: !1, producer: "", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug)
+!3 = !{i32 2, !"Debug Info Version", i32 3}
+!4 = distinct !DISubprogram(name: "with_debuginfo", linkageName: "_with_debuginfo", scope: null, file: !1, line: 42, type: !5, isLocal: false, isDefinition: true, scopeLine: 1519, flags: DIFlagPrototyped, isOptimized: true, unit: !0, templateParams: !6, retainedNodes: !6)
+!5 = !DISubroutineType(types: !6)
+!6 = !{}
+!7 = !DILocation(line: 42, scope: !8, inlinedAt: !11)
+!8 = distinct !DILexicalBlock(scope: !9, file: !1, line: 42, column: 12)
+!9 = distinct !DISubprogram(name: "fake_inlined_block", linkageName: "_fake_inlined_block", scope: null, file: !1, line: 82, type: !5, isLocal: false, isDefinition: true, scopeLine: 82, flags: DIFlagPrototyped, isOptimized: true, unit: !2, templateParams: !6, retainedNodes: !6)
+!10 = distinct !DILocation(line: 84, scope: !8, inlinedAt: !11)
+!11 = !DILocation(line: 42, scope: !4)

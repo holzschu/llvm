@@ -1,9 +1,8 @@
 //===- verify-uselistorder.cpp - The LLVM Modular Optimizer ---------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -83,7 +82,7 @@ struct ValueMapping {
   DenseMap<const Value *, unsigned> IDs;
   std::vector<const Value *> Values;
 
-  /// \brief Construct a value mapping for module.
+  /// Construct a value mapping for module.
   ///
   /// Creates mapping from every value in \c M to an ID.  This mapping includes
   /// un-referencable values.
@@ -96,7 +95,7 @@ struct ValueMapping {
   /// mapping, but others -- which wouldn't be serialized -- are not.
   ValueMapping(const Module &M);
 
-  /// \brief Map a value.
+  /// Map a value.
   ///
   /// Maps a value.  If it's a constant, maps all of its operands first.
   void map(const Value *V);
@@ -107,7 +106,7 @@ struct ValueMapping {
 
 bool TempFile::init(const std::string &Ext) {
   SmallVector<char, 64> Vector;
-  DEBUG(dbgs() << " - create-temp-file\n");
+  LLVM_DEBUG(dbgs() << " - create-temp-file\n");
   if (auto EC = sys::fs::createTemporaryFile("uselistorder", Ext, Vector)) {
     errs() << "verify-uselistorder: error: " << EC.message() << "\n";
     return true;
@@ -122,9 +121,9 @@ bool TempFile::init(const std::string &Ext) {
 }
 
 bool TempFile::writeBitcode(const Module &M) const {
-  DEBUG(dbgs() << " - write bitcode\n");
+  LLVM_DEBUG(dbgs() << " - write bitcode\n");
   std::error_code EC;
-  raw_fd_ostream OS(Filename, EC, sys::fs::F_None);
+  raw_fd_ostream OS(Filename, EC, sys::fs::OF_None);
   if (EC) {
     errs() << "verify-uselistorder: error: " << EC.message() << "\n";
     return true;
@@ -135,9 +134,9 @@ bool TempFile::writeBitcode(const Module &M) const {
 }
 
 bool TempFile::writeAssembly(const Module &M) const {
-  DEBUG(dbgs() << " - write assembly\n");
+  LLVM_DEBUG(dbgs() << " - write assembly\n");
   std::error_code EC;
-  raw_fd_ostream OS(Filename, EC, sys::fs::F_Text);
+  raw_fd_ostream OS(Filename, EC, sys::fs::OF_Text);
   if (EC) {
     errs() << "verify-uselistorder: error: " << EC.message() << "\n";
     return true;
@@ -148,7 +147,7 @@ bool TempFile::writeAssembly(const Module &M) const {
 }
 
 std::unique_ptr<Module> TempFile::readBitcode(LLVMContext &Context) const {
-  DEBUG(dbgs() << " - read bitcode\n");
+  LLVM_DEBUG(dbgs() << " - read bitcode\n");
   ErrorOr<std::unique_ptr<MemoryBuffer>> BufferOr =
       MemoryBuffer::getFile(Filename);
   if (!BufferOr) {
@@ -169,7 +168,7 @@ std::unique_ptr<Module> TempFile::readBitcode(LLVMContext &Context) const {
 }
 
 std::unique_ptr<Module> TempFile::readAssembly(LLVMContext &Context) const {
-  DEBUG(dbgs() << " - read assembly\n");
+  LLVM_DEBUG(dbgs() << " - read assembly\n");
   SMDiagnostic Err;
   std::unique_ptr<Module> M = parseAssemblyFile(Filename, Err, Context);
   if (!M.get())
@@ -288,9 +287,9 @@ static void debugSizeMismatch(const ValueMapping &L, const ValueMapping &R) {
 #endif
 
 static bool matches(const ValueMapping &LM, const ValueMapping &RM) {
-  DEBUG(dbgs() << "compare value maps\n");
+  LLVM_DEBUG(dbgs() << "compare value maps\n");
   if (LM.Values.size() != RM.Values.size()) {
-    DEBUG(debugSizeMismatch(LM, RM));
+    LLVM_DEBUG(debugSizeMismatch(LM, RM));
     return false;
   }
 
@@ -317,22 +316,22 @@ static bool matches(const ValueMapping &LM, const ValueMapping &RM) {
 
     while (LU != LE) {
       if (RU == RE) {
-        DEBUG(debugUserMismatch(LM, RM, I));
+        LLVM_DEBUG(debugUserMismatch(LM, RM, I));
         return false;
       }
       if (LM.lookup(LU->getUser()) != RM.lookup(RU->getUser())) {
-        DEBUG(debugUserMismatch(LM, RM, I));
+        LLVM_DEBUG(debugUserMismatch(LM, RM, I));
         return false;
       }
       if (LU->getOperandNo() != RU->getOperandNo()) {
-        DEBUG(debugUserMismatch(LM, RM, I));
+        LLVM_DEBUG(debugUserMismatch(LM, RM, I));
         return false;
       }
       skipUnmappedUsers(++LU, LE, LM);
       skipUnmappedUsers(++RU, RE, RM);
     }
     if (RU != RE) {
-      DEBUG(debugUserMismatch(LM, RM, I));
+      LLVM_DEBUG(debugUserMismatch(LM, RM, I));
       return false;
     }
   }
@@ -397,7 +396,7 @@ static void shuffleValueUseLists(Value *V, std::minstd_rand0 &Gen,
 
   // Generate random numbers between 10 and 99, which will line up nicely in
   // debug output.  We're not worried about collisons here.
-  DEBUG(dbgs() << "V = "; V->dump());
+  LLVM_DEBUG(dbgs() << "V = "; V->dump());
   std::uniform_int_distribution<short> Dist(10, 99);
   SmallDenseMap<const Use *, short, 16> Order;
   auto compareUses =
@@ -406,16 +405,16 @@ static void shuffleValueUseLists(Value *V, std::minstd_rand0 &Gen,
     for (const Use &U : V->uses()) {
       auto I = Dist(Gen);
       Order[&U] = I;
-      DEBUG(dbgs() << " - order: " << I << ", op = " << U.getOperandNo()
-                   << ", U = ";
-            U.getUser()->dump());
+      LLVM_DEBUG(dbgs() << " - order: " << I << ", op = " << U.getOperandNo()
+                        << ", U = ";
+                 U.getUser()->dump());
     }
   } while (std::is_sorted(V->use_begin(), V->use_end(), compareUses));
 
-  DEBUG(dbgs() << " => shuffle\n");
+  LLVM_DEBUG(dbgs() << " => shuffle\n");
   V->sortUseList(compareUses);
 
-  DEBUG({
+  LLVM_DEBUG({
     for (const Use &U : V->uses()) {
       dbgs() << " - order: " << Order.lookup(&U)
              << ", op = " << U.getOperandNo() << ", U = ";
@@ -437,7 +436,7 @@ static void reverseValueUseLists(Value *V, DenseSet<Value *> &Seen) {
     // Nothing to shuffle for 0 or 1 users.
     return;
 
-  DEBUG({
+  LLVM_DEBUG({
     dbgs() << "V = ";
     V->dump();
     for (const Use &U : V->uses()) {
@@ -449,7 +448,7 @@ static void reverseValueUseLists(Value *V, DenseSet<Value *> &Seen) {
 
   V->reverseUseList();
 
-  DEBUG({
+  LLVM_DEBUG({
     for (const Use &U : V->uses()) {
       dbgs() << " - order: op = " << U.getOperandNo() << ", U = ";
       U.getUser()->dump();
@@ -515,13 +514,13 @@ static void shuffleUseLists(Module &M, unsigned SeedOffset) {
   std::minstd_rand0 Gen(std::minstd_rand0::default_seed + SeedOffset);
   DenseSet<Value *> Seen;
   changeUseLists(M, [&](Value *V) { shuffleValueUseLists(V, Gen, Seen); });
-  DEBUG(dbgs() << "\n");
+  LLVM_DEBUG(dbgs() << "\n");
 }
 
 static void reverseUseLists(Module &M) {
   DenseSet<Value *> Seen;
   changeUseLists(M, [&](Value *V) { reverseValueUseLists(V, Seen); });
-  DEBUG(dbgs() << "\n");
+  LLVM_DEBUG(dbgs() << "\n");
 }
 
 int main(int argc, char **argv) {

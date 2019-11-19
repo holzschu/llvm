@@ -1,9 +1,8 @@
 //=-- SystemZHazardRecognizer.h - SystemZ Hazard Recognizer -----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -45,14 +44,16 @@ namespace llvm {
 /// SystemZHazardRecognizer maintains the state for one MBB during scheduling.
 class SystemZHazardRecognizer : public ScheduleHazardRecognizer {
 
-#ifndef NDEBUG
   const SystemZInstrInfo *TII;
-#endif
   const TargetSchedModel *SchedModel;
 
   /// Keep track of the number of decoder slots used in the current
   /// decoder group.
   unsigned CurrGroupSize;
+
+  /// True if an instruction with four reg operands have been scheduled into
+  /// the current decoder group.
+  bool CurrGroupHas4RegOps;
 
   /// The tracking of resources here are quite similar to the common
   /// code use of a critical resource. However, z13 differs in the way
@@ -72,6 +73,9 @@ class SystemZHazardRecognizer : public ScheduleHazardRecognizer {
 
   /// Return true if MI fits into current decoder group.
   bool fitsIntoCurrentGroup(SUnit *SU) const;
+
+  /// Return true if this instruction has four register operands.
+  bool has4RegOps(const MachineInstr *MI) const;
 
   /// Two decoder groups per cycle are formed (for z13), meaning 2x3
   /// instructions. This function returns a number between 0 and 5,
@@ -105,11 +109,7 @@ class SystemZHazardRecognizer : public ScheduleHazardRecognizer {
 public:
   SystemZHazardRecognizer(const SystemZInstrInfo *tii,
                           const TargetSchedModel *SM)
-      :
-#ifndef NDEBUG
-        TII(tii),
-#endif
-        SchedModel(SM) {
+      : TII(tii), SchedModel(SM) {
     Reset();
   }
 
@@ -134,7 +134,7 @@ public:
   /// new decoder group, this is negative if this fits the schedule or
   /// positive if it would mean ending a group prematurely. For normal
   /// instructions this returns 0.
-  int groupingCost(SUnit *SU) const; 
+  int groupingCost(SUnit *SU) const;
 
   /// Return the cost of SU in regards to processor resources usage.
   /// A positive value means it would be better to wait with SU, while

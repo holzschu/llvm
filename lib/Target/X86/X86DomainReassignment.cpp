@@ -1,9 +1,8 @@
 //===--- X86DomainReassignment.cpp - Selectively switch register classes---===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -26,13 +25,10 @@
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/TargetRegisterInfo.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/Printable.h"
 #include <bitset>
 
 using namespace llvm;
-
-namespace llvm {
-void initializeX86DomainReassignmentPass(PassRegistry &);
-}
 
 #define DEBUG_TYPE "x86-domain-reassignment"
 
@@ -186,7 +182,7 @@ public:
     MachineBasicBlock *MBB = MI->getParent();
     auto &DL = MI->getDebugLoc();
 
-    unsigned Reg = MRI->createVirtualRegister(
+    Register Reg = MRI->createVirtualRegister(
         TII->getRegClass(TII->get(DstOpcode), 0, MRI->getTargetRegisterInfo(),
                          *MBB->getParent()));
     MachineInstrBuilder Bld = BuildMI(*MBB, MI, DL, TII->get(DstOpcode), Reg);
@@ -216,6 +212,27 @@ public:
   InstrCOPYReplacer(unsigned SrcOpcode, RegDomain DstDomain, unsigned DstOpcode)
       : InstrReplacer(SrcOpcode, DstOpcode), DstDomain(DstDomain) {}
 
+  bool isLegal(const MachineInstr *MI,
+               const TargetInstrInfo *TII) const override {
+    if (!InstrConverterBase::isLegal(MI, TII))
+      return false;
+
+    // Don't allow copies to/flow GR8/GR16 physical registers.
+    // FIXME: Is there some better way to support this?
+    Register DstReg = MI->getOperand(0).getReg();
+    if (Register::isPhysicalRegister(DstReg) &&
+        (X86::GR8RegClass.contains(DstReg) ||
+         X86::GR16RegClass.contains(DstReg)))
+      return false;
+    Register SrcReg = MI->getOperand(1).getReg();
+    if (Register::isPhysicalRegister(SrcReg) &&
+        (X86::GR8RegClass.contains(SrcReg) ||
+         X86::GR16RegClass.contains(SrcReg)))
+      return false;
+
+    return true;
+  }
+
   double getExtraCost(const MachineInstr *MI,
                       MachineRegisterInfo *MRI) const override {
     assert(MI->getOpcode() == TargetOpcode::COPY && "Expected a COPY");
@@ -224,7 +241,7 @@ public:
       // Physical registers will not be converted. Assume that converting the
       // COPY to the destination domain will eventually result in a actual
       // instruction.
-      if (TargetRegisterInfo::isPhysicalRegister(MO.getReg()))
+      if (Register::isPhysicalRegister(MO.getReg()))
         return 1;
 
       RegDomain OpDomain = getDomain(MRI->getRegClass(MO.getReg()),
@@ -253,25 +270,6 @@ public:
     BuildMI(*MI->getParent(), MI, MI->getDebugLoc(),
             TII->get(TargetOpcode::COPY))
         .add({MI->getOperand(0), MI->getOperand(SrcOpIdx)});
-    return true;
-  }
-
-  double getExtraCost(const MachineInstr *MI,
-                      MachineRegisterInfo *MRI) const override {
-    return 0;
-  }
-};
-
-/// An Instruction Converter which completely deletes an instruction.
-/// For example, IMPLICIT_DEF instructions can be deleted when converting from
-/// GPR to mask.
-class InstrDeleter : public InstrConverterBase {
-public:
-  InstrDeleter(unsigned SrcOpcode) : InstrConverterBase(SrcOpcode) {}
-
-  bool convertInstr(MachineInstr *MI, const TargetInstrInfo *TII,
-                    MachineRegisterInfo *MRI) const override {
-    assert(isLegal(MI, TII) && "Cannot convert instruction");
     return true;
   }
 
@@ -310,8 +308,12 @@ private:
   /// Domains which this closure can legally be reassigned to.
   std::bitset<NumDomains> LegalDstDomains;
 
+  /// An ID to uniquely identify this closure, even when it gets
+  /// moved around
+  unsigned ID;
+
 public:
-  Closure(std::initializer_list<RegDomain> LegalDstDomainList) {
+  Closure(unsigned ID, std::initializer_list<RegDomain> LegalDstDomainList) : ID(ID) {
     for (RegDomain D : LegalDstDomainList)
       LegalDstDomains.set(D);
   }
@@ -347,6 +349,27 @@ public:
     return Instrs;
   }
 
+  LLVM_DUMP_METHOD void dump(const MachineRegisterInfo *MRI) const {
+    dbgs() << "Registers: ";
+    bool First = true;
+    for (unsigned Reg : Edges) {
+      if (!First)
+        dbgs() << ", ";
+      First = false;
+      dbgs() << printReg(Reg, MRI->getTargetRegisterInfo(), 0, MRI);
+    }
+    dbgs() << "\n" << "Instructions:";
+    for (MachineInstr *MI : Instrs) {
+      dbgs() << "\n  ";
+      MI->print(dbgs());
+    }
+    dbgs() << "\n";
+  }
+
+  unsigned getID() const {
+    return ID;
+  }
+
 };
 
 class X86DomainReassignment : public MachineFunctionPass {
@@ -358,14 +381,12 @@ class X86DomainReassignment : public MachineFunctionPass {
   DenseSet<unsigned> EnclosedEdges;
 
   /// All instructions that are included in some closure.
-  DenseMap<MachineInstr *, Closure *> EnclosedInstrs;
+  DenseMap<MachineInstr *, unsigned> EnclosedInstrs;
 
 public:
   static char ID;
 
-  X86DomainReassignment() : MachineFunctionPass(ID) {
-    initializeX86DomainReassignmentPass(*PassRegistry::getPassRegistry());
-  }
+  X86DomainReassignment() : MachineFunctionPass(ID) { }
 
   bool runOnMachineFunction(MachineFunction &MF) override;
 
@@ -415,7 +436,7 @@ void X86DomainReassignment::visitRegister(Closure &C, unsigned Reg,
   if (EnclosedEdges.count(Reg))
     return;
 
-  if (!TargetRegisterInfo::isVirtualRegister(Reg))
+  if (!Register::isVirtualRegister(Reg))
     return;
 
   if (!MRI->hasOneDef(Reg))
@@ -435,14 +456,14 @@ void X86DomainReassignment::visitRegister(Closure &C, unsigned Reg,
 void X86DomainReassignment::encloseInstr(Closure &C, MachineInstr *MI) {
   auto I = EnclosedInstrs.find(MI);
   if (I != EnclosedInstrs.end()) {
-    if (I->second != &C)
+    if (I->second != C.getID())
       // Instruction already belongs to another closure, avoid conflicts between
       // closure and mark this closure as illegal.
       C.setAllIllegal();
     return;
   }
 
-  EnclosedInstrs[MI] = &C;
+  EnclosedInstrs[MI] = C.getID();
   C.addInstruction(MI);
 
   // Mark closure as illegal for reassignment to domains, if there is no
@@ -533,6 +554,7 @@ void X86DomainReassignment::buildClosure(Closure &C, unsigned Reg) {
     // Register already in this closure.
     if (!C.insertEdge(CurReg))
       continue;
+    EnclosedEdges.insert(Reg);
 
     MachineInstr *DefMI = MRI->getVRegDef(CurReg);
     encloseInstr(C, DefMI);
@@ -571,8 +593,8 @@ void X86DomainReassignment::buildClosure(Closure &C, unsigned Reg) {
         if (!DefOp.isReg())
           continue;
 
-        unsigned DefReg = DefOp.getReg();
-        if (!TargetRegisterInfo::isVirtualRegister(DefReg)) {
+        Register DefReg = DefOp.getReg();
+        if (!Register::isVirtualRegister(DefReg)) {
           C.setAllIllegal();
           continue;
         }
@@ -587,7 +609,7 @@ void X86DomainReassignment::initConverters() {
       new InstrIgnore(TargetOpcode::PHI);
 
   Converters[{MaskDomain, TargetOpcode::IMPLICIT_DEF}] =
-      new InstrDeleter(TargetOpcode::IMPLICIT_DEF);
+      new InstrIgnore(TargetOpcode::IMPLICIT_DEF);
 
   Converters[{MaskDomain, TargetOpcode::INSERT_SUBREG}] =
       new InstrReplaceWithCopy(TargetOpcode::INSERT_SUBREG, 2);
@@ -701,13 +723,17 @@ bool X86DomainReassignment::runOnMachineFunction(MachineFunction &MF) {
   if (DisableX86DomainReassignment)
     return false;
 
-  DEBUG(dbgs() << "***** Machine Function before Domain Reassignment *****\n");
-  DEBUG(MF.print(dbgs()));
+  LLVM_DEBUG(
+      dbgs() << "***** Machine Function before Domain Reassignment *****\n");
+  LLVM_DEBUG(MF.print(dbgs()));
 
   STI = &MF.getSubtarget<X86Subtarget>();
   // GPR->K is the only transformation currently supported, bail out early if no
   // AVX512.
-  if (!STI->hasAVX512())
+  // TODO: We're also bailing of AVX512BW isn't supported since we use VK32 and
+  // VK64 for GR32/GR64, but those aren't legal classes on KNL. If the register
+  // coalescer doesn't clean it up and we generate a spill we will crash.
+  if (!STI->hasAVX512() || !STI->hasBWI())
     return false;
 
   MRI = &MF.getRegInfo();
@@ -723,8 +749,9 @@ bool X86DomainReassignment::runOnMachineFunction(MachineFunction &MF) {
   std::vector<Closure> Closures;
 
   // Go over all virtual registers and calculate a closure.
+  unsigned ClosureID = 0;
   for (unsigned Idx = 0; Idx < MRI->getNumVirtRegs(); ++Idx) {
-    unsigned Reg = TargetRegisterInfo::index2VirtReg(Idx);
+    unsigned Reg = Register::index2VirtReg(Idx);
 
     // GPR only current source domain supported.
     if (!isGPR(MRI->getRegClass(Reg)))
@@ -735,7 +762,7 @@ bool X86DomainReassignment::runOnMachineFunction(MachineFunction &MF) {
       continue;
 
     // Calculate closure starting with Reg.
-    Closure C({MaskDomain});
+    Closure C(ClosureID++, {MaskDomain});
     buildClosure(C, Reg);
 
     // Collect all closures that can potentially be converted.
@@ -743,18 +770,20 @@ bool X86DomainReassignment::runOnMachineFunction(MachineFunction &MF) {
       Closures.push_back(std::move(C));
   }
 
-  for (Closure &C : Closures)
+  for (Closure &C : Closures) {
+    LLVM_DEBUG(C.dump(MRI));
     if (isReassignmentProfitable(C, MaskDomain)) {
       reassign(C, MaskDomain);
       ++NumClosuresConverted;
       Changed = true;
     }
+  }
 
-  for (auto I : Converters)
-    delete I.second;
+  DeleteContainerSeconds(Converters);
 
-  DEBUG(dbgs() << "***** Machine Function after Domain Reassignment *****\n");
-  DEBUG(MF.print(dbgs()));
+  LLVM_DEBUG(
+      dbgs() << "***** Machine Function after Domain Reassignment *****\n");
+  LLVM_DEBUG(MF.print(dbgs()));
 
   return Changed;
 }

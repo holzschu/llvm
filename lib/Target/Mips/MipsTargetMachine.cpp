@@ -1,9 +1,8 @@
 //===-- MipsTargetMachine.cpp - Define TargetMachine for Mips -------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -19,6 +18,7 @@
 #include "MipsSEISelDAGToDAG.h"
 #include "MipsSubtarget.h"
 #include "MipsTargetObjectFile.h"
+#include "TargetInfo/MipsTargetInfo.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
@@ -53,6 +53,10 @@ extern "C" void LLVMInitializeMipsTarget() {
 
   PassRegistry *PR = PassRegistry::getPassRegistry();
   initializeGlobalISel(*PR);
+  initializeMipsDelaySlotFillerPass(*PR);
+  initializeMipsBranchExpansionPass(*PR);
+  initializeMicroMipsSizeReducePass(*PR);
+  initializeMipsPreLegalizerCombinerPass(*PR);
 }
 
 static std::string computeDataLayout(const Triple &TT, StringRef CPU,
@@ -98,12 +102,6 @@ static Reloc::Model getEffectiveRelocModel(bool JIT,
   return *RM;
 }
 
-static CodeModel::Model getEffectiveCodeModel(Optional<CodeModel::Model> CM) {
-  if (CM)
-    return *CM;
-  return CodeModel::Small;
-}
-
 // On function prologue, the stack is created by decrementing
 // its pointer. Once decremented, all references are done with positive
 // offset from the stack/frame pointer, using StackGrowsUp enables
@@ -118,15 +116,18 @@ MipsTargetMachine::MipsTargetMachine(const Target &T, const Triple &TT,
                                      bool isLittle)
     : LLVMTargetMachine(T, computeDataLayout(TT, CPU, Options, isLittle), TT,
                         CPU, FS, Options, getEffectiveRelocModel(JIT, RM),
-                        getEffectiveCodeModel(CM), OL),
-      isLittle(isLittle), TLOF(llvm::make_unique<MipsTargetObjectFile>()),
+                        getEffectiveCodeModel(CM, CodeModel::Small), OL),
+      isLittle(isLittle), TLOF(std::make_unique<MipsTargetObjectFile>()),
       ABI(MipsABIInfo::computeTargetABI(TT, CPU, Options.MCOptions)),
-      Subtarget(nullptr), DefaultSubtarget(TT, CPU, FS, isLittle, *this,
-                                           Options.StackAlignmentOverride),
+      Subtarget(nullptr),
+      DefaultSubtarget(TT, CPU, FS, isLittle, *this,
+                       MaybeAlign(Options.StackAlignmentOverride)),
       NoMips16Subtarget(TT, CPU, FS.empty() ? "-mips16" : FS.str() + ",-mips16",
-                        isLittle, *this, Options.StackAlignmentOverride),
+                        isLittle, *this,
+                        MaybeAlign(Options.StackAlignmentOverride)),
       Mips16Subtarget(TT, CPU, FS.empty() ? "+mips16" : FS.str() + ",+mips16",
-                      isLittle, *this, Options.StackAlignmentOverride) {
+                      isLittle, *this,
+                      MaybeAlign(Options.StackAlignmentOverride)) {
   Subtarget = &DefaultSubtarget;
   initAsmInfo();
 }
@@ -198,17 +199,17 @@ MipsTargetMachine::getSubtargetImpl(const Function &F) const {
     // creation will depend on the TM and the code generation flags on the
     // function that reside in TargetOptions.
     resetTargetOptions(F);
-    I = llvm::make_unique<MipsSubtarget>(TargetTriple, CPU, FS, isLittle, *this,
-                                         Options.StackAlignmentOverride);
+    I = std::make_unique<MipsSubtarget>(
+        TargetTriple, CPU, FS, isLittle, *this,
+        MaybeAlign(Options.StackAlignmentOverride));
   }
   return I.get();
 }
 
 void MipsTargetMachine::resetSubtarget(MachineFunction *MF) {
-  DEBUG(dbgs() << "resetSubtarget\n");
+  LLVM_DEBUG(dbgs() << "resetSubtarget\n");
 
-  Subtarget = const_cast<MipsSubtarget *>(getSubtargetImpl(MF->getFunction()));
-  MF->setSubtarget(Subtarget);
+  Subtarget = &MF->getSubtarget<MipsSubtarget>();
 }
 
 namespace {
@@ -238,15 +239,22 @@ public:
   void addPreEmitPass() override;
   void addPreRegAlloc() override;
   bool addIRTranslator() override;
+  void addPreLegalizeMachineIR() override;
   bool addLegalizeMachineIR() override;
   bool addRegBankSelect() override;
   bool addGlobalInstructionSelect() override;
+
+  std::unique_ptr<CSEConfigBase> getCSEConfig() const override;
 };
 
 } // end anonymous namespace
 
 TargetPassConfig *MipsTargetMachine::createPassConfig(PassManagerBase &PM) {
   return new MipsPassConfig(*this, PM);
+}
+
+std::unique_ptr<CSEConfigBase> MipsPassConfig::getCSEConfig() const {
+  return getStandardCSEConfigForOpt(TM->getOptLevel());
 }
 
 void MipsPassConfig::addIRPasses() {
@@ -273,12 +281,12 @@ void MipsPassConfig::addPreRegAlloc() {
 TargetTransformInfo
 MipsTargetMachine::getTargetTransformInfo(const Function &F) {
   if (Subtarget->allowMixed16_32()) {
-    DEBUG(errs() << "No Target Transform Info Pass Added\n");
+    LLVM_DEBUG(errs() << "No Target Transform Info Pass Added\n");
     // FIXME: This is no longer necessary as the TTI returned is per-function.
     return TargetTransformInfo(F.getParent()->getDataLayout());
   }
 
-  DEBUG(errs() << "Target Transform Info Pass Added\n");
+  LLVM_DEBUG(errs() << "Target Transform Info Pass Added\n");
   return TargetTransformInfo(BasicTTIImpl(this, F));
 }
 
@@ -286,20 +294,37 @@ MipsTargetMachine::getTargetTransformInfo(const Function &F) {
 // machine code is emitted. return true if -print-machineinstrs should
 // print out the code after the passes.
 void MipsPassConfig::addPreEmitPass() {
-  addPass(createMicroMipsSizeReductionPass());
+  // Expand pseudo instructions that are sensitive to register allocation.
+  addPass(createMipsExpandPseudoPass());
 
-  // The delay slot filler and the long branch passes can potientially create
-  // forbidden slot/ hazards for MIPSR6 which the hazard schedule pass will
-  // fix. Any new pass must come before the hazard schedule pass.
+  // The microMIPS size reduction pass performs instruction reselection for
+  // instructions which can be remapped to a 16 bit instruction.
+  addPass(createMicroMipsSizeReducePass());
+
+  // The delay slot filler pass can potientially create forbidden slot hazards
+  // for MIPSR6 and therefore it should go before MipsBranchExpansion pass.
   addPass(createMipsDelaySlotFillerPass());
-  addPass(createMipsLongBranchPass());
-  addPass(createMipsHazardSchedule());
+
+  // This pass expands branches and takes care about the forbidden slot hazards.
+  // Expanding branches may potentially create forbidden slot hazards for
+  // MIPSR6, and fixing such hazard may potentially break a branch by extending
+  // its offset out of range. That's why this pass combine these two tasks, and
+  // runs them alternately until one of them finishes without any changes. Only
+  // then we can be sure that all branches are expanded properly and no hazards
+  // exists.
+  // Any new pass should go before this pass.
+  addPass(createMipsBranchExpansion());
+
   addPass(createMipsConstantIslandPass());
 }
 
 bool MipsPassConfig::addIRTranslator() {
   addPass(new IRTranslator());
   return false;
+}
+
+void MipsPassConfig::addPreLegalizeMachineIR() {
+  addPass(createMipsPreLegalizeCombiner());
 }
 
 bool MipsPassConfig::addLegalizeMachineIR() {

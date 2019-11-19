@@ -1,9 +1,8 @@
 //===- WholeProgramDevirt.cpp - Whole program virtual call optimization ---===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -25,12 +24,14 @@
 //   returns 0, or a single vtable's function returns 1, replace each virtual
 //   call with a comparison of the vptr against that vtable's address.
 //
-// This pass is intended to be used during the regular and thin LTO pipelines.
+// This pass is intended to be used during the regular and thin LTO pipelines:
+//
 // During regular LTO, the pass determines the best optimization for each
 // virtual call and applies the resolutions directly to virtual calls that are
 // eligible for virtual call optimization (i.e. calls that use either of the
-// llvm.assume(llvm.type.test) or llvm.type.checked.load intrinsics). During
-// ThinLTO, the pass operates in two phases:
+// llvm.assume(llvm.type.test) or llvm.type.checked.load intrinsics).
+//
+// During hybrid Regular/ThinLTO, the pass operates in two phases:
 // - Export phase: this is run during the thin link over a single merged module
 //   that contains all vtables with !type metadata that participate in the link.
 //   The pass computes a resolution for each virtual call and stores it in the
@@ -38,6 +39,14 @@
 // - Import phase: this is run during the thin backends over the individual
 //   modules. The pass applies the resolutions previously computed during the
 //   import phase to each eligible virtual call.
+//
+// During ThinLTO, the pass operates in two phases:
+// - Export phase: this is run during the thin link over the index which
+//   contains a summary of all vtables with !type metadata that participate in
+//   the link. It computes a resolution for each virtual call and stores it in
+//   the type identifier summary. Only single implementation devirtualization
+//   is supported.
+// - Import phase: (same as with hybrid case above).
 //
 //===----------------------------------------------------------------------===//
 
@@ -58,6 +67,7 @@
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DebugLoc.h"
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GlobalAlias.h"
 #include "llvm/IR/GlobalVariable.h"
@@ -116,6 +126,11 @@ static cl::opt<unsigned>
                 cl::init(10), cl::ZeroOrMore,
                 cl::desc("Maximum number of call targets per "
                          "call site to enable branch funnels"));
+
+static cl::opt<bool>
+    PrintSummaryDevirt("wholeprogramdevirt-print-index-based", cl::Hidden,
+                       cl::init(false), cl::ZeroOrMore,
+                       cl::desc("Print index-based devirtualization messages"));
 
 // Find the minimum offset that we may store a value of size Size bits at. If
 // IsAfter is set, look for an offset before the object, otherwise look for an
@@ -265,6 +280,25 @@ template <> struct DenseMapInfo<VTableSlot> {
   }
 };
 
+template <> struct DenseMapInfo<VTableSlotSummary> {
+  static VTableSlotSummary getEmptyKey() {
+    return {DenseMapInfo<StringRef>::getEmptyKey(),
+            DenseMapInfo<uint64_t>::getEmptyKey()};
+  }
+  static VTableSlotSummary getTombstoneKey() {
+    return {DenseMapInfo<StringRef>::getTombstoneKey(),
+            DenseMapInfo<uint64_t>::getTombstoneKey()};
+  }
+  static unsigned getHashValue(const VTableSlotSummary &I) {
+    return DenseMapInfo<StringRef>::getHashValue(I.TypeID) ^
+           DenseMapInfo<uint64_t>::getHashValue(I.ByteOffset);
+  }
+  static bool isEqual(const VTableSlotSummary &LHS,
+                      const VTableSlotSummary &RHS) {
+    return LHS.TypeID == RHS.TypeID && LHS.ByteOffset == RHS.ByteOffset;
+  }
+};
+
 } // end namespace llvm
 
 namespace {
@@ -342,19 +376,21 @@ struct CallSiteInfo {
   /// pass the vector is non-empty, we will need to add a use of llvm.type.test
   /// to each of the function summaries in the vector.
   std::vector<FunctionSummary *> SummaryTypeCheckedLoadUsers;
+  std::vector<FunctionSummary *> SummaryTypeTestAssumeUsers;
 
   bool isExported() const {
     return SummaryHasTypeTestAssumeUsers ||
            !SummaryTypeCheckedLoadUsers.empty();
   }
 
-  void markSummaryHasTypeTestAssumeUsers() {
-    SummaryHasTypeTestAssumeUsers = true;
+  void addSummaryTypeCheckedLoadUser(FunctionSummary *FS) {
+    SummaryTypeCheckedLoadUsers.push_back(FS);
     AllCallSitesDevirted = false;
   }
 
-  void addSummaryTypeCheckedLoadUser(FunctionSummary *FS) {
-    SummaryTypeCheckedLoadUsers.push_back(FS);
+  void addSummaryTypeTestAssumeUser(FunctionSummary *FS) {
+    SummaryTypeTestAssumeUsers.push_back(FS);
+    SummaryHasTypeTestAssumeUsers = true;
     AllCallSitesDevirted = false;
   }
 
@@ -406,6 +442,7 @@ void VTableSlotInfo::addCallSite(Value *VTable, CallSite CS,
 struct DevirtModule {
   Module &M;
   function_ref<AAResults &(Function &)> AARGetter;
+  function_ref<DominatorTree &(Function &)> LookupDomTree;
 
   ModuleSummaryIndex *ExportSummary;
   const ModuleSummaryIndex *ImportSummary;
@@ -433,10 +470,12 @@ struct DevirtModule {
 
   DevirtModule(Module &M, function_ref<AAResults &(Function &)> AARGetter,
                function_ref<OptimizationRemarkEmitter &(Function *)> OREGetter,
+               function_ref<DominatorTree &(Function &)> LookupDomTree,
                ModuleSummaryIndex *ExportSummary,
                const ModuleSummaryIndex *ImportSummary)
-      : M(M), AARGetter(AARGetter), ExportSummary(ExportSummary),
-        ImportSummary(ImportSummary), Int8Ty(Type::getInt8Ty(M.getContext())),
+      : M(M), AARGetter(AARGetter), LookupDomTree(LookupDomTree),
+        ExportSummary(ExportSummary), ImportSummary(ImportSummary),
+        Int8Ty(Type::getInt8Ty(M.getContext())),
         Int8PtrTy(Type::getInt8PtrTy(M.getContext())),
         Int32Ty(Type::getInt32Ty(M.getContext())),
         Int64Ty(Type::getInt64Ty(M.getContext())),
@@ -453,7 +492,6 @@ struct DevirtModule {
   void buildTypeIdentifierMap(
       std::vector<VTableBits> &Bits,
       DenseMap<Metadata *, std::set<TypeMemberInfo>> &TypeIdMap);
-  Constant *getPointerAtOffset(Constant *I, uint64_t Offset);
   bool
   tryFindVirtualCallTargets(std::vector<VirtualCallTarget> &TargetsForSlot,
                             const std::set<TypeMemberInfo> &TypeMemberInfos,
@@ -461,7 +499,8 @@ struct DevirtModule {
 
   void applySingleImplDevirt(VTableSlotInfo &SlotInfo, Constant *TheFn,
                              bool &IsExported);
-  bool trySingleImplDevirt(MutableArrayRef<VirtualCallTarget> TargetsForSlot,
+  bool trySingleImplDevirt(ModuleSummaryIndex *ExportSummary,
+                           MutableArrayRef<VirtualCallTarget> TargetsForSlot,
                            VTableSlotInfo &SlotInfo,
                            WholeProgramDevirtResolution *Res);
 
@@ -533,9 +572,42 @@ struct DevirtModule {
 
   // Lower the module using the action and summary passed as command line
   // arguments. For testing purposes only.
-  static bool runForTesting(
-      Module &M, function_ref<AAResults &(Function &)> AARGetter,
-      function_ref<OptimizationRemarkEmitter &(Function *)> OREGetter);
+  static bool
+  runForTesting(Module &M, function_ref<AAResults &(Function &)> AARGetter,
+                function_ref<OptimizationRemarkEmitter &(Function *)> OREGetter,
+                function_ref<DominatorTree &(Function &)> LookupDomTree);
+};
+
+struct DevirtIndex {
+  ModuleSummaryIndex &ExportSummary;
+  // The set in which to record GUIDs exported from their module by
+  // devirtualization, used by client to ensure they are not internalized.
+  std::set<GlobalValue::GUID> &ExportedGUIDs;
+  // A map in which to record the information necessary to locate the WPD
+  // resolution for local targets in case they are exported by cross module
+  // importing.
+  std::map<ValueInfo, std::vector<VTableSlotSummary>> &LocalWPDTargetsMap;
+
+  MapVector<VTableSlotSummary, VTableSlotInfo> CallSlots;
+
+  DevirtIndex(
+      ModuleSummaryIndex &ExportSummary,
+      std::set<GlobalValue::GUID> &ExportedGUIDs,
+      std::map<ValueInfo, std::vector<VTableSlotSummary>> &LocalWPDTargetsMap)
+      : ExportSummary(ExportSummary), ExportedGUIDs(ExportedGUIDs),
+        LocalWPDTargetsMap(LocalWPDTargetsMap) {}
+
+  bool tryFindVirtualCallTargets(std::vector<ValueInfo> &TargetsForSlot,
+                                 const TypeIdCompatibleVtableInfo TIdInfo,
+                                 uint64_t ByteOffset);
+
+  bool trySingleImplDevirt(MutableArrayRef<ValueInfo> TargetsForSlot,
+                           VTableSlotSummary &SlotSummary,
+                           VTableSlotInfo &SlotInfo,
+                           WholeProgramDevirtResolution *Res,
+                           std::set<ValueInfo> &DevirtTargets);
+
+  void run();
 };
 
 struct WholeProgramDevirt : public ModulePass {
@@ -568,21 +640,27 @@ struct WholeProgramDevirt : public ModulePass {
     // an optimization remark emitter on the fly, when we need it.
     std::unique_ptr<OptimizationRemarkEmitter> ORE;
     auto OREGetter = [&](Function *F) -> OptimizationRemarkEmitter & {
-      ORE = make_unique<OptimizationRemarkEmitter>(F);
+      ORE = std::make_unique<OptimizationRemarkEmitter>(F);
       return *ORE;
     };
 
-    if (UseCommandLine)
-      return DevirtModule::runForTesting(M, LegacyAARGetter(*this), OREGetter);
+    auto LookupDomTree = [this](Function &F) -> DominatorTree & {
+      return this->getAnalysis<DominatorTreeWrapperPass>(F).getDomTree();
+    };
 
-    return DevirtModule(M, LegacyAARGetter(*this), OREGetter, ExportSummary,
-                        ImportSummary)
+    if (UseCommandLine)
+      return DevirtModule::runForTesting(M, LegacyAARGetter(*this), OREGetter,
+                                         LookupDomTree);
+
+    return DevirtModule(M, LegacyAARGetter(*this), OREGetter, LookupDomTree,
+                        ExportSummary, ImportSummary)
         .run();
   }
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.addRequired<AssumptionCacheTracker>();
     AU.addRequired<TargetLibraryInfoWrapperPass>();
+    AU.addRequired<DominatorTreeWrapperPass>();
   }
 };
 
@@ -592,6 +670,7 @@ INITIALIZE_PASS_BEGIN(WholeProgramDevirt, "wholeprogramdevirt",
                       "Whole program devirtualization", false, false)
 INITIALIZE_PASS_DEPENDENCY(AssumptionCacheTracker)
 INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfoWrapperPass)
+INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 INITIALIZE_PASS_END(WholeProgramDevirt, "wholeprogramdevirt",
                     "Whole program devirtualization", false, false)
 char WholeProgramDevirt::ID = 0;
@@ -611,15 +690,56 @@ PreservedAnalyses WholeProgramDevirtPass::run(Module &M,
   auto OREGetter = [&](Function *F) -> OptimizationRemarkEmitter & {
     return FAM.getResult<OptimizationRemarkEmitterAnalysis>(*F);
   };
-  if (!DevirtModule(M, AARGetter, OREGetter, nullptr, nullptr).run())
+  auto LookupDomTree = [&FAM](Function &F) -> DominatorTree & {
+    return FAM.getResult<DominatorTreeAnalysis>(F);
+  };
+  if (!DevirtModule(M, AARGetter, OREGetter, LookupDomTree, ExportSummary,
+                    ImportSummary)
+           .run())
     return PreservedAnalyses::all();
   return PreservedAnalyses::none();
 }
 
+namespace llvm {
+void runWholeProgramDevirtOnIndex(
+    ModuleSummaryIndex &Summary, std::set<GlobalValue::GUID> &ExportedGUIDs,
+    std::map<ValueInfo, std::vector<VTableSlotSummary>> &LocalWPDTargetsMap) {
+  DevirtIndex(Summary, ExportedGUIDs, LocalWPDTargetsMap).run();
+}
+
+void updateIndexWPDForExports(
+    ModuleSummaryIndex &Summary,
+    function_ref<bool(StringRef, GlobalValue::GUID)> isExported,
+    std::map<ValueInfo, std::vector<VTableSlotSummary>> &LocalWPDTargetsMap) {
+  for (auto &T : LocalWPDTargetsMap) {
+    auto &VI = T.first;
+    // This was enforced earlier during trySingleImplDevirt.
+    assert(VI.getSummaryList().size() == 1 &&
+           "Devirt of local target has more than one copy");
+    auto &S = VI.getSummaryList()[0];
+    if (!isExported(S->modulePath(), VI.getGUID()))
+      continue;
+
+    // It's been exported by a cross module import.
+    for (auto &SlotSummary : T.second) {
+      auto *TIdSum = Summary.getTypeIdSummary(SlotSummary.TypeID);
+      assert(TIdSum);
+      auto WPDRes = TIdSum->WPDRes.find(SlotSummary.ByteOffset);
+      assert(WPDRes != TIdSum->WPDRes.end());
+      WPDRes->second.SingleImplName = ModuleSummaryIndex::getGlobalNameForLocal(
+          WPDRes->second.SingleImplName,
+          Summary.getModuleHash(S->modulePath()));
+    }
+  }
+}
+
+} // end namespace llvm
+
 bool DevirtModule::runForTesting(
     Module &M, function_ref<AAResults &(Function &)> AARGetter,
-    function_ref<OptimizationRemarkEmitter &(Function *)> OREGetter) {
-  ModuleSummaryIndex Summary(/*IsPerformingAnalysis=*/false);
+    function_ref<OptimizationRemarkEmitter &(Function *)> OREGetter,
+    function_ref<DominatorTree &(Function &)> LookupDomTree) {
+  ModuleSummaryIndex Summary(/*HaveGVs=*/false);
 
   // Handle the command-line summary arguments. This code is for testing
   // purposes only, so we handle errors directly.
@@ -636,7 +756,7 @@ bool DevirtModule::runForTesting(
 
   bool Changed =
       DevirtModule(
-          M, AARGetter, OREGetter,
+          M, AARGetter, OREGetter, LookupDomTree,
           ClSummaryAction == PassSummaryAction::Export ? &Summary : nullptr,
           ClSummaryAction == PassSummaryAction::Import ? &Summary : nullptr)
           .run();
@@ -645,7 +765,7 @@ bool DevirtModule::runForTesting(
     ExitOnError ExitOnErr(
         "-wholeprogramdevirt-write-summary: " + ClWriteSummary + ": ");
     std::error_code EC;
-    raw_fd_ostream OS(ClWriteSummary, EC, sys::fs::F_Text);
+    raw_fd_ostream OS(ClWriteSummary, EC, sys::fs::OF_Text);
     ExitOnErr(errorCodeToError(EC));
 
     yaml::Output Out(OS);
@@ -664,7 +784,7 @@ void DevirtModule::buildTypeIdentifierMap(
   for (GlobalVariable &GV : M.globals()) {
     Types.clear();
     GV.getMetadata(LLVMContext::MD_type, Types);
-    if (Types.empty())
+    if (GV.isDeclaration() || Types.empty())
       continue;
 
     VTableBits *&BitsPtr = GVToBits[&GV];
@@ -689,38 +809,6 @@ void DevirtModule::buildTypeIdentifierMap(
   }
 }
 
-Constant *DevirtModule::getPointerAtOffset(Constant *I, uint64_t Offset) {
-  if (I->getType()->isPointerTy()) {
-    if (Offset == 0)
-      return I;
-    return nullptr;
-  }
-
-  const DataLayout &DL = M.getDataLayout();
-
-  if (auto *C = dyn_cast<ConstantStruct>(I)) {
-    const StructLayout *SL = DL.getStructLayout(C->getType());
-    if (Offset >= SL->getSizeInBytes())
-      return nullptr;
-
-    unsigned Op = SL->getElementContainingOffset(Offset);
-    return getPointerAtOffset(cast<Constant>(I->getOperand(Op)),
-                              Offset - SL->getElementOffset(Op));
-  }
-  if (auto *C = dyn_cast<ConstantArray>(I)) {
-    ArrayType *VTableTy = C->getType();
-    uint64_t ElemSize = DL.getTypeAllocSize(VTableTy->getElementType());
-
-    unsigned Op = Offset / ElemSize;
-    if (Op >= C->getNumOperands())
-      return nullptr;
-
-    return getPointerAtOffset(cast<Constant>(I->getOperand(Op)),
-                              Offset % ElemSize);
-  }
-  return nullptr;
-}
-
 bool DevirtModule::tryFindVirtualCallTargets(
     std::vector<VirtualCallTarget> &TargetsForSlot,
     const std::set<TypeMemberInfo> &TypeMemberInfos, uint64_t ByteOffset) {
@@ -729,7 +817,7 @@ bool DevirtModule::tryFindVirtualCallTargets(
       return false;
 
     Constant *Ptr = getPointerAtOffset(TM.Bits->GV->getInitializer(),
-                                       TM.Offset + ByteOffset);
+                                       TM.Offset + ByteOffset, M);
     if (!Ptr)
       return false;
 
@@ -749,12 +837,41 @@ bool DevirtModule::tryFindVirtualCallTargets(
   return !TargetsForSlot.empty();
 }
 
+bool DevirtIndex::tryFindVirtualCallTargets(
+    std::vector<ValueInfo> &TargetsForSlot, const TypeIdCompatibleVtableInfo TIdInfo,
+    uint64_t ByteOffset) {
+  for (const TypeIdOffsetVtableInfo P : TIdInfo) {
+    // VTable initializer should have only one summary, or all copies must be
+    // linkonce/weak ODR.
+    assert(P.VTableVI.getSummaryList().size() == 1 ||
+           llvm::all_of(
+               P.VTableVI.getSummaryList(),
+               [&](const std::unique_ptr<GlobalValueSummary> &Summary) {
+                 return GlobalValue::isLinkOnceODRLinkage(Summary->linkage()) ||
+                        GlobalValue::isWeakODRLinkage(Summary->linkage());
+               }));
+    const auto *VS = cast<GlobalVarSummary>(P.VTableVI.getSummaryList()[0].get());
+    if (!P.VTableVI.getSummaryList()[0]->isLive())
+      continue;
+    for (auto VTP : VS->vTableFuncs()) {
+      if (VTP.VTableOffset != P.AddressPointOffset + ByteOffset)
+        continue;
+
+      TargetsForSlot.push_back(VTP.FuncVI);
+    }
+  }
+
+  // Give up if we couldn't find any targets.
+  return !TargetsForSlot.empty();
+}
+
 void DevirtModule::applySingleImplDevirt(VTableSlotInfo &SlotInfo,
                                          Constant *TheFn, bool &IsExported) {
   auto Apply = [&](CallSiteInfo &CSInfo) {
     for (auto &&VCallSite : CSInfo.CallSites) {
       if (RemarksEnabled)
-        VCallSite.emitRemark("single-impl", TheFn->getName(), OREGetter);
+        VCallSite.emitRemark("single-impl",
+                             TheFn->stripPointerCasts()->getName(), OREGetter);
       VCallSite.CS.setCalledFunction(ConstantExpr::getBitCast(
           TheFn, VCallSite.CS.getCalledValue()->getType()));
       // This use is no longer unsafe.
@@ -770,9 +887,38 @@ void DevirtModule::applySingleImplDevirt(VTableSlotInfo &SlotInfo,
     Apply(P.second);
 }
 
+static bool AddCalls(VTableSlotInfo &SlotInfo, const ValueInfo &Callee) {
+  // We can't add calls if we haven't seen a definition
+  if (Callee.getSummaryList().empty())
+    return false;
+
+  // Insert calls into the summary index so that the devirtualized targets
+  // are eligible for import.
+  // FIXME: Annotate type tests with hotness. For now, mark these as hot
+  // to better ensure we have the opportunity to inline them.
+  bool IsExported = false;
+  auto &S = Callee.getSummaryList()[0];
+  CalleeInfo CI(CalleeInfo::HotnessType::Hot, /* RelBF = */ 0);
+  auto AddCalls = [&](CallSiteInfo &CSInfo) {
+    for (auto *FS : CSInfo.SummaryTypeCheckedLoadUsers) {
+      FS->addCall({Callee, CI});
+      IsExported |= S->modulePath() != FS->modulePath();
+    }
+    for (auto *FS : CSInfo.SummaryTypeTestAssumeUsers) {
+      FS->addCall({Callee, CI});
+      IsExported |= S->modulePath() != FS->modulePath();
+    }
+  };
+  AddCalls(SlotInfo.CSInfo);
+  for (auto &P : SlotInfo.ConstCSInfo)
+    AddCalls(P.second);
+  return IsExported;
+}
+
 bool DevirtModule::trySingleImplDevirt(
-    MutableArrayRef<VirtualCallTarget> TargetsForSlot,
-    VTableSlotInfo &SlotInfo, WholeProgramDevirtResolution *Res) {
+    ModuleSummaryIndex *ExportSummary,
+    MutableArrayRef<VirtualCallTarget> TargetsForSlot, VTableSlotInfo &SlotInfo,
+    WholeProgramDevirtResolution *Res) {
   // See if the program contains a single implementation of this virtual
   // function.
   Function *TheFn = TargetsForSlot[0].Fn;
@@ -812,9 +958,70 @@ bool DevirtModule::trySingleImplDevirt(
     TheFn->setVisibility(GlobalValue::HiddenVisibility);
     TheFn->setName(NewName);
   }
+  if (ValueInfo TheFnVI = ExportSummary->getValueInfo(TheFn->getGUID()))
+    // Any needed promotion of 'TheFn' has already been done during
+    // LTO unit split, so we can ignore return value of AddCalls.
+    AddCalls(SlotInfo, TheFnVI);
 
   Res->TheKind = WholeProgramDevirtResolution::SingleImpl;
   Res->SingleImplName = TheFn->getName();
+
+  return true;
+}
+
+bool DevirtIndex::trySingleImplDevirt(MutableArrayRef<ValueInfo> TargetsForSlot,
+                                      VTableSlotSummary &SlotSummary,
+                                      VTableSlotInfo &SlotInfo,
+                                      WholeProgramDevirtResolution *Res,
+                                      std::set<ValueInfo> &DevirtTargets) {
+  // See if the program contains a single implementation of this virtual
+  // function.
+  auto TheFn = TargetsForSlot[0];
+  for (auto &&Target : TargetsForSlot)
+    if (TheFn != Target)
+      return false;
+
+  // Don't devirtualize if we don't have target definition.
+  auto Size = TheFn.getSummaryList().size();
+  if (!Size)
+    return false;
+
+  // If the summary list contains multiple summaries where at least one is
+  // a local, give up, as we won't know which (possibly promoted) name to use.
+  for (auto &S : TheFn.getSummaryList())
+    if (GlobalValue::isLocalLinkage(S->linkage()) && Size > 1)
+      return false;
+
+  // Collect functions devirtualized at least for one call site for stats.
+  if (PrintSummaryDevirt)
+    DevirtTargets.insert(TheFn);
+
+  auto &S = TheFn.getSummaryList()[0];
+  bool IsExported = AddCalls(SlotInfo, TheFn);
+  if (IsExported)
+    ExportedGUIDs.insert(TheFn.getGUID());
+
+  // Record in summary for use in devirtualization during the ThinLTO import
+  // step.
+  Res->TheKind = WholeProgramDevirtResolution::SingleImpl;
+  if (GlobalValue::isLocalLinkage(S->linkage())) {
+    if (IsExported)
+      // If target is a local function and we are exporting it by
+      // devirtualizing a call in another module, we need to record the
+      // promoted name.
+      Res->SingleImplName = ModuleSummaryIndex::getGlobalNameForLocal(
+          TheFn.name(), ExportSummary.getModuleHash(S->modulePath()));
+    else {
+      LocalWPDTargetsMap[TheFn].push_back(SlotSummary);
+      Res->SingleImplName = TheFn.name();
+    }
+  } else
+    Res->SingleImplName = TheFn.name();
+
+  // Name will be empty if this thin link driven off of serialized combined
+  // index (e.g. llvm-lto). However, WPD is not supported/invoked for the
+  // legacy LTO API anyway.
+  assert(!Res->SingleImplName.empty());
 
   return true;
 }
@@ -845,10 +1052,13 @@ void DevirtModule::tryICallBranchFunnel(
   Function *JT;
   if (isa<MDString>(Slot.TypeID)) {
     JT = Function::Create(FT, Function::ExternalLinkage,
+                          M.getDataLayout().getProgramAddressSpace(),
                           getGlobalName(Slot, {}, "branch_funnel"), &M);
     JT->setVisibility(GlobalValue::HiddenVisibility);
   } else {
-    JT = Function::Create(FT, Function::InternalLinkage, "branch_funnel", &M);
+    JT = Function::Create(FT, Function::InternalLinkage,
+                          M.getDataLayout().getProgramAddressSpace(),
+                          "branch_funnel", &M);
   }
   JT->addAttribute(1, Attribute::Nest);
 
@@ -860,7 +1070,7 @@ void DevirtModule::tryICallBranchFunnel(
   }
 
   BasicBlock *BB = BasicBlock::Create(M.getContext(), "", JT, nullptr);
-  Constant *Intr =
+  Function *Intr =
       Intrinsic::getDeclaration(&M, llvm::Intrinsic::icall_branch_funnel, {});
 
   auto *CI = CallInst::Create(Intr, JTArgs, "", BB);
@@ -890,7 +1100,8 @@ void DevirtModule::applyICallBranchFunnel(VTableSlotInfo &SlotInfo,
         continue;
 
       if (RemarksEnabled)
-        VCallSite.emitRemark("branch-funnel", JT->getName(), OREGetter);
+        VCallSite.emitRemark("branch-funnel",
+                             JT->stripPointerCasts()->getName(), OREGetter);
 
       // Pass the address of the vtable in the nest register, which is r10 on
       // x86_64.
@@ -898,9 +1109,10 @@ void DevirtModule::applyICallBranchFunnel(VTableSlotInfo &SlotInfo,
       NewArgs.push_back(Int8PtrTy);
       for (Type *T : CS.getFunctionType()->params())
         NewArgs.push_back(T);
-      PointerType *NewFT = PointerType::getUnqual(
+      FunctionType *NewFT =
           FunctionType::get(CS.getFunctionType()->getReturnType(), NewArgs,
-                            CS.getFunctionType()->isVarArg()));
+                            CS.getFunctionType()->isVarArg());
+      PointerType *NewFTPtr = PointerType::getUnqual(NewFT);
 
       IRBuilder<> IRB(CS.getInstruction());
       std::vector<Value *> Args;
@@ -910,10 +1122,10 @@ void DevirtModule::applyICallBranchFunnel(VTableSlotInfo &SlotInfo,
 
       CallSite NewCS;
       if (CS.isCall())
-        NewCS = IRB.CreateCall(IRB.CreateBitCast(JT, NewFT), Args);
+        NewCS = IRB.CreateCall(NewFT, IRB.CreateBitCast(JT, NewFTPtr), Args);
       else
         NewCS = IRB.CreateInvoke(
-            IRB.CreateBitCast(JT, NewFT),
+            NewFT, IRB.CreateBitCast(JT, NewFTPtr),
             cast<InvokeInst>(CS.getInstruction())->getNormalDest(),
             cast<InvokeInst>(CS.getInstruction())->getUnwindDest(), Args);
       NewCS.setCallingConv(CS.getCallingConv());
@@ -1066,7 +1278,7 @@ Constant *DevirtModule::importConstant(VTableSlot Slot, ArrayRef<uint64_t> Args,
 
   // We only need to set metadata if the global is newly created, in which
   // case it would not have hidden visibility.
-  if (GV->getMetadata(LLVMContext::MD_absolute_symbol))
+  if (GV->hasMetadata(LLVMContext::MD_absolute_symbol))
     return C;
 
   auto SetAbsRange = [&](uint64_t Min, uint64_t Max) {
@@ -1160,7 +1372,7 @@ void DevirtModule::applyVirtualConstProp(CallSiteInfo &CSInfo, StringRef FnName,
     Value *Addr =
         B.CreateGEP(Int8Ty, B.CreateBitCast(Call.VTable, Int8PtrTy), Byte);
     if (RetType->getBitWidth() == 1) {
-      Value *Bits = B.CreateLoad(Addr);
+      Value *Bits = B.CreateLoad(Int8Ty, Addr);
       Value *BitsAndBit = B.CreateAnd(Bits, Bit);
       auto IsBitSet = B.CreateICmpNE(BitsAndBit, ConstantInt::get(Int8Ty, 0));
       Call.replaceAndErase("virtual-const-prop-1-bit", FnName, RemarksEnabled,
@@ -1279,10 +1491,13 @@ void DevirtModule::rebuildGlobal(VTableBits &B) {
   if (B.Before.Bytes.empty() && B.After.Bytes.empty())
     return;
 
-  // Align each byte array to pointer width.
-  unsigned PointerSize = M.getDataLayout().getPointerSize();
-  B.Before.Bytes.resize(alignTo(B.Before.Bytes.size(), PointerSize));
-  B.After.Bytes.resize(alignTo(B.After.Bytes.size(), PointerSize));
+  // Align the before byte array to the global's minimum alignment so that we
+  // don't break any alignment requirements on the global.
+  MaybeAlign Alignment(B.GV->getAlignment());
+  if (!Alignment)
+    Alignment =
+        Align(M.getDataLayout().getABITypeAlignment(B.GV->getValueType()));
+  B.Before.Bytes.resize(alignTo(B.Before.Bytes.size(), Alignment));
 
   // Before was stored in reverse order; flip it now.
   for (size_t I = 0, Size = B.Before.Bytes.size(); I != Size / 2; ++I)
@@ -1299,6 +1514,7 @@ void DevirtModule::rebuildGlobal(VTableBits &B) {
                          GlobalVariable::PrivateLinkage, NewInit, "", B.GV);
   NewGV->setSection(B.GV->getSection());
   NewGV->setComdat(B.GV->getComdat());
+  NewGV->setAlignment(MaybeAlign(B.GV->getAlignment()));
 
   // Copy the original vtable's metadata to the anonymous global, adjusting
   // offsets as required.
@@ -1322,15 +1538,14 @@ void DevirtModule::rebuildGlobal(VTableBits &B) {
 
 bool DevirtModule::areRemarksEnabled() {
   const auto &FL = M.getFunctionList();
-  if (FL.empty())
-    return false;
-  const Function &Fn = FL.front();
-
-  const auto &BBL = Fn.getBasicBlockList();
-  if (BBL.empty())
-    return false;
-  auto DI = OptimizationRemark(DEBUG_TYPE, "", DebugLoc(), &BBL.front());
-  return DI.isEnabled();
+  for (const Function &Fn : FL) {
+    const auto &BBL = Fn.getBasicBlockList();
+    if (BBL.empty())
+      continue;
+    auto DI = OptimizationRemark(DEBUG_TYPE, "", DebugLoc(), &BBL.front());
+    return DI.isEnabled();
+  }
+  return false;
 }
 
 void DevirtModule::scanTypeTestUsers(Function *TypeTestFunc,
@@ -1340,7 +1555,7 @@ void DevirtModule::scanTypeTestUsers(Function *TypeTestFunc,
   // points to a member of the type identifier %md. Group calls by (type ID,
   // offset) pair (effectively the identity of the virtual function) and store
   // to CallSlots.
-  DenseSet<Value *> SeenPtrs;
+  DenseSet<CallSite> SeenCallSites;
   for (auto I = TypeTestFunc->use_begin(), E = TypeTestFunc->use_end();
        I != E;) {
     auto CI = dyn_cast<CallInst>(I->getUser());
@@ -1351,19 +1566,22 @@ void DevirtModule::scanTypeTestUsers(Function *TypeTestFunc,
     // Search for virtual calls based on %p and add them to DevirtCalls.
     SmallVector<DevirtCallSite, 1> DevirtCalls;
     SmallVector<CallInst *, 1> Assumes;
-    findDevirtualizableCallsForTypeTest(DevirtCalls, Assumes, CI);
+    auto &DT = LookupDomTree(*CI->getFunction());
+    findDevirtualizableCallsForTypeTest(DevirtCalls, Assumes, CI, DT);
 
-    // If we found any, add them to CallSlots. Only do this if we haven't seen
-    // the vtable pointer before, as it may have been CSE'd with pointers from
-    // other call sites, and we don't want to process call sites multiple times.
+    // If we found any, add them to CallSlots.
     if (!Assumes.empty()) {
       Metadata *TypeId =
           cast<MetadataAsValue>(CI->getArgOperand(1))->getMetadata();
       Value *Ptr = CI->getArgOperand(0)->stripPointerCasts();
-      if (SeenPtrs.insert(Ptr).second) {
-        for (DevirtCallSite Call : DevirtCalls) {
+      for (DevirtCallSite Call : DevirtCalls) {
+        // Only add this CallSite if we haven't seen it before. The vtable
+        // pointer may have been CSE'd with pointers from other call sites,
+        // and we don't want to process call sites multiple times. We can't
+        // just skip the vtable Ptr if it has been seen before, however, since
+        // it may be shared by type tests that dominate different calls.
+        if (SeenCallSites.insert(Call.CS).second)
           CallSlots[{TypeId, Call.Offset}].addCallSite(Ptr, Call.CS, nullptr);
-        }
       }
     }
 
@@ -1397,8 +1615,9 @@ void DevirtModule::scanTypeCheckedLoadUsers(Function *TypeCheckedLoadFunc) {
     SmallVector<Instruction *, 1> LoadedPtrs;
     SmallVector<Instruction *, 1> Preds;
     bool HasNonCallUses = false;
+    auto &DT = LookupDomTree(*CI->getFunction());
     findDevirtualizableCallsForTypeCheckedLoad(DevirtCalls, LoadedPtrs, Preds,
-                                               HasNonCallUses, CI);
+                                               HasNonCallUses, CI, DT);
 
     // Start by generating "pessimistic" code that explicitly loads the function
     // pointer from the vtable and performs the type check. If possible, we will
@@ -1457,8 +1676,11 @@ void DevirtModule::scanTypeCheckedLoadUsers(Function *TypeCheckedLoadFunc) {
 }
 
 void DevirtModule::importResolution(VTableSlot Slot, VTableSlotInfo &SlotInfo) {
+  auto *TypeId = dyn_cast<MDString>(Slot.TypeID);
+  if (!TypeId)
+    return;
   const TypeIdSummary *TidSummary =
-      ImportSummary->getTypeIdSummary(cast<MDString>(Slot.TypeID)->getString());
+      ImportSummary->getTypeIdSummary(TypeId->getString());
   if (!TidSummary)
     return;
   auto ResI = TidSummary->WPDRes.find(Slot.ByteOffset);
@@ -1467,10 +1689,13 @@ void DevirtModule::importResolution(VTableSlot Slot, VTableSlotInfo &SlotInfo) {
   const WholeProgramDevirtResolution &Res = ResI->second;
 
   if (Res.TheKind == WholeProgramDevirtResolution::SingleImpl) {
+    assert(!Res.SingleImplName.empty());
     // The type of the function in the declaration is irrelevant because every
     // call site will cast it to the correct type.
-    auto *SingleImpl = M.getOrInsertFunction(
-        Res.SingleImplName, Type::getVoidTy(M.getContext()));
+    Constant *SingleImpl =
+        cast<Constant>(M.getOrInsertFunction(Res.SingleImplName,
+                                             Type::getVoidTy(M.getContext()))
+                           .getCallee());
 
     // This is the import phase so we should not be exporting anything.
     bool IsExported = false;
@@ -1512,8 +1737,12 @@ void DevirtModule::importResolution(VTableSlot Slot, VTableSlotInfo &SlotInfo) {
   }
 
   if (Res.TheKind == WholeProgramDevirtResolution::BranchFunnel) {
-    auto *JT = M.getOrInsertFunction(getGlobalName(Slot, {}, "branch_funnel"),
-                                     Type::getVoidTy(M.getContext()));
+    // The type of the function is irrelevant, because it's bitcast at calls
+    // anyhow.
+    Constant *JT = cast<Constant>(
+        M.getOrInsertFunction(getGlobalName(Slot, {}, "branch_funnel"),
+                              Type::getVoidTy(M.getContext()))
+            .getCallee());
     bool IsExported = false;
     applyICallBranchFunnel(SlotInfo, JT, IsExported);
     assert(!IsExported);
@@ -1531,6 +1760,14 @@ void DevirtModule::removeRedundantTypeTests() {
 }
 
 bool DevirtModule::run() {
+  // If only some of the modules were split, we cannot correctly perform
+  // this transformation. We already checked for the presense of type tests
+  // with partially split modules during the thin link, and would have emitted
+  // an error if any were found, so here we can simply return.
+  if ((ExportSummary && ExportSummary->partiallySplitLTOUnits()) ||
+      (ImportSummary && ImportSummary->partiallySplitLTOUnits()))
+    return false;
+
   Function *TypeTestFunc =
       M.getFunction(Intrinsic::getName(Intrinsic::type_test));
   Function *TypeCheckedLoadFunc =
@@ -1587,8 +1824,7 @@ bool DevirtModule::run() {
         // FIXME: Only add live functions.
         for (FunctionSummary::VFuncId VF : FS->type_test_assume_vcalls()) {
           for (Metadata *MD : MetadataByGUID[VF.GUID]) {
-            CallSlots[{MD, VF.Offset}]
-                .CSInfo.markSummaryHasTypeTestAssumeUsers();
+            CallSlots[{MD, VF.Offset}].CSInfo.addSummaryTypeTestAssumeUser(FS);
           }
         }
         for (FunctionSummary::VFuncId VF : FS->type_checked_load_vcalls()) {
@@ -1601,7 +1837,7 @@ bool DevirtModule::run() {
           for (Metadata *MD : MetadataByGUID[VC.VFunc.GUID]) {
             CallSlots[{MD, VC.VFunc.Offset}]
                 .ConstCSInfo[VC.Args]
-                .markSummaryHasTypeTestAssumeUsers();
+                .addSummaryTypeTestAssumeUser(FS);
           }
         }
         for (const FunctionSummary::ConstVCall &VC :
@@ -1633,7 +1869,7 @@ bool DevirtModule::run() {
                        cast<MDString>(S.first.TypeID)->getString())
                    .WPDRes[S.first.ByteOffset];
 
-      if (!trySingleImplDevirt(TargetsForSlot, S.second, Res)) {
+      if (!trySingleImplDevirt(ExportSummary, TargetsForSlot, S.second, Res)) {
         DidVirtualConstProp |=
             tryVirtualConstProp(TargetsForSlot, S.second, Res, S.first);
 
@@ -1670,7 +1906,7 @@ bool DevirtModule::run() {
       using namespace ore;
       OREGetter(F).emit(OptimizationRemark(DEBUG_TYPE, "Devirtualized", F)
                         << "devirtualized "
-                        << NV("FunctionName", F->getName()));
+                        << NV("FunctionName", DT.first));
     }
   }
 
@@ -1682,5 +1918,86 @@ bool DevirtModule::run() {
     for (VTableBits &B : Bits)
       rebuildGlobal(B);
 
+  // We have lowered or deleted the type checked load intrinsics, so we no
+  // longer have enough information to reason about the liveness of virtual
+  // function pointers in GlobalDCE.
+  for (GlobalVariable &GV : M.globals())
+    GV.eraseMetadata(LLVMContext::MD_vcall_visibility);
+
   return true;
+}
+
+void DevirtIndex::run() {
+  if (ExportSummary.typeIdCompatibleVtableMap().empty())
+    return;
+
+  DenseMap<GlobalValue::GUID, std::vector<StringRef>> NameByGUID;
+  for (auto &P : ExportSummary.typeIdCompatibleVtableMap()) {
+    NameByGUID[GlobalValue::getGUID(P.first)].push_back(P.first);
+  }
+
+  // Collect information from summary about which calls to try to devirtualize.
+  for (auto &P : ExportSummary) {
+    for (auto &S : P.second.SummaryList) {
+      auto *FS = dyn_cast<FunctionSummary>(S.get());
+      if (!FS)
+        continue;
+      // FIXME: Only add live functions.
+      for (FunctionSummary::VFuncId VF : FS->type_test_assume_vcalls()) {
+        for (StringRef Name : NameByGUID[VF.GUID]) {
+          CallSlots[{Name, VF.Offset}].CSInfo.addSummaryTypeTestAssumeUser(FS);
+        }
+      }
+      for (FunctionSummary::VFuncId VF : FS->type_checked_load_vcalls()) {
+        for (StringRef Name : NameByGUID[VF.GUID]) {
+          CallSlots[{Name, VF.Offset}].CSInfo.addSummaryTypeCheckedLoadUser(FS);
+        }
+      }
+      for (const FunctionSummary::ConstVCall &VC :
+           FS->type_test_assume_const_vcalls()) {
+        for (StringRef Name : NameByGUID[VC.VFunc.GUID]) {
+          CallSlots[{Name, VC.VFunc.Offset}]
+              .ConstCSInfo[VC.Args]
+              .addSummaryTypeTestAssumeUser(FS);
+        }
+      }
+      for (const FunctionSummary::ConstVCall &VC :
+           FS->type_checked_load_const_vcalls()) {
+        for (StringRef Name : NameByGUID[VC.VFunc.GUID]) {
+          CallSlots[{Name, VC.VFunc.Offset}]
+              .ConstCSInfo[VC.Args]
+              .addSummaryTypeCheckedLoadUser(FS);
+        }
+      }
+    }
+  }
+
+  std::set<ValueInfo> DevirtTargets;
+  // For each (type, offset) pair:
+  for (auto &S : CallSlots) {
+    // Search each of the members of the type identifier for the virtual
+    // function implementation at offset S.first.ByteOffset, and add to
+    // TargetsForSlot.
+    std::vector<ValueInfo> TargetsForSlot;
+    auto TidSummary = ExportSummary.getTypeIdCompatibleVtableSummary(S.first.TypeID);
+    assert(TidSummary);
+    if (tryFindVirtualCallTargets(TargetsForSlot, *TidSummary,
+                                  S.first.ByteOffset)) {
+      WholeProgramDevirtResolution *Res =
+          &ExportSummary.getOrInsertTypeIdSummary(S.first.TypeID)
+               .WPDRes[S.first.ByteOffset];
+
+      if (!trySingleImplDevirt(TargetsForSlot, S.first, S.second, Res,
+                               DevirtTargets))
+        continue;
+    }
+  }
+
+  // Optionally have the thin link print message for each devirtualized
+  // function.
+  if (PrintSummaryDevirt)
+    for (const auto &DT : DevirtTargets)
+      errs() << "Devirtualized call to " << DT << "\n";
+
+  return;
 }

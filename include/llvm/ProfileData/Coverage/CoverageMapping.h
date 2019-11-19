@@ -1,9 +1,8 @@
 //===- CoverageMapping.h - Code coverage mapping support --------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -17,6 +16,7 @@
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/None.h"
 #include "llvm/ADT/StringRef.h"
@@ -206,7 +206,7 @@ struct CounterMappingRegion {
     /// A CodeRegion associates some code with a counter
     CodeRegion,
 
-    /// An ExpansionRegion represents a file expansion region that associates 
+    /// An ExpansionRegion represents a file expansion region that associates
     /// a source range with the expansion of a virtual source file, such as
     /// for a macro instantiation or #include file.
     ExpansionRegion,
@@ -301,7 +301,12 @@ public:
 struct FunctionRecord {
   /// Raw function name.
   std::string Name;
-  /// Associated files.
+  /// Mapping from FileID (i.e. vector index) to filename. Used to support
+  /// macro expansions within a function in which the macro and function are
+  /// defined in separate files.
+  ///
+  /// TODO: Uniquing filenames across all function records may be a performance
+  /// optimization.
   std::vector<std::string> Filenames;
   /// Regions in the function along with their counts.
   std::vector<CountedRegion> CountedRegions;
@@ -506,16 +511,23 @@ public:
 /// This is the main interface to get coverage information, using a profile to
 /// fill out execution counts.
 class CoverageMapping {
-  StringSet<> FunctionNames;
+  DenseMap<size_t, DenseSet<size_t>> RecordProvenance;
   std::vector<FunctionRecord> Functions;
+  DenseMap<size_t, SmallVector<unsigned, 0>> FilenameHash2RecordIndices;
   std::vector<std::pair<std::string, uint64_t>> FuncHashMismatches;
-  std::vector<std::pair<std::string, uint64_t>> FuncCounterMismatches;
 
   CoverageMapping() = default;
 
   /// Add a function record corresponding to \p Record.
   Error loadFunctionRecord(const CoverageMappingRecord &Record,
                            IndexedInstrProfReader &ProfileReader);
+
+  /// Look up the indices for function records which are at least partially
+  /// defined in the specified file. This is guaranteed to return a superset of
+  /// such records: extra records not in the file may be included if there is
+  /// a hash collision on the filename. Clients must be robust to collisions.
+  ArrayRef<unsigned>
+  getImpreciseRecordIndicesForFilename(StringRef Filename) const;
 
 public:
   CoverageMapping(const CoverageMapping &) = delete;
@@ -528,6 +540,7 @@ public:
 
   /// Load the coverage mapping from the given object files and profile. If
   /// \p Arches is non-empty, it must specify an architecture for each object.
+  /// Ignores non-instrumented object files unless all are not instrumented.
   static Expected<std::unique_ptr<CoverageMapping>>
   load(ArrayRef<StringRef> ObjectFilenames, StringRef ProfileFilename,
        ArrayRef<StringRef> Arches = None);
@@ -536,9 +549,7 @@ public:
   ///
   /// This is a count of functions whose profile is out of date or otherwise
   /// can't be associated with any coverage information.
-  unsigned getMismatchedCount() const {
-    return FuncHashMismatches.size() + FuncCounterMismatches.size();
-  }
+  unsigned getMismatchedCount() const { return FuncHashMismatches.size(); }
 
   /// A hash mismatch occurs when a profile record for a symbol does not have
   /// the same hash as a coverage mapping record for the same symbol. This
@@ -546,14 +557,6 @@ public:
   /// symbol name and its coverage mapping hash.
   ArrayRef<std::pair<std::string, uint64_t>> getHashMismatches() const {
     return FuncHashMismatches;
-  }
-
-  /// A counter mismatch occurs when there is an error when evaluating the
-  /// counter expressions in a coverage mapping record. This returns a list of
-  /// counter mismatches, where each mismatch is a pair of the symbol name and
-  /// the number of valid evaluated counter expressions.
-  ArrayRef<std::pair<std::string, uint64_t>> getCounterMismatches() const {
-    return FuncCounterMismatches;
   }
 
   /// Returns a lexicographically sorted, unique list of files that are
@@ -639,8 +642,6 @@ public:
         Line(Line), Segments(), Stats() {
     this->operator++();
   }
-
-  LineCoverageIterator &operator=(const LineCoverageIterator &R) = default;
 
   bool operator==(const LineCoverageIterator &R) const {
     return &CD == &R.CD && Next == R.Next && Ended == R.Ended;

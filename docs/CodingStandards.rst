@@ -56,12 +56,12 @@ choice.
 C++ Standard Versions
 ---------------------
 
-LLVM, Clang, and LLD are currently written using C++11 conforming code,
+LLVM, Clang, and LLD are currently written using C++14 conforming code,
 although we restrict ourselves to features which are available in the major
 toolchains supported as host compilers. The LLDB project is even more
 aggressive in the set of host compilers supported and thus uses still more
 features. Regardless of the supported features, code is expected to (when
-reasonable) be standard, portable, and modern C++11 code. We avoid unnecessary
+reasonable) be standard, portable, and modern C++14 code. We avoid unnecessary
 vendor-specific extensions, etc.
 
 C++ Standard Library
@@ -78,10 +78,10 @@ There are some exceptions such as the standard I/O streams library which are
 avoided. Also, there is much more detailed information on these subjects in the
 :doc:`ProgrammersManual`.
 
-Supported C++11 Language and Library Features
+Supported C++14 Language and Library Features
 ---------------------------------------------
 
-While LLVM, Clang, and LLD use C++11, not all features are available in all of
+While LLVM, Clang, and LLD use C++14, not all features are available in all of
 the toolchains which we support. The set of features supported for use in LLVM
 is the intersection of those supported in the minimum requirements described
 in the :doc:`GettingStarted` page, section `Software`.
@@ -91,100 +91,9 @@ guidance below to help you know what to expect.
 
 Each toolchain provides a good reference for what it accepts:
 
-* Clang: http://clang.llvm.org/cxx_status.html
-* GCC: http://gcc.gnu.org/projects/cxx0x.html
-* MSVC: http://msdn.microsoft.com/en-us/library/hh567368.aspx
-
-In most cases, the MSVC list will be the dominating factor. Here is a summary
-of the features that are expected to work. Features not on this list are
-unlikely to be supported by our host compilers.
-
-* Rvalue references: N2118_
-
-  * But *not* Rvalue references for ``*this`` or member qualifiers (N2439_)
-
-* Static assert: N1720_
-* ``auto`` type deduction: N1984_, N1737_
-* Trailing return types: N2541_
-* Lambdas: N2927_
-
-  * But *not* lambdas with default arguments.
-
-* ``decltype``: N2343_
-* Nested closing right angle brackets: N1757_
-* Extern templates: N1987_
-* ``nullptr``: N2431_
-* Strongly-typed and forward declarable enums: N2347_, N2764_
-* Local and unnamed types as template arguments: N2657_
-* Range-based for-loop: N2930_
-
-  * But ``{}`` are required around inner ``do {} while()`` loops.  As a result,
-    ``{}`` are required around function-like macros inside range-based for
-    loops.
-
-* ``override`` and ``final``: N2928_, N3206_, N3272_
-* Atomic operations and the C++11 memory model: N2429_
-* Variadic templates: N2242_
-* Explicit conversion operators: N2437_
-* Defaulted and deleted functions: N2346_
-* Initializer lists: N2627_
-* Delegating constructors: N1986_
-* Default member initializers (non-static data member initializers): N2756_
-
-  * Feel free to use these wherever they make sense and where the `=`
-    syntax is allowed. Don't use braced initialization syntax.
-
-.. _N2118: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2118.html
-.. _N2439: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2439.htm
-.. _N1720: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1720.html
-.. _N1984: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1984.pdf
-.. _N1737: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1737.pdf
-.. _N2541: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2541.htm
-.. _N2927: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2009/n2927.pdf
-.. _N2343: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2343.pdf
-.. _N1757: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1757.html
-.. _N1987: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1987.htm
-.. _N2431: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2431.pdf
-.. _N2347: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2347.pdf
-.. _N2764: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2764.pdf
-.. _N2657: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2657.htm
-.. _N2930: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2009/n2930.html
-.. _N2928: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2009/n2928.htm
-.. _N3206: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3206.htm
-.. _N3272: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3272.htm
-.. _N2429: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2429.htm
-.. _N2242: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2242.pdf
-.. _N2437: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2437.pdf
-.. _N2346: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2346.htm
-.. _N2627: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2672.htm
-.. _N1986: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1986.pdf
-.. _N2756: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2756.htm
-
-The supported features in the C++11 standard libraries are less well tracked,
-but also much greater. Most of the standard libraries implement most of C++11's
-library. The most likely lowest common denominator is Linux support. For
-libc++, the support is just poorly tested and undocumented but expected to be
-largely complete. YMMV. For libstdc++, the support is documented in detail in
-`the libstdc++ manual`_. There are some very minor missing facilities that are
-unlikely to be common problems, and there are a few larger gaps that are worth
-being aware of:
-
-* Not all of the type traits are implemented
-* No regular expression library.
-* While most of the atomics library is well implemented, the fences are
-  missing. Fortunately, they are rarely needed.
-* The locale support is incomplete.
-
-Other than these areas you should assume the standard library is available and
-working as expected until some build bot tells you otherwise. If you're in an
-uncertain area of one of the above points, but you cannot test on a Linux
-system, your best approach is to minimize your use of these features, and watch
-the Linux build bots to find out if your usage triggered a bug. For example, if
-you hit a type trait which doesn't work we can then add support to LLVM's
-traits header to emulate it.
-
-.. _the libstdc++ manual:
-  http://gcc.gnu.org/onlinedocs/gcc-4.8.0/libstdc++/manual/manual/status.html#status.iso.2011
+* Clang: https://clang.llvm.org/cxx_status.html
+* GCC: https://gcc.gnu.org/projects/cxx-status.html#cxx14
+* MSVC: https://msdn.microsoft.com/en-us/library/hh567368.aspx
 
 Other Languages
 ---------------
@@ -233,10 +142,9 @@ tree.  The standard header looks like this:
 
   //===-- llvm/Instruction.h - Instruction class definition -------*- C++ -*-===//
   //
-  //                     The LLVM Compiler Infrastructure
-  //
-  // This file is distributed under the University of Illinois Open Source
-  // License. See LICENSE.TXT for details.
+  // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+  // See https://llvm.org/LICENSE.txt for license information.
+  // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
   //
   //===----------------------------------------------------------------------===//
   ///
@@ -304,6 +212,21 @@ useful to use C style (``/* */``) comments however:
 
 #. When writing a source file that is used by a tool that only accepts C style
    comments.
+
+#. When documenting the significance of constants used as actual parameters in
+   a call. This is most helpful for ``bool`` parameters, or passing ``0`` or
+   ``nullptr``. Typically you add the formal parameter name, which ought to be
+   meaningful. For example, it's not clear what the parameter means in this call:
+
+   .. code-block:: c++
+
+     Object.emitName(nullptr);
+
+   An in-line C-style comment makes the intent obvious:
+
+   .. code-block:: c++
+
+     Object.emitName(/*Prefix=*/nullptr);
 
 Commenting out large blocks of code is discouraged, but if you really have to do
 this (for documentation purposes or as a suggestion for debug printing), use
@@ -494,8 +417,8 @@ for it (vs something else, like 90 columns).
 This is one of many contentious issues in coding standards, but it is not up for
 debate.
 
-Use Spaces Instead of Tabs
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Whitespace
+^^^^^^^^^^
 
 In all cases, prefer spaces to tabs in source files.  People have different
 preferred indentation levels, and different styles of indentation that they
@@ -508,6 +431,12 @@ existing code if you are modifying and extending it.  If you like four spaces of
 indentation, **DO NOT** do that in the middle of a chunk of code with two spaces
 of indentation.  Also, do not reindent a whole source file: it makes for
 incredible diffs that are absolutely worthless.
+
+Do not commit changes that include trailing whitespace. If you find trailing
+whitespace in a file, do not remove it unless you're otherwise changing that
+line of code. Some common editors will automatically remove trailing whitespace
+when saving a file which causes unrelated changes to appear in diffs and
+commits.
 
 Indent Code Consistently
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -591,7 +520,7 @@ understood for formatting nested function calls. Examples:
 This formatting scheme also makes it particularly easy to get predictable,
 consistent, and automatic formatting with tools like `Clang Format`_.
 
-.. _Clang Format: http://clang.llvm.org/docs/ClangFormat.html
+.. _Clang Format: https://clang.llvm.org/docs/ClangFormat.html
 
 Language and Compiler Issues
 ----------------------------
@@ -667,14 +596,14 @@ Do not use Static Constructors
 Static constructors and destructors (e.g. global variables whose types have a
 constructor or destructor) should not be added to the code base, and should be
 removed wherever possible.  Besides `well known problems
-<http://yosefk.com/c++fqa/ctors.html#fqa-10.12>`_ where the order of
+<https://yosefk.com/c++fqa/ctors.html#fqa-10.12>`_ where the order of
 initialization is undefined between globals in different source files, the
 entire concept of static constructors is at odds with the common use case of
 LLVM as a library linked into a larger application.
   
 Consider the use of LLVM as a JIT linked into another application (perhaps for
-`OpenGL, custom languages <http://llvm.org/Users.html>`_, `shaders in movies
-<http://llvm.org/devmtg/2010-11/Gritz-OpenShadingLang.pdf>`_, etc). Due to the
+`OpenGL, custom languages <https://llvm.org/Users.html>`_, `shaders in movies
+<https://llvm.org/devmtg/2010-11/Gritz-OpenShadingLang.pdf>`_, etc). Due to the
 design of static constructors, they must be executed at startup time of the
 entire application, regardless of whether or how LLVM is used in that larger
 application.  There are two problems with this:
@@ -692,7 +621,7 @@ target or other library into an application, but static constructors violate
 this goal.
   
 That said, LLVM unfortunately does contain static constructors.  It would be a
-`great project <http://llvm.org/PR11944>`_ for someone to purge all static
+`great project <https://llvm.org/PR11944>`_ for someone to purge all static
 constructors from LLVM, and then enable the ``-Wglobal-constructors`` warning
 flag (when building with Clang) to ensure we do not regress in the future.
 
@@ -787,6 +716,9 @@ readable or easier to maintain. Don't "almost always" use ``auto``, but do use
 type is already obvious from the context. Another time when ``auto`` works well
 for these purposes is when the type would have been abstracted away anyways,
 often behind a container's typedef such as ``std::vector<T>::iterator``.
+
+Similarly, C++14 adds generic lambda expressions where parameter types can be
+``auto``. Use these where you would have used a template.
 
 Beware unnecessary copies with ``auto``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -949,7 +881,7 @@ exit from a function, consider this "bad" code:
 .. code-block:: c++
 
   Value *doSomething(Instruction *I) {
-    if (!isa<TerminatorInst>(I) &&
+    if (!I->isTerminator() &&
         I->hasOneUse() && doOtherThing(I)) {
       ... some long code ....
     }
@@ -974,7 +906,7 @@ It is much preferred to format the code like this:
 
   Value *doSomething(Instruction *I) {
     // Terminators never need 'something' done to them because ... 
-    if (isa<TerminatorInst>(I))
+    if (I->isTerminator())
       return 0;
 
     // We conservatively avoid transforming instructions with multiple uses
@@ -1697,12 +1629,12 @@ A lot of these comments and recommendations have been culled from other sources.
 Two particularly important books for our work are:
 
 #. `Effective C++
-   <http://www.amazon.com/Effective-Specific-Addison-Wesley-Professional-Computing/dp/0321334876>`_
+   <https://www.amazon.com/Effective-Specific-Addison-Wesley-Professional-Computing/dp/0321334876>`_
    by Scott Meyers.  Also interesting and useful are "More Effective C++" and
    "Effective STL" by the same author.
 
 #. `Large-Scale C++ Software Design
-   <http://www.amazon.com/Large-Scale-Software-Design-John-Lakos/dp/0201633620/ref=sr_1_1>`_
+   <https://www.amazon.com/Large-Scale-Software-Design-John-Lakos/dp/0201633620>`_
    by John Lakos
 
 If you get some free time, and you haven't read them: do so, you might learn

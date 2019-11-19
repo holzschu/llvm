@@ -1,9 +1,8 @@
 //===- HexagonGenExtract.cpp ----------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -185,7 +184,7 @@ bool HexagonGenExtract::convert(Instruction *In) {
   // The width of the extracted field is the minimum of the original bits
   // that remain after the shifts and the number of contiguous 1s in the mask.
   uint32_t W = std::min(U, T);
-  if (W == 0)
+  if (W == 0 || W == 1)
     return false;
 
   // Check if the extracted bits are contained within the mask that it is
@@ -211,7 +210,7 @@ bool HexagonGenExtract::convert(Instruction *In) {
   Intrinsic::ID IntId = (BW == 32) ? Intrinsic::hexagon_S2_extractu
                                    : Intrinsic::hexagon_S2_extractup;
   Module *Mod = BB->getParent()->getParent();
-  Value *ExtF = Intrinsic::getDeclaration(Mod, IntId);
+  Function *ExtF = Intrinsic::getDeclaration(Mod, IntId);
   Value *NewIn = IRB.CreateCall(ExtF, {BF, IRB.getInt32(W), IRB.getInt32(SR)});
   if (SL != 0)
     NewIn = IRB.CreateShl(NewIn, SL, CSL->getName());

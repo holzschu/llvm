@@ -1,9 +1,8 @@
 //===-- SpecialCaseList.cpp - special case list for sanitizers ------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -54,7 +53,7 @@ bool SpecialCaseList::Matcher::insert(std::string Regexp,
     return false;
 
   RegExes.emplace_back(
-      std::make_pair(make_unique<Regex>(std::move(CheckRE)), LineNumber));
+      std::make_pair(std::make_unique<Regex>(std::move(CheckRE)), LineNumber));
   return true;
 }
 
@@ -176,7 +175,7 @@ bool SpecialCaseList::parse(const MemoryBuffer *MB,
 
     // Create this section if it has not been seen before.
     if (SectionsMap.find(Section) == SectionsMap.end()) {
-      std::unique_ptr<Matcher> M = make_unique<Matcher>();
+      std::unique_ptr<Matcher> M = std::make_unique<Matcher>();
       std::string REError;
       if (!M->insert(Section, LineNo, REError)) {
         Error = (Twine("malformed section ") + Section + ": '" + REError).str();

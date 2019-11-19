@@ -17,27 +17,24 @@
 ; FIXME: sizeof(a) in the user program is 1, but we claim it is 4 because
 ; sometimes the frontend lies to us. See array-types-advanced.ll for an example.
 ;
-; CHECK: Array ({{.*}}) {
-; CHECK:   TypeLeafKind: LF_ARRAY (0x1503)
-; CHECK:   ElementType: YYSTYPE ({{.*}})
-; CHECK:   IndexType: unsigned __int64 (0x23)
-; CHECK:   SizeOf: 4
-; CHECK:   Name:
-; CHECK: }
+; CHECK:	# Array (0x1004)
+; CHECK:	.short	0xe                     # Record length
+; CHECK:	.short	0x1503                  # Record kind: LF_ARRAY
+; CHECK:	.long	0x1003                  # ElementType: YYSTYPE
+; CHECK:	.long	0x23                    # IndexType: unsigned __int64
+; CHECK:	.short	0x4                     # SizeOf
+; CHECK:	.byte	0                       # Name
+; CHECK:	.byte	241
 
-; sizeof(YYSTYPE) == 4
-; CHECK: Union ({{.*}}) {
-; CHECK:   TypeLeafKind: LF_UNION (0x1506)
-; CHECK:   MemberCount: 1
-; CHECK:   Properties [ (0x600)
-; CHECK:     HasUniqueName (0x200)
-; CHECK:     Sealed (0x400)
-; CHECK:   ]
-; CHECK:   FieldList: <field list>
-; CHECK:   SizeOf: 4
-; CHECK:   Name: YYSTYPE
-; CHECK:   LinkageName: .?ATYYSTYPE@@
-; CHECK: }
+; CHECK:	# Union (0x1006)
+; CHECK:	.short	0x22                    # Record length
+; CHECK:	.short	0x1506                  # Record kind: LF_UNION
+; CHECK:	.short	0x1                     # MemberCount
+; CHECK:	.short	0x600                   # Properties ( HasUniqueName (0x200) | Sealed (0x400) )
+; CHECK:	.long	0x1005                  # FieldList: <field list>
+; CHECK:	.short	0x4                     # SizeOf
+; CHECK:	.asciz	"YYSTYPE"               # Name
+; CHECK:	.asciz	".?ATYYSTYPE@@"         # LinkageName
 
 ; ModuleID = 'llvm-link'
 source_filename = "llvm-link"
@@ -84,7 +81,7 @@ attributes #1 = { nounwind readnone }
 !18 = !{i32 2, !"CodeView", i32 1}
 !19 = !{i32 2, !"Debug Info Version", i32 3}
 !20 = !{i32 1, !"PIC Level", i32 2}
-!21 = distinct !DISubprogram(name: "fn1", linkageName: "\01?fn1@@YAXXZ", scope: !12, file: !12, line: 2, type: !22, isLocal: false, isDefinition: true, scopeLine: 2, flags: DIFlagPrototyped, isOptimized: false, unit: !11, variables: !4)
+!21 = distinct !DISubprogram(name: "fn1", linkageName: "\01?fn1@@YAXXZ", scope: !12, file: !12, line: 2, type: !22, isLocal: false, isDefinition: true, scopeLine: 2, flags: DIFlagPrototyped, isOptimized: false, unit: !11, retainedNodes: !4)
 !22 = !DISubroutineType(types: !23)
 !23 = !{null}
 !24 = !DILocalVariable(name: "a", scope: !21, file: !12, line: 2, type: !25)

@@ -1,9 +1,8 @@
 //===---- llvm/MDBuilder.cpp - Builder for LLVM metadata ------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -69,9 +68,7 @@ MDNode *MDBuilder::createFunctionEntryCount(
   Ops.push_back(createConstant(ConstantInt::get(Int64Ty, Count)));
   if (Imports) {
     SmallVector<GlobalValue::GUID, 2> OrderID(Imports->begin(), Imports->end());
-    std::stable_sort(OrderID.begin(), OrderID.end(),
-      [] (GlobalValue::GUID A, GlobalValue::GUID B) {
-        return A < B;});
+    llvm::stable_sort(OrderID);
     for (auto ID : OrderID)
       Ops.push_back(createConstant(ConstantInt::get(Int64Ty, ID)));
   }
@@ -107,6 +104,52 @@ MDNode *MDBuilder::createCallees(ArrayRef<Function *> Callees) {
   return MDNode::get(Context, Ops);
 }
 
+MDNode *MDBuilder::createCallbackEncoding(unsigned CalleeArgNo,
+                                          ArrayRef<int> Arguments,
+                                          bool VarArgArePassed) {
+  SmallVector<Metadata *, 4> Ops;
+
+  Type *Int64 = Type::getInt64Ty(Context);
+  Ops.push_back(createConstant(ConstantInt::get(Int64, CalleeArgNo)));
+
+  for (int ArgNo : Arguments)
+    Ops.push_back(createConstant(ConstantInt::get(Int64, ArgNo, true)));
+
+  Type *Int1 = Type::getInt1Ty(Context);
+  Ops.push_back(createConstant(ConstantInt::get(Int1, VarArgArePassed)));
+
+  return MDNode::get(Context, Ops);
+}
+
+MDNode *MDBuilder::mergeCallbackEncodings(MDNode *ExistingCallbacks,
+                                          MDNode *NewCB) {
+  if (!ExistingCallbacks)
+    return MDNode::get(Context, {NewCB});
+
+  auto *NewCBCalleeIdxAsCM = cast<ConstantAsMetadata>(NewCB->getOperand(0));
+  uint64_t NewCBCalleeIdx =
+      cast<ConstantInt>(NewCBCalleeIdxAsCM->getValue())->getZExtValue();
+  (void)NewCBCalleeIdx;
+
+  SmallVector<Metadata *, 4> Ops;
+  unsigned NumExistingOps = ExistingCallbacks->getNumOperands();
+  Ops.resize(NumExistingOps + 1);
+
+  for (unsigned u = 0; u < NumExistingOps; u++) {
+    Ops[u] = ExistingCallbacks->getOperand(u);
+
+    auto *OldCBCalleeIdxAsCM = cast<ConstantAsMetadata>(Ops[u]);
+    uint64_t OldCBCalleeIdx =
+      cast<ConstantInt>(OldCBCalleeIdxAsCM->getValue())->getZExtValue();
+    (void)OldCBCalleeIdx;
+    assert(NewCBCalleeIdx != OldCBCalleeIdx &&
+           "Cannot map a callback callee index twice!");
+  }
+
+  Ops[NumExistingOps] = NewCB;
+  return MDNode::get(Context, Ops);
+}
+
 MDNode *MDBuilder::createAnonymousAARoot(StringRef Name, MDNode *Extra) {
   // To ensure uniqueness the root node is self-referential.
   auto Dummy = MDNode::getTemporary(Context, None);
@@ -133,7 +176,7 @@ MDNode *MDBuilder::createTBAARoot(StringRef Name) {
   return MDNode::get(Context, createString(Name));
 }
 
-/// \brief Return metadata for a non-root TBAA node with the given name,
+/// Return metadata for a non-root TBAA node with the given name,
 /// parent in the TBAA tree, and value for 'pointsToConstantMemory'.
 MDNode *MDBuilder::createTBAANode(StringRef Name, MDNode *Parent,
                                   bool isConstant) {
@@ -153,7 +196,7 @@ MDNode *MDBuilder::createAliasScope(StringRef Name, MDNode *Domain) {
   return MDNode::get(Context, {createString(Name), Domain});
 }
 
-/// \brief Return metadata for a tbaa.struct node with the given
+/// Return metadata for a tbaa.struct node with the given
 /// struct field descriptions.
 MDNode *MDBuilder::createTBAAStructNode(ArrayRef<TBAAStructField> Fields) {
   SmallVector<Metadata *, 4> Vals(Fields.size() * 3);
@@ -166,7 +209,7 @@ MDNode *MDBuilder::createTBAAStructNode(ArrayRef<TBAAStructField> Fields) {
   return MDNode::get(Context, Vals);
 }
 
-/// \brief Return metadata for a TBAA struct node in the type DAG
+/// Return metadata for a TBAA struct node in the type DAG
 /// with the given name, a list of pairs (offset, field type in the type DAG).
 MDNode *MDBuilder::createTBAAStructTypeNode(
     StringRef Name, ArrayRef<std::pair<MDNode *, uint64_t>> Fields) {
@@ -180,7 +223,7 @@ MDNode *MDBuilder::createTBAAStructTypeNode(
   return MDNode::get(Context, Ops);
 }
 
-/// \brief Return metadata for a TBAA scalar type node with the
+/// Return metadata for a TBAA scalar type node with the
 /// given name, an offset and a parent in the TBAA type DAG.
 MDNode *MDBuilder::createTBAAScalarTypeNode(StringRef Name, MDNode *Parent,
                                             uint64_t Offset) {
@@ -189,7 +232,7 @@ MDNode *MDBuilder::createTBAAScalarTypeNode(StringRef Name, MDNode *Parent,
                      {createString(Name), Parent, createConstant(Off)});
 }
 
-/// \brief Return metadata for a TBAA tag node with the given
+/// Return metadata for a TBAA tag node with the given
 /// base type, access type and offset relative to the base type.
 MDNode *MDBuilder::createTBAAStructTagNode(MDNode *BaseType, MDNode *AccessType,
                                            uint64_t Offset, bool IsConstant) {
@@ -260,8 +303,21 @@ MDNode *MDBuilder::createMutableTBAAAccessTag(MDNode *Tag) {
 }
 
 MDNode *MDBuilder::createIrrLoopHeaderWeight(uint64_t Weight) {
-  SmallVector<Metadata *, 2> Vals(2);
-  Vals[0] = createString("loop_header_weight");
-  Vals[1] = createConstant(ConstantInt::get(Type::getInt64Ty(Context), Weight));
+  Metadata *Vals[] = {
+    createString("loop_header_weight"),
+    createConstant(ConstantInt::get(Type::getInt64Ty(Context), Weight)),
+  };
+  return MDNode::get(Context, Vals);
+}
+
+MDNode *MDBuilder::createMisExpect(uint64_t Index, uint64_t LikleyWeight,
+                                   uint64_t UnlikleyWeight) {
+  auto *IntType = Type::getInt64Ty(Context);
+  Metadata *Vals[] = {
+      createString("misexpect"),
+      createConstant(ConstantInt::get(IntType, Index)),
+      createConstant(ConstantInt::get(IntType, LikleyWeight)),
+      createConstant(ConstantInt::get(IntType, UnlikleyWeight)),
+  };
   return MDNode::get(Context, Vals);
 }

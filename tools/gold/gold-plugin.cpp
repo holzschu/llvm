@@ -1,9 +1,8 @@
 //===-- gold-plugin.cpp - Plugin to gold for Link Time Optimization  ------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -89,7 +88,7 @@ struct PluginInputFile {
   std::unique_ptr<ld_plugin_input_file> File;
 
   PluginInputFile(void *Handle) : Handle(Handle) {
-    File = llvm::make_unique<ld_plugin_input_file>();
+    File = std::make_unique<ld_plugin_input_file>();
     if (get_input_file(Handle, File.get()) != LDPS_OK)
       message(LDPL_FATAL, "Failed to get file information");
   }
@@ -122,6 +121,7 @@ static ld_plugin_add_input_file add_input_file = nullptr;
 static ld_plugin_set_extra_library_path set_extra_library_path = nullptr;
 static ld_plugin_get_view get_view = nullptr;
 static bool IsExecutable = false;
+static bool SplitSections = true;
 static Optional<Reloc::Model> RelocationModel = None;
 static std::string output_name = "";
 static std::list<claimed_file> Modules;
@@ -134,6 +134,7 @@ namespace options {
     OT_NORMAL,
     OT_DISABLE,
     OT_BC_ONLY,
+    OT_ASM_ONLY,
     OT_SAVE_TEMPS
   };
   static OutputType TheOutputType = OT_NORMAL;
@@ -206,16 +207,20 @@ namespace options {
   static bool new_pass_manager = false;
   // Debug new pass manager
   static bool debug_pass_manager = false;
-  // Objcopy for debug fission.
-  static std::string objcopy;
   // Directory to store the .dwo files.
   static std::string dwo_dir;
   /// Statistics output filename.
   static std::string stats_file;
 
-  // Optimization remarks filename and hotness options
-  static std::string OptRemarksFilename;
-  static bool OptRemarksWithHotness = false;
+  // Optimization remarks filename, accepted passes and hotness options
+  static std::string RemarksFilename;
+  static std::string RemarksPasses;
+  static bool RemarksWithHotness = false;
+  static std::string RemarksFormat;
+
+  // Context sensitive PGO options.
+  static std::string cs_profile_path;
+  static bool cs_pgo_gen = false;
 
   static void process_plugin_option(const char *opt_)
   {
@@ -237,6 +242,8 @@ namespace options {
       TheOutputType = OT_SAVE_TEMPS;
     } else if (opt == "disable-output") {
       TheOutputType = OT_DISABLE;
+    } else if (opt == "emit-asm") {
+      TheOutputType = OT_ASM_ONLY;
     } else if (opt == "thinlto") {
       thinlto = true;
     } else if (opt == "thinlto-index-only") {
@@ -274,19 +281,25 @@ namespace options {
     } else if (opt == "disable-verify") {
       DisableVerify = true;
     } else if (opt.startswith("sample-profile=")) {
-      sample_profile= opt.substr(strlen("sample-profile="));
+      sample_profile = opt.substr(strlen("sample-profile="));
+    } else if (opt == "cs-profile-generate") {
+      cs_pgo_gen = true;
+    } else if (opt.startswith("cs-profile-path=")) {
+      cs_profile_path = opt.substr(strlen("cs-profile-path="));
     } else if (opt == "new-pass-manager") {
       new_pass_manager = true;
     } else if (opt == "debug-pass-manager") {
       debug_pass_manager = true;
-    } else if (opt.startswith("objcopy=")) {
-      objcopy = opt.substr(strlen("objcopy="));
     } else if (opt.startswith("dwo_dir=")) {
       dwo_dir = opt.substr(strlen("dwo_dir="));
     } else if (opt.startswith("opt-remarks-filename=")) {
-      OptRemarksFilename = opt.substr(strlen("opt-remarks-filename="));
+      RemarksFilename = opt.substr(strlen("opt-remarks-filename="));
+    } else if (opt.startswith("opt-remarks-passes=")) {
+      RemarksPasses = opt.substr(strlen("opt-remarks-passes="));
     } else if (opt == "opt-remarks-with-hotness") {
-      OptRemarksWithHotness = true;
+      RemarksWithHotness = true;
+    } else if (opt.startswith("opt-remarks-format=")) {
+      RemarksFormat = opt.substr(strlen("opt-remarks-format="));
     } else if (opt.startswith("stats-file=")) {
       stats_file = opt.substr(strlen("stats-file="));
     } else {
@@ -335,6 +348,7 @@ ld_plugin_status onload(ld_plugin_tv *tv) {
       switch (tv->tv_u.tv_val) {
       case LDPO_REL: // .o
         IsExecutable = false;
+        SplitSections = false;
         break;
       case LDPO_DYN: // .so
         IsExecutable = false;
@@ -456,8 +470,8 @@ static void diagnosticHandler(const DiagnosticInfo &DI) {
   ld_plugin_level Level;
   switch (DI.getSeverity()) {
   case DS_Error:
-    message(LDPL_FATAL, "LLVM gold plugin has failed to create LTO module: %s",
-            ErrStorage.c_str());
+    Level = LDPL_FATAL;
+    break;
   case DS_Warning:
     Level = LDPL_WARNING;
     break;
@@ -506,8 +520,8 @@ static ld_plugin_status claim_file_hook(const ld_plugin_input_file *file,
       offset = file->offset;
     }
     ErrorOr<std::unique_ptr<MemoryBuffer>> BufferOrErr =
-        MemoryBuffer::getOpenFileSlice(file->fd, file->name, file->filesize,
-                                       offset);
+        MemoryBuffer::getOpenFileSlice(sys::fs::convertFDToNativeFile(file->fd),
+                                       file->name, file->filesize, offset);
     if (std::error_code EC = BufferOrErr.getError()) {
       message(LDPL_ERROR, EC.message().c_str());
       return LDPS_ERR;
@@ -676,13 +690,9 @@ static void getThinLTOOldAndNewSuffix(std::string &OldSuffix,
 /// suffix matching \p OldSuffix with \p NewSuffix.
 static std::string getThinLTOObjectFileName(StringRef Path, StringRef OldSuffix,
                                             StringRef NewSuffix) {
-  if (OldSuffix.empty() && NewSuffix.empty())
-    return Path;
-  StringRef NewPath = Path;
-  NewPath.consume_back(OldSuffix);
-  std::string NewNewPath = NewPath;
-  NewNewPath += NewSuffix;
-  return NewNewPath;
+  if (Path.consume_back(OldSuffix))
+    return (Path + NewSuffix).str();
+  return Path;
 }
 
 // Returns true if S is valid as a C language identifier.
@@ -798,7 +808,7 @@ static int getOutputFileName(StringRef InFilename, bool TempOutFile,
     if (TaskID > 0)
       NewFilename += utostr(TaskID);
     std::error_code EC =
-        sys::fs::openFileForWrite(NewFilename, FD, sys::fs::F_None);
+        sys::fs::openFileForWrite(NewFilename, FD, sys::fs::CD_CreateAlways);
     if (EC)
       message(LDPL_FATAL, "Could not open file %s: %s", NewFilename.c_str(),
               EC.message().c_str());
@@ -845,12 +855,15 @@ static std::unique_ptr<LTO> createLTO(IndexWriteCallback OnIndexWrite,
   // FIXME: Check the gold version or add a new option to enable them.
   Conf.Options.RelaxELFRelocations = false;
 
-  // Enable function/data sections by default.
-  Conf.Options.FunctionSections = true;
-  Conf.Options.DataSections = true;
+  // Toggle function/data sections.
+  if (FunctionSections.getNumOccurrences() == 0)
+    Conf.Options.FunctionSections = SplitSections;
+  if (DataSections.getNumOccurrences() == 0)
+    Conf.Options.DataSections = SplitSections;
 
   Conf.MAttrs = MAttrs;
   Conf.RelocModel = RelocationModel;
+  Conf.CodeModel = getCodeModel();
   Conf.CGOptLevel = getCGOptLevel();
   Conf.DisableVerify = options::DisableVerify;
   Conf.OptLevel = options::OptLevel;
@@ -880,7 +893,7 @@ static std::unique_ptr<LTO> createLTO(IndexWriteCallback OnIndexWrite,
   case options::OT_BC_ONLY:
     Conf.PostInternalizeModuleHook = [](size_t Task, const Module &M) {
       std::error_code EC;
-      raw_fd_ostream OS(output_name, EC, sys::fs::OpenFlags::F_None);
+      raw_fd_ostream OS(output_name, EC, sys::fs::OpenFlags::OF_None);
       if (EC)
         message(LDPL_FATAL, "Failed to write the output file.");
       WriteBitcodeToFile(M, OS, /* ShouldPreserveUseListOrder */ false);
@@ -892,18 +905,25 @@ static std::unique_ptr<LTO> createLTO(IndexWriteCallback OnIndexWrite,
     check(Conf.addSaveTemps(output_name + ".",
                             /* UseInputModulePath */ true));
     break;
+  case options::OT_ASM_ONLY:
+    Conf.CGFileType = TargetMachine::CGFT_AssemblyFile;
+    break;
   }
 
   if (!options::sample_profile.empty())
     Conf.SampleProfile = options::sample_profile;
 
+  if (!options::cs_profile_path.empty())
+    Conf.CSIRProfile = options::cs_profile_path;
+  Conf.RunCSIRInstr = options::cs_pgo_gen;
+
   Conf.DwoDir = options::dwo_dir;
 
-  Conf.Objcopy = options::objcopy;
-
   // Set up optimization remarks handling.
-  Conf.RemarksFilename = options::OptRemarksFilename;
-  Conf.RemarksWithHotness = options::OptRemarksWithHotness;
+  Conf.RemarksFilename = options::RemarksFilename;
+  Conf.RemarksPasses = options::RemarksPasses;
+  Conf.RemarksWithHotness = options::RemarksWithHotness;
+  Conf.RemarksFormat = options::RemarksFormat;
 
   // Use new pass manager if set in driver
   Conf.UseNewPM = options::new_pass_manager;
@@ -911,7 +931,7 @@ static std::unique_ptr<LTO> createLTO(IndexWriteCallback OnIndexWrite,
   Conf.DebugPassManager = options::debug_pass_manager;
 
   Conf.StatsFile = options::stats_file;
-  return llvm::make_unique<LTO>(std::move(Conf), Backend,
+  return std::make_unique<LTO>(std::move(Conf), Backend,
                                 options::ParallelCodeGenParallelismLevel);
 }
 
@@ -934,20 +954,20 @@ static void writeEmptyDistributedBuildOutputs(const std::string &ModulePath,
   std::error_code EC;
   {
     raw_fd_ostream OS(NewModulePath + ".thinlto.bc", EC,
-                      sys::fs::OpenFlags::F_None);
+                      sys::fs::OpenFlags::OF_None);
     if (EC)
       message(LDPL_FATAL, "Failed to write '%s': %s",
               (NewModulePath + ".thinlto.bc").c_str(), EC.message().c_str());
 
     if (SkipModule) {
-      ModuleSummaryIndex Index(false);
+      ModuleSummaryIndex Index(/*HaveGVs*/ false);
       Index.setSkipModuleByDistributedBackend();
       WriteIndexToFile(Index, OS, nullptr);
     }
   }
   if (options::thinlto_emit_imports_files) {
     raw_fd_ostream OS(NewModulePath + ".imports", EC,
-                      sys::fs::OpenFlags::F_None);
+                      sys::fs::OpenFlags::OF_None);
     if (EC)
       message(LDPL_FATAL, "Failed to write '%s': %s",
               (NewModulePath + ".imports").c_str(), EC.message().c_str());
@@ -961,8 +981,8 @@ static std::unique_ptr<raw_fd_ostream> CreateLinkedObjectsFile() {
     return nullptr;
   assert(options::thinlto_index_only);
   std::error_code EC;
-  auto LinkedObjectsFile = llvm::make_unique<raw_fd_ostream>(
-      options::thinlto_linked_objects_file, EC, sys::fs::OpenFlags::F_None);
+  auto LinkedObjectsFile = std::make_unique<raw_fd_ostream>(
+      options::thinlto_linked_objects_file, EC, sys::fs::OpenFlags::OF_None);
   if (EC)
     message(LDPL_FATAL, "Failed to create '%s': %s",
             options::thinlto_linked_objects_file.c_str(), EC.message().c_str());
@@ -998,7 +1018,7 @@ static std::vector<std::pair<SmallString<128>, bool>> runLTO() {
   for (claimed_file &F : Modules) {
     if (options::thinlto && !HandleToInputFile.count(F.leader_handle))
       HandleToInputFile.insert(std::make_pair(
-          F.leader_handle, llvm::make_unique<PluginInputFile>(F.handle)));
+          F.leader_handle, std::make_unique<PluginInputFile>(F.handle)));
     // In case we are thin linking with a minimized bitcode file, ensure
     // the module paths encoded in the index reflect where the backends
     // will locate the full bitcode files for compiling/importing.
@@ -1021,6 +1041,8 @@ static std::vector<std::pair<SmallString<128>, bool>> runLTO() {
     Filename = options::obj_path;
   else if (options::TheOutputType == options::OT_SAVE_TEMPS)
     Filename = output_name + ".o";
+  else if (options::TheOutputType == options::OT_ASM_ONLY)
+    Filename = output_name;
   bool SaveTemps = !Filename.empty();
 
   size_t MaxTasks = Lto->getMaxTasks();
@@ -1031,8 +1053,8 @@ static std::vector<std::pair<SmallString<128>, bool>> runLTO() {
     Files[Task].second = !SaveTemps;
     int FD = getOutputFileName(Filename, /* TempOutFile */ !SaveTemps,
                                Files[Task].first, Task);
-    return llvm::make_unique<lto::NativeObjectStream>(
-        llvm::make_unique<llvm::raw_fd_ostream>(FD, true));
+    return std::make_unique<lto::NativeObjectStream>(
+        std::make_unique<llvm::raw_fd_ostream>(FD, true));
   };
 
   auto AddBuffer = [&](size_t Task, std::unique_ptr<MemoryBuffer> MB) {
@@ -1069,7 +1091,8 @@ static ld_plugin_status allSymbolsReadHook() {
   std::vector<std::pair<SmallString<128>, bool>> Files = runLTO();
 
   if (options::TheOutputType == options::OT_DISABLE ||
-      options::TheOutputType == options::OT_BC_ONLY)
+      options::TheOutputType == options::OT_BC_ONLY ||
+      options::TheOutputType == options::OT_ASM_ONLY)
     return LDPS_OK;
 
   if (options::thinlto_index_only) {
@@ -1094,6 +1117,7 @@ static ld_plugin_status all_symbols_read_hook(void) {
   llvm_shutdown();
 
   if (options::TheOutputType == options::OT_BC_ONLY ||
+      options::TheOutputType == options::OT_ASM_ONLY ||
       options::TheOutputType == options::OT_DISABLE) {
     if (options::TheOutputType == options::OT_DISABLE) {
       // Remove the output file here since ld.bfd creates the output file

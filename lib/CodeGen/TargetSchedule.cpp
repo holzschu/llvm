@@ -1,9 +1,8 @@
 //===- llvm/Target/TargetSchedule.cpp - Sched Machine Model ---------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -261,7 +260,13 @@ TargetSchedModel::computeInstrLatency(const MCSchedClassDesc &SCDesc) const {
 unsigned TargetSchedModel::computeInstrLatency(unsigned Opcode) const {
   assert(hasInstrSchedModel() && "Only call this function with a SchedModel");
   unsigned SCIdx = TII->get(Opcode).getSchedClass();
-  return SchedModel.computeInstrLatency(*STI, SCIdx);
+  return capLatency(SchedModel.computeInstrLatency(*STI, SCIdx));
+}
+
+unsigned TargetSchedModel::computeInstrLatency(const MCInst &Inst) const {
+  if (hasInstrSchedModel())
+    return capLatency(SchedModel.computeInstrLatency(*STI, *TII, Inst));
+  return computeInstrLatency(Inst.getOpcode());
 }
 
 unsigned
@@ -295,7 +300,7 @@ computeOutputLatency(const MachineInstr *DefMI, unsigned DefOperIdx,
   // TODO: The following hack exists because predication passes do not
   // correctly append imp-use operands, and readsReg() strangely returns false
   // for predicated defs.
-  unsigned Reg = DefMI->getOperand(DefOperIdx).getReg();
+  Register Reg = DefMI->getOperand(DefOperIdx).getReg();
   const MachineFunction &MF = *DefMI->getMF();
   const TargetRegisterInfo *TRI = MF.getSubtarget().getRegisterInfo();
   if (!DepMI->readsRegister(Reg, TRI) && TII->isPredicated(*DepMI))
@@ -316,7 +321,7 @@ computeOutputLatency(const MachineInstr *DefMI, unsigned DefOperIdx,
   return 0;
 }
 
-Optional<double>
+double
 TargetSchedModel::computeReciprocalThroughput(const MachineInstr *MI) const {
   if (hasInstrItineraries()) {
     unsigned SchedClass = MI->getDesc().getSchedClass();
@@ -326,10 +331,11 @@ TargetSchedModel::computeReciprocalThroughput(const MachineInstr *MI) const {
 
   if (hasInstrSchedModel())
     return MCSchedModel::getReciprocalThroughput(*STI, *resolveSchedClass(MI));
-  return Optional<double>();
+
+  return 0.0;
 }
 
-Optional<double>
+double
 TargetSchedModel::computeReciprocalThroughput(unsigned Opcode) const {
   unsigned SchedClass = TII->get(Opcode).getSchedClass();
   if (hasInstrItineraries())
@@ -340,5 +346,14 @@ TargetSchedModel::computeReciprocalThroughput(unsigned Opcode) const {
     if (SCDesc.isValid() && !SCDesc.isVariant())
       return MCSchedModel::getReciprocalThroughput(*STI, SCDesc);
   }
-  return Optional<double>();
+
+  return 0.0;
 }
+
+double
+TargetSchedModel::computeReciprocalThroughput(const MCInst &MI) const {
+  if (hasInstrSchedModel())
+    return SchedModel.getReciprocalThroughput(*STI, *TII, MI);
+  return computeReciprocalThroughput(MI.getOpcode());
+}
+

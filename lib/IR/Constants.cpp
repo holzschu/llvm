@@ -1,9 +1,8 @@
 //===-- Constants.cpp - Implement Constant nodes --------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -23,6 +22,7 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Operator.h"
+#include "llvm/IR/PatternMatch.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/ManagedStatic.h"
@@ -184,18 +184,15 @@ bool Constant::isNotMinSignedValue() const {
   if (const ConstantFP *CFP = dyn_cast<ConstantFP>(this))
     return !CFP->getValueAPF().bitcastToAPInt().isMinSignedValue();
 
-  // Check for constant vectors which are splats of INT_MIN values.
-  if (const ConstantVector *CV = dyn_cast<ConstantVector>(this))
-    if (Constant *Splat = CV->getSplatValue())
-      return Splat->isNotMinSignedValue();
-
-  // Check for constant vectors which are splats of INT_MIN values.
-  if (const ConstantDataVector *CV = dyn_cast<ConstantDataVector>(this)) {
-    if (CV->isSplat()) {
-      if (CV->getElementType()->isFloatingPointTy())
-        return !CV->getElementAsAPFloat(0).bitcastToAPInt().isMinSignedValue();
-      return !CV->getElementAsAPInt(0).isMinSignedValue();
+  // Check that vectors don't contain INT_MIN
+  if (this->getType()->isVectorTy()) {
+    unsigned NumElts = this->getType()->getVectorNumElements();
+    for (unsigned i = 0; i != NumElts; ++i) {
+      Constant *Elt = this->getAggregateElement(i);
+      if (!Elt || !Elt->isNotMinSignedValue())
+        return false;
     }
+    return true;
   }
 
   // It *may* contain INT_MIN, we can't tell.
@@ -252,6 +249,40 @@ bool Constant::isNaN() const {
       return false;
   }
   return true;
+}
+
+bool Constant::isElementWiseEqual(Value *Y) const {
+  // Are they fully identical?
+  if (this == Y)
+    return true;
+  // They may still be identical element-wise (if they have `undef`s).
+  auto *Cy = dyn_cast<Constant>(Y);
+  if (!Cy)
+    return false;
+  return PatternMatch::match(ConstantExpr::getICmp(ICmpInst::Predicate::ICMP_EQ,
+                                                   const_cast<Constant *>(this),
+                                                   Cy),
+                             PatternMatch::m_One());
+}
+
+bool Constant::containsUndefElement() const {
+  if (!getType()->isVectorTy())
+    return false;
+  for (unsigned i = 0, e = getType()->getVectorNumElements(); i != e; ++i)
+    if (isa<UndefValue>(getAggregateElement(i)))
+      return true;
+
+  return false;
+}
+
+bool Constant::containsConstantExpression() const {
+  if (!getType()->isVectorTy())
+    return false;
+  for (unsigned i = 0, e = getType()->getVectorNumElements(); i != e; ++i)
+    if (isa<ConstantExpr>(getAggregateElement(i)))
+      return true;
+
+  return false;
 }
 
 /// Constructor to create a '0' constant of arbitrary type.
@@ -343,8 +374,12 @@ Constant *Constant::getAggregateElement(unsigned Elt) const {
 
 Constant *Constant::getAggregateElement(Constant *Elt) const {
   assert(isa<IntegerType>(Elt->getType()) && "Index must be an integer");
-  if (ConstantInt *CI = dyn_cast<ConstantInt>(Elt))
+  if (ConstantInt *CI = dyn_cast<ConstantInt>(Elt)) {
+    // Check if the constant fits into an uint64_t.
+    if (CI->getValue().getActiveBits() > 64)
+      return nullptr;
     return getAggregateElement(CI->getZExtValue());
+  }
   return nullptr;
 }
 
@@ -482,22 +517,32 @@ bool Constant::needsRelocation() const {
   if (const BlockAddress *BA = dyn_cast<BlockAddress>(this))
     return BA->getFunction()->needsRelocation();
 
-  // While raw uses of blockaddress need to be relocated, differences between
-  // two of them don't when they are for labels in the same function.  This is a
-  // common idiom when creating a table for the indirect goto extension, so we
-  // handle it efficiently here.
-  if (const ConstantExpr *CE = dyn_cast<ConstantExpr>(this))
+  if (const ConstantExpr *CE = dyn_cast<ConstantExpr>(this)) {
     if (CE->getOpcode() == Instruction::Sub) {
       ConstantExpr *LHS = dyn_cast<ConstantExpr>(CE->getOperand(0));
       ConstantExpr *RHS = dyn_cast<ConstantExpr>(CE->getOperand(1));
       if (LHS && RHS && LHS->getOpcode() == Instruction::PtrToInt &&
-          RHS->getOpcode() == Instruction::PtrToInt &&
-          isa<BlockAddress>(LHS->getOperand(0)) &&
-          isa<BlockAddress>(RHS->getOperand(0)) &&
-          cast<BlockAddress>(LHS->getOperand(0))->getFunction() ==
-              cast<BlockAddress>(RHS->getOperand(0))->getFunction())
-        return false;
+          RHS->getOpcode() == Instruction::PtrToInt) {
+        Constant *LHSOp0 = LHS->getOperand(0);
+        Constant *RHSOp0 = RHS->getOperand(0);
+
+        // While raw uses of blockaddress need to be relocated, differences
+        // between two of them don't when they are for labels in the same
+        // function.  This is a common idiom when creating a table for the
+        // indirect goto extension, so we handle it efficiently here.
+        if (isa<BlockAddress>(LHSOp0) && isa<BlockAddress>(RHSOp0) &&
+            cast<BlockAddress>(LHSOp0)->getFunction() ==
+                cast<BlockAddress>(RHSOp0)->getFunction())
+          return false;
+
+        // Relative pointers do not need to be dynamically relocated.
+        if (auto *LHSGV = dyn_cast<GlobalValue>(LHSOp0->stripPointerCasts()))
+          if (auto *RHSGV = dyn_cast<GlobalValue>(RHSOp0->stripPointerCasts()))
+            if (LHSGV->isDSOLocal() && RHSGV->isDSOLocal())
+              return false;
+      }
     }
+  }
 
   bool Result = false;
   for (unsigned i = 0, e = getNumOperands(); i != e; ++i)
@@ -543,13 +588,10 @@ void Constant::removeDeadConstantUsers() const {
     }
 
     // If the constant was dead, then the iterator is invalidated.
-    if (LastNonDeadUser == E) {
+    if (LastNonDeadUser == E)
       I = user_begin();
-      if (I == E) break;
-    } else {
-      I = LastNonDeadUser;
-      ++I;
-    }
+    else
+      I = std::next(LastNonDeadUser);
   }
 }
 
@@ -709,17 +751,39 @@ Constant *ConstantFP::get(Type *Ty, StringRef Str) {
   if (VectorType *VTy = dyn_cast<VectorType>(Ty))
     return ConstantVector::getSplat(VTy->getNumElements(), C);
 
-  return C; 
+  return C;
 }
 
-Constant *ConstantFP::getNaN(Type *Ty, bool Negative, unsigned Type) {
+Constant *ConstantFP::getNaN(Type *Ty, bool Negative, uint64_t Payload) {
   const fltSemantics &Semantics = *TypeToFloatSemantics(Ty->getScalarType());
-  APFloat NaN = APFloat::getNaN(Semantics, Negative, Type);
+  APFloat NaN = APFloat::getNaN(Semantics, Negative, Payload);
   Constant *C = get(Ty->getContext(), NaN);
 
   if (VectorType *VTy = dyn_cast<VectorType>(Ty))
     return ConstantVector::getSplat(VTy->getNumElements(), C);
 
+  return C;
+}
+
+Constant *ConstantFP::getQNaN(Type *Ty, bool Negative, APInt *Payload) {
+  const fltSemantics &Semantics = *TypeToFloatSemantics(Ty->getScalarType());
+  APFloat NaN = APFloat::getQNaN(Semantics, Negative, Payload);
+  Constant *C = get(Ty->getContext(), NaN);
+  
+  if (VectorType *VTy = dyn_cast<VectorType>(Ty))
+    return ConstantVector::getSplat(VTy->getNumElements(), C);
+  
+  return C;
+}
+
+Constant *ConstantFP::getSNaN(Type *Ty, bool Negative, APInt *Payload) {
+  const fltSemantics &Semantics = *TypeToFloatSemantics(Ty->getScalarType());
+  APFloat NaN = APFloat::getSNaN(Semantics, Negative, Payload);
+  Constant *C = get(Ty->getContext(), NaN);
+  
+  if (VectorType *VTy = dyn_cast<VectorType>(Ty))
+    return ConstantVector::getSplat(VTy->getNumElements(), C);
+  
   return C;
 }
 
@@ -762,7 +826,7 @@ ConstantFP* ConstantFP::get(LLVMContext &Context, const APFloat& V) {
     else if (&V.getSemantics() == &APFloat::IEEEquad())
       Ty = Type::getFP128Ty(Context);
     else {
-      assert(&V.getSemantics() == &APFloat::PPCDoubleDouble() && 
+      assert(&V.getSemantics() == &APFloat::PPCDoubleDouble() &&
              "Unknown FP format");
       Ty = Type::getPPC_FP128Ty(Context);
     }
@@ -930,7 +994,7 @@ ConstantAggregate::ConstantAggregate(CompositeType *T, ValueTy VT,
                                      ArrayRef<Constant *> V)
     : Constant(T, VT, OperandTraits<ConstantAggregate>::op_end(this) - V.size(),
                V.size()) {
-  std::copy(V.begin(), V.end(), op_begin());
+  llvm::copy(V, op_begin());
 
   // Check that types match, unless this is an opaque struct.
   if (auto *ST = dyn_cast<StructType>(T))
@@ -1015,7 +1079,7 @@ Constant *ConstantStruct::get(StructType *ST, ArrayRef<Constant*> V) {
   // Create a ConstantAggregateZero value if all elements are zeros.
   bool isZero = true;
   bool isUndef = false;
-  
+
   if (!V.empty()) {
     isUndef = isa<UndefValue>(V[0]);
     isZero = V[0]->isNullValue();
@@ -1276,17 +1340,17 @@ bool ConstantFP::isValueValidForType(Type *Ty, const APFloat& Val) {
   }
   case Type::X86_FP80TyID:
     return &Val2.getSemantics() == &APFloat::IEEEhalf() ||
-           &Val2.getSemantics() == &APFloat::IEEEsingle() || 
+           &Val2.getSemantics() == &APFloat::IEEEsingle() ||
            &Val2.getSemantics() == &APFloat::IEEEdouble() ||
            &Val2.getSemantics() == &APFloat::x87DoubleExtended();
   case Type::FP128TyID:
     return &Val2.getSemantics() == &APFloat::IEEEhalf() ||
-           &Val2.getSemantics() == &APFloat::IEEEsingle() || 
+           &Val2.getSemantics() == &APFloat::IEEEsingle() ||
            &Val2.getSemantics() == &APFloat::IEEEdouble() ||
            &Val2.getSemantics() == &APFloat::IEEEquad();
   case Type::PPC_FP128TyID:
     return &Val2.getSemantics() == &APFloat::IEEEhalf() ||
-           &Val2.getSemantics() == &APFloat::IEEEsingle() || 
+           &Val2.getSemantics() == &APFloat::IEEEsingle() ||
            &Val2.getSemantics() == &APFloat::IEEEdouble() ||
            &Val2.getSemantics() == &APFloat::PPCDoubleDouble();
   }
@@ -1770,11 +1834,41 @@ Constant *ConstantExpr::getAddrSpaceCast(Constant *C, Type *DstTy,
   return getFoldedCast(Instruction::AddrSpaceCast, C, DstTy, OnlyIfReduced);
 }
 
+Constant *ConstantExpr::get(unsigned Opcode, Constant *C, unsigned Flags, 
+                            Type *OnlyIfReducedTy) {
+  // Check the operands for consistency first.
+  assert(Instruction::isUnaryOp(Opcode) &&
+         "Invalid opcode in unary constant expression");
+
+#ifndef NDEBUG
+  switch (Opcode) {
+  case Instruction::FNeg:
+    assert(C->getType()->isFPOrFPVectorTy() &&
+           "Tried to create a floating-point operation on a "
+           "non-floating-point type!");
+    break;
+  default:
+    break;
+  }
+#endif
+
+  if (Constant *FC = ConstantFoldUnaryInstruction(Opcode, C))
+    return FC;
+
+  if (OnlyIfReducedTy == C->getType())
+    return nullptr;
+
+  Constant *ArgVec[] = { C };
+  ConstantExprKeyType Key(Opcode, ArgVec, 0, Flags);
+
+  LLVMContextImpl *pImpl = C->getContext().pImpl;
+  return pImpl->ExprConstants.getOrCreate(C->getType(), Key);
+}
+
 Constant *ConstantExpr::get(unsigned Opcode, Constant *C1, Constant *C2,
                             unsigned Flags, Type *OnlyIfReducedTy) {
   // Check the operands for consistency first.
-  assert(Opcode >= Instruction::BinaryOpsBegin &&
-         Opcode <  Instruction::BinaryOpsEnd   &&
+  assert(Instruction::isBinaryOp(Opcode) &&
          "Invalid opcode in binary constant expression");
   assert(C1->getType() == C2->getType() &&
          "Operand types in binary constant expression should match");
@@ -1784,51 +1878,31 @@ Constant *ConstantExpr::get(unsigned Opcode, Constant *C1, Constant *C2,
   case Instruction::Add:
   case Instruction::Sub:
   case Instruction::Mul:
-    assert(C1->getType() == C2->getType() && "Op types should be identical!");
+  case Instruction::UDiv:
+  case Instruction::SDiv:
+  case Instruction::URem:
+  case Instruction::SRem:
     assert(C1->getType()->isIntOrIntVectorTy() &&
            "Tried to create an integer operation on a non-integer type!");
     break;
   case Instruction::FAdd:
   case Instruction::FSub:
   case Instruction::FMul:
-    assert(C1->getType() == C2->getType() && "Op types should be identical!");
+  case Instruction::FDiv:
+  case Instruction::FRem:
     assert(C1->getType()->isFPOrFPVectorTy() &&
            "Tried to create a floating-point operation on a "
            "non-floating-point type!");
     break;
-  case Instruction::UDiv: 
-  case Instruction::SDiv: 
-    assert(C1->getType() == C2->getType() && "Op types should be identical!");
-    assert(C1->getType()->isIntOrIntVectorTy() &&
-           "Tried to create an arithmetic operation on a non-arithmetic type!");
-    break;
-  case Instruction::FDiv:
-    assert(C1->getType() == C2->getType() && "Op types should be identical!");
-    assert(C1->getType()->isFPOrFPVectorTy() &&
-           "Tried to create an arithmetic operation on a non-arithmetic type!");
-    break;
-  case Instruction::URem: 
-  case Instruction::SRem: 
-    assert(C1->getType() == C2->getType() && "Op types should be identical!");
-    assert(C1->getType()->isIntOrIntVectorTy() &&
-           "Tried to create an arithmetic operation on a non-arithmetic type!");
-    break;
-  case Instruction::FRem:
-    assert(C1->getType() == C2->getType() && "Op types should be identical!");
-    assert(C1->getType()->isFPOrFPVectorTy() &&
-           "Tried to create an arithmetic operation on a non-arithmetic type!");
-    break;
   case Instruction::And:
   case Instruction::Or:
   case Instruction::Xor:
-    assert(C1->getType() == C2->getType() && "Op types should be identical!");
     assert(C1->getType()->isIntOrIntVectorTy() &&
            "Tried to create a logical operation on a non-integral type!");
     break;
   case Instruction::Shl:
   case Instruction::LShr:
   case Instruction::AShr:
-    assert(C1->getType() == C2->getType() && "Op types should be identical!");
     assert(C1->getType()->isIntOrIntVectorTy() &&
            "Tried to create a shift operation on a non-integer type!");
     break;
@@ -1838,7 +1912,7 @@ Constant *ConstantExpr::get(unsigned Opcode, Constant *C1, Constant *C2,
 #endif
 
   if (Constant *FC = ConstantFoldBinaryInstruction(Opcode, C1, C2))
-    return FC;          // Fold a few common cases.
+    return FC;
 
   if (OnlyIfReducedTy == C1->getType())
     return nullptr;
@@ -1856,7 +1930,7 @@ Constant *ConstantExpr::getSizeOf(Type* Ty) {
   Constant *GEPIdx = ConstantInt::get(Type::getInt32Ty(Ty->getContext()), 1);
   Constant *GEP = getGetElementPtr(
       Ty, Constant::getNullValue(PointerType::getUnqual(Ty)), GEPIdx);
-  return getPtrToInt(GEP, 
+  return getPtrToInt(GEP,
                      Type::getInt64Ty(Ty->getContext()));
 }
 
@@ -1937,9 +2011,8 @@ Constant *ConstantExpr::getGetElementPtr(Type *Ty, Constant *C,
   if (!Ty)
     Ty = cast<PointerType>(C->getType()->getScalarType())->getElementType();
   else
-    assert(
-        Ty ==
-        cast<PointerType>(C->getType()->getScalarType())->getContainedType(0u));
+    assert(Ty ==
+           cast<PointerType>(C->getType()->getScalarType())->getElementType());
 
   if (Constant *FC =
           ConstantFoldGetElementPtr(Ty, C, InBounds, InRangeIndex, Idxs))
@@ -2165,7 +2238,7 @@ Constant *ConstantExpr::getNeg(Constant *C, bool HasNUW, bool HasNSW) {
 Constant *ConstantExpr::getFNeg(Constant *C) {
   assert(C->getType()->isFPOrFPVectorTy() &&
          "Cannot FNEG a non-floating-point value!");
-  return getFSub(ConstantFP::getZeroValueForNegation(C->getType()), C);
+  return get(Instruction::FNeg, C);
 }
 
 Constant *ConstantExpr::getNot(Constant *C) {
@@ -2262,22 +2335,49 @@ Constant *ConstantExpr::getAShr(Constant *C1, Constant *C2, bool isExact) {
              isExact ? PossiblyExactOperator::IsExact : 0);
 }
 
-Constant *ConstantExpr::getBinOpIdentity(unsigned Opcode, Type *Ty) {
-  switch (Opcode) {
-  default:
-    // Doesn't have an identity.
+Constant *ConstantExpr::getBinOpIdentity(unsigned Opcode, Type *Ty,
+                                         bool AllowRHSConstant) {
+  assert(Instruction::isBinaryOp(Opcode) && "Only binops allowed");
+
+  // Commutative opcodes: it does not matter if AllowRHSConstant is set.
+  if (Instruction::isCommutative(Opcode)) {
+    switch (Opcode) {
+      case Instruction::Add: // X + 0 = X
+      case Instruction::Or:  // X | 0 = X
+      case Instruction::Xor: // X ^ 0 = X
+        return Constant::getNullValue(Ty);
+      case Instruction::Mul: // X * 1 = X
+        return ConstantInt::get(Ty, 1);
+      case Instruction::And: // X & -1 = X
+        return Constant::getAllOnesValue(Ty);
+      case Instruction::FAdd: // X + -0.0 = X
+        // TODO: If the fadd has 'nsz', should we return +0.0?
+        return ConstantFP::getNegativeZero(Ty);
+      case Instruction::FMul: // X * 1.0 = X
+        return ConstantFP::get(Ty, 1.0);
+      default:
+        llvm_unreachable("Every commutative binop has an identity constant");
+    }
+  }
+
+  // Non-commutative opcodes: AllowRHSConstant must be set.
+  if (!AllowRHSConstant)
     return nullptr;
 
-  case Instruction::Add:
-  case Instruction::Or:
-  case Instruction::Xor:
-    return Constant::getNullValue(Ty);
-
-  case Instruction::Mul:
-    return ConstantInt::get(Ty, 1);
-
-  case Instruction::And:
-    return Constant::getAllOnesValue(Ty);
+  switch (Opcode) {
+    case Instruction::Sub:  // X - 0 = X
+    case Instruction::Shl:  // X << 0 = X
+    case Instruction::LShr: // X >>u 0 = X
+    case Instruction::AShr: // X >> 0 = X
+    case Instruction::FSub: // X - 0.0 = X
+      return Constant::getNullValue(Ty);
+    case Instruction::SDiv: // X / 1 = X
+    case Instruction::UDiv: // X /u 1 = X
+      return ConstantInt::get(Ty, 1);
+    case Instruction::FDiv: // X / 1.0 = X
+      return ConstantFP::get(Ty, 1.0);
+    default:
+      return nullptr;
   }
 }
 
@@ -2417,7 +2517,7 @@ Constant *ConstantDataSequential::getImpl(StringRef Elements, Type *Ty) {
 
 void ConstantDataSequential::destroyConstantImpl() {
   // Remove the constant from the StringMap.
-  StringMap<ConstantDataSequential*> &CDSConstants = 
+  StringMap<ConstantDataSequential*> &CDSConstants =
     getType()->getContext().pImpl->CDSConstants;
 
   StringMap<ConstantDataSequential*>::iterator Slot =
@@ -2434,7 +2534,7 @@ void ConstantDataSequential::destroyConstantImpl() {
     assert((*Entry) == this && "Hash mismatch in ConstantDataSequential");
     getContext().pImpl->CDSConstants.erase(Slot);
   } else {
-    // Otherwise, there are multiple entries linked off the bucket, unlink the 
+    // Otherwise, there are multiple entries linked off the bucket, unlink the
     // node we care about but keep the bucket around.
     for (ConstantDataSequential *Node = *Entry; ;
          Entry = &Node->Next, Node = *Entry) {
@@ -2479,7 +2579,7 @@ Constant *ConstantDataArray::getFP(LLVMContext &Context,
 Constant *ConstantDataArray::getString(LLVMContext &Context,
                                        StringRef Str, bool AddNull) {
   if (!AddNull) {
-    const uint8_t *Data = reinterpret_cast<const uint8_t *>(Str.data());
+    const uint8_t *Data = Str.bytes_begin();
     return get(Context, makeArrayRef(Data, Str.size()));
   }
 
@@ -2927,7 +3027,8 @@ Instruction *ConstantExpr::getAsInstruction() {
   case Instruction::FCmp:
     return CmpInst::Create((Instruction::OtherOps)getOpcode(),
                            (CmpInst::Predicate)getPredicate(), Ops[0], Ops[1]);
-
+  case Instruction::FNeg:
+    return UnaryOperator::Create((Instruction::UnaryOps)getOpcode(), Ops[0]);
   default:
     assert(getNumOperands() == 2 && "Must be binary operator?");
     BinaryOperator *BO =

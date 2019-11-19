@@ -1,9 +1,8 @@
 //===- RegisterPressure.h - Dynamic Register Pressure -----------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -130,10 +129,8 @@ public:
   bool operator==(const PressureChange &RHS) const {
     return PSetID == RHS.PSetID && UnitInc == RHS.UnitInc;
   }
-};
 
-template <> struct isPodLike<PressureChange> {
-   static const bool value = true;
+  void dump() const;
 };
 
 /// List of PressureChanges in order of increasing, unique PSetID.
@@ -171,10 +168,10 @@ class RegisterOperands {
 public:
   /// List of virtual registers and register units read by the instruction.
   SmallVector<RegisterMaskPair, 8> Uses;
-  /// \brief List of virtual registers and register units defined by the
+  /// List of virtual registers and register units defined by the
   /// instruction which are not dead.
   SmallVector<RegisterMaskPair, 8> Defs;
-  /// \brief List of virtual registers and register units defined by the
+  /// List of virtual registers and register units defined by the
   /// instruction but dead.
   SmallVector<RegisterMaskPair, 8> DeadDefs;
 
@@ -219,7 +216,7 @@ public:
     return const_cast<PressureDiffs*>(this)->operator[](Idx);
   }
 
-  /// \brief Record pressure difference induced by the given operand list to
+  /// Record pressure difference induced by the given operand list to
   /// node with index \p Idx.
   void addInstruction(unsigned Idx, const RegisterOperands &RegOpers,
                       const MachineRegisterInfo &MRI);
@@ -253,6 +250,7 @@ struct RegPressureDelta {
   bool operator!=(const RegPressureDelta &RHS) const {
     return !operator==(RHS);
   }
+  void dump() const;
 };
 
 /// A set of live virtual registers and physical register units.
@@ -278,15 +276,15 @@ private:
   unsigned NumRegUnits;
 
   unsigned getSparseIndexFromReg(unsigned Reg) const {
-    if (TargetRegisterInfo::isVirtualRegister(Reg))
-      return TargetRegisterInfo::virtReg2Index(Reg) + NumRegUnits;
+    if (Register::isVirtualRegister(Reg))
+      return Register::virtReg2Index(Reg) + NumRegUnits;
     assert(Reg < NumRegUnits);
     return Reg;
   }
 
   unsigned getRegFromSparseIndex(unsigned SparseIndex) const {
     if (SparseIndex >= NumRegUnits)
-      return TargetRegisterInfo::index2VirtReg(SparseIndex-NumRegUnits);
+      return Register::index2VirtReg(SparseIndex-NumRegUnits);
     return SparseIndex;
   }
 
@@ -546,7 +544,7 @@ protected:
   /// Add Reg to the live in set and increase max pressure.
   void discoverLiveIn(RegisterMaskPair Pair);
 
-  /// \brief Get the SlotIndex for the first nondebug instruction including or
+  /// Get the SlotIndex for the first nondebug instruction including or
   /// after the current position.
   SlotIndex getCurrSlot() const;
 

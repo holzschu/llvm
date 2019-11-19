@@ -906,7 +906,7 @@ define <4 x i32> @cmhsz4xi32(<4 x i32> %A) {
 }
 
 define <2 x i64> @cmhsz2xi64(<2 x i64> %A) {
-;CHECK: orr w[[TWO:[0-9]+]], wzr, #0x2
+;CHECK: mov w[[TWO:[0-9]+]], #2
 ;CHECK-NEXT: dup v[[ZERO:[0-9]+]].2d, x[[TWO]]
 ;CHECK-NEXT: cmhs {{v[0-9]+}}.2d, {{v[0-9]+}}.2d, v[[ZERO]].2d
 	%tmp3 = icmp uge <2 x i64> %A, <i64 2, i64 2>
@@ -964,7 +964,7 @@ define <4 x i32> @cmhiz4xi32(<4 x i32> %A) {
 }
 
 define <2 x i64> @cmhiz2xi64(<2 x i64> %A) {
-;CHECK: orr w[[ONE:[0-9]+]], wzr, #0x1
+;CHECK: mov w[[ONE:[0-9]+]], #1
 ;CHECK-NEXT: dup v[[ZERO:[0-9]+]].2d, x[[ONE]]
 ;CHECK-NEXT: cmhi {{v[0-9]+}}.2d, {{v[0-9]+}}.2d, v[[ZERO]].2d
 	%tmp3 = icmp ugt <2 x i64> %A, <i64 1, i64 1>
@@ -975,7 +975,7 @@ define <2 x i64> @cmhiz2xi64(<2 x i64> %A) {
 define <8 x i8> @cmlsz8xi8(<8 x i8> %A) {
 ; Using registers other than v0, v1 are possible, but would be odd.
 ; LS implemented as HS, so check reversed operands.
-;CHECK: movi d[[ZERO:[0-9]+]], #0
+;CHECK: movi v[[ZERO:[0-9]+]].2d, #0
 ;CHECK-NEXT: cmhs {{v[0-9]+}}.8b, v[[ZERO]].8b, v0.8b
 	%tmp3 = icmp ule <8 x i8> %A, zeroinitializer;
    %tmp4 = sext <8 x i1> %tmp3 to <8 x i8>
@@ -995,7 +995,7 @@ define <16 x i8> @cmlsz16xi8(<16 x i8> %A) {
 define <4 x i16> @cmlsz4xi16(<4 x i16> %A) {
 ; Using registers other than v0, v1 are possible, but would be odd.
 ; LS implemented as HS, so check reversed operands.
-;CHECK: movi d[[ZERO:[0-9]+]], #0
+;CHECK: movi v[[ZERO:[0-9]+]].2d, #0
 ;CHECK-NEXT: cmhs {{v[0-9]+}}.4h, v[[ZERO]].4h, v0.4h
 	%tmp3 = icmp ule <4 x i16> %A, zeroinitializer;
    %tmp4 = sext <4 x i1> %tmp3 to <4 x i16>
@@ -1015,7 +1015,7 @@ define <8 x i16> @cmlsz8xi16(<8 x i16> %A) {
 define <2 x i32> @cmlsz2xi32(<2 x i32> %A) {
 ; Using registers other than v0, v1 are possible, but would be odd.
 ; LS implemented as HS, so check reversed operands.
-;CHECK: movi d[[ZERO:[0-9]+]], #0
+;CHECK: movi v[[ZERO:[0-9]+]].2d, #0
 ;CHECK-NEXT: cmhs {{v[0-9]+}}.2s, v[[ZERO]].2s, v0.2s
 	%tmp3 = icmp ule <2 x i32> %A, zeroinitializer;
    %tmp4 = sext <2 x i1> %tmp3 to <2 x i32>
@@ -1105,7 +1105,7 @@ define <4 x i32> @cmloz4xi32(<4 x i32> %A) {
 define <2 x i64> @cmloz2xi64(<2 x i64> %A) {
 ; Using registers other than v0, v1 are possible, but would be odd.
 ; LO implemented as HI, so check reversed operands.
-;CHECK: orr w[[TWO:[0-9]+]], wzr, #0x2
+;CHECK: mov w[[TWO:[0-9]+]], #2
 ;CHECK-NEXT: dup v[[ZERO:[0-9]+]].2d, x[[TWO]]
 ;CHECK-NEXT: cmhi {{v[0-9]+}}.2d, v[[ZERO]].2d, v0.2d
 	%tmp3 = icmp ult <2 x i64> %A, <i64 2, i64 2>

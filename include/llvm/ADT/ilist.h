@@ -1,9 +1,8 @@
 //==-- llvm/ADT/ilist.h - Intrusive Linked List Template ---------*- C++ -*-==//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -66,9 +65,8 @@ template <typename NodeTy> struct ilist_callback_traits {
   void addNodeToList(NodeTy *) {}
   void removeNodeFromList(NodeTy *) {}
 
-  /// Callback before transferring nodes to this list.
-  ///
-  /// \pre \c this!=&OldList
+  /// Callback before transferring nodes to this list. The nodes may already be
+  /// in this same list.
   template <class Iterator>
   void transferNodesFromList(ilist_callback_traits &OldList, Iterator /*first*/,
                              Iterator /*last*/) {
@@ -287,8 +285,8 @@ private:
     if (position == last)
       return;
 
-    if (this != &L2) // Notify traits we moved the nodes...
-      this->transferNodesFromList(L2, first, last);
+    // Notify traits we moved the nodes...
+    this->transferNodesFromList(L2, first, last);
 
     base_list_type::splice(position, L2, first, last);
   }
@@ -356,26 +354,26 @@ public:
 
   using base_list_type::sort;
 
-  /// \brief Get the previous node, or \c nullptr for the list head.
+  /// Get the previous node, or \c nullptr for the list head.
   pointer getPrevNode(reference N) const {
     auto I = N.getIterator();
     if (I == begin())
       return nullptr;
     return &*std::prev(I);
   }
-  /// \brief Get the previous node, or \c nullptr for the list head.
+  /// Get the previous node, or \c nullptr for the list head.
   const_pointer getPrevNode(const_reference N) const {
     return getPrevNode(const_cast<reference >(N));
   }
 
-  /// \brief Get the next node, or \c nullptr for the list tail.
+  /// Get the next node, or \c nullptr for the list tail.
   pointer getNextNode(reference N) const {
     auto Next = std::next(N.getIterator());
     if (Next == end())
       return nullptr;
     return &*Next;
   }
-  /// \brief Get the next node, or \c nullptr for the list tail.
+  /// Get the next node, or \c nullptr for the list tail.
   const_pointer getNextNode(const_reference N) const {
     return getNextNode(const_cast<reference >(N));
   }

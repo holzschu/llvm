@@ -1,9 +1,8 @@
 //= AArch64WinCOFFObjectWriter.cpp - AArch64 Windows COFF Object Writer C++ =//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===---------------------------------------------------------------------===//
 
@@ -96,8 +95,17 @@ unsigned AArch64WinCOFFObjectWriter::getRelocType(
     }
     return COFF::IMAGE_REL_ARM64_PAGEOFFSET_12L;
 
+  case AArch64::fixup_aarch64_pcrel_adr_imm21:
+    return COFF::IMAGE_REL_ARM64_REL21;
+
   case AArch64::fixup_aarch64_pcrel_adrp_imm21:
     return COFF::IMAGE_REL_ARM64_PAGEBASE_REL21;
+
+  case AArch64::fixup_aarch64_pcrel_branch14:
+    return COFF::IMAGE_REL_ARM64_BRANCH14;
+
+  case AArch64::fixup_aarch64_pcrel_branch19:
+    return COFF::IMAGE_REL_ARM64_BRANCH19;
 
   case AArch64::fixup_aarch64_pcrel_branch26:
   case AArch64::fixup_aarch64_pcrel_call26:
@@ -111,10 +119,8 @@ bool AArch64WinCOFFObjectWriter::recordRelocation(const MCFixup &Fixup) const {
 
 namespace llvm {
 
-std::unique_ptr<MCObjectWriter>
-createAArch64WinCOFFObjectWriter(raw_pwrite_stream &OS) {
-  auto MOTW = llvm::make_unique<AArch64WinCOFFObjectWriter>();
-  return createWinCOFFObjectWriter(std::move(MOTW), OS);
+std::unique_ptr<MCObjectTargetWriter> createAArch64WinCOFFObjectWriter() {
+  return std::make_unique<AArch64WinCOFFObjectWriter>();
 }
 
 } // end namespace llvm

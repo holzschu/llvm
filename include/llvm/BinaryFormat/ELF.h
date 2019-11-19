@@ -1,9 +1,8 @@
 //===- llvm/BinaryFormat/ELF.h - ELF constants and structures ---*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -312,11 +311,6 @@ enum {
   EM_RISCV = 243,         // RISC-V
   EM_LANAI = 244,         // Lanai 32-bit processor
   EM_BPF = 247,           // Linux kernel bpf virtual machine
-
-  // A request has been made to the maintainer of the official registry for
-  // such numbers for an official value for WebAssembly. As soon as one is
-  // allocated, this enum will be updated to use it.
-  EM_WEBASSEMBLY = 0x4157, // WebAssembly architecture
 };
 
 // Object file classes.
@@ -418,8 +412,10 @@ enum {
 
 // ARM Specific e_flags
 enum : unsigned {
-  EF_ARM_SOFT_FLOAT = 0x00000200U,
-  EF_ARM_VFP_FLOAT = 0x00000400U,
+  EF_ARM_SOFT_FLOAT = 0x00000200U,     // Legacy pre EABI_VER5
+  EF_ARM_ABI_FLOAT_SOFT = 0x00000200U, // EABI_VER5
+  EF_ARM_VFP_FLOAT = 0x00000400U,      // Legacy pre EABI_VER5
+  EF_ARM_ABI_FLOAT_HARD = 0x00000400U, // EABI_VER5
   EF_ARM_EABI_UNKNOWN = 0x00000000U,
   EF_ARM_EABI_VER1 = 0x01000000U,
   EF_ARM_EABI_VER2 = 0x02000000U,
@@ -585,6 +581,7 @@ enum {
   EF_HEXAGON_MACH_V60 = 0x00000060, // Hexagon V60
   EF_HEXAGON_MACH_V62 = 0x00000062, // Hexagon V62
   EF_HEXAGON_MACH_V65 = 0x00000065, // Hexagon V65
+  EF_HEXAGON_MACH_V66 = 0x00000066, // Hexagon V66
 
   // Highest ISA version flags
   EF_HEXAGON_ISA_MACH = 0x00000000, // Same as specified in bits[11:0]
@@ -597,6 +594,7 @@ enum {
   EF_HEXAGON_ISA_V60 = 0x00000060,  // Hexagon V60 ISA
   EF_HEXAGON_ISA_V62 = 0x00000062,  // Hexagon V62 ISA
   EF_HEXAGON_ISA_V65 = 0x00000065,  // Hexagon V65 ISA
+  EF_HEXAGON_ISA_V66 = 0x00000066,  // Hexagon V66 ISA
 };
 
 // Hexagon-specific section indexes for common small data
@@ -644,11 +642,6 @@ enum {
 #include "ELFRelocs/Sparc.def"
 };
 
-// ELF Relocation types for WebAssembly
-enum {
-#include "ELFRelocs/WebAssembly.def"
-};
-
 // AMDGPU specific e_flags.
 enum : unsigned {
   // Processor selection mask for EF_AMDGPU_MACH_* values.
@@ -658,8 +651,7 @@ enum : unsigned {
   EF_AMDGPU_MACH_NONE = 0x000,
 
   // R600-based processors.
-  EF_AMDGPU_MACH_R600_FIRST = 0x001,
-  EF_AMDGPU_MACH_R600_LAST = 0x010,
+
   // Radeon HD 2000/3000 Series (R600).
   EF_AMDGPU_MACH_R600_R600 = 0x001,
   EF_AMDGPU_MACH_R600_R630 = 0x002,
@@ -685,9 +677,12 @@ enum : unsigned {
   EF_AMDGPU_MACH_R600_RESERVED_FIRST = 0x011,
   EF_AMDGPU_MACH_R600_RESERVED_LAST = 0x01f,
 
+  // First/last R600-based processors.
+  EF_AMDGPU_MACH_R600_FIRST = EF_AMDGPU_MACH_R600_R600,
+  EF_AMDGPU_MACH_R600_LAST = EF_AMDGPU_MACH_R600_TURKS,
+
   // AMDGCN-based processors.
-  EF_AMDGPU_MACH_AMDGCN_FIRST = 0x020,
-  EF_AMDGPU_MACH_AMDGCN_LAST = 0x02d,
+
   // AMDGCN GFX6.
   EF_AMDGPU_MACH_AMDGCN_GFX600 = 0x020,
   EF_AMDGPU_MACH_AMDGCN_GFX601 = 0x021,
@@ -705,16 +700,29 @@ enum : unsigned {
   // AMDGCN GFX9.
   EF_AMDGPU_MACH_AMDGCN_GFX900 = 0x02c,
   EF_AMDGPU_MACH_AMDGCN_GFX902 = 0x02d,
+  EF_AMDGPU_MACH_AMDGCN_GFX904 = 0x02e,
+  EF_AMDGPU_MACH_AMDGCN_GFX906 = 0x02f,
+  EF_AMDGPU_MACH_AMDGCN_GFX908 = 0x030,
+  EF_AMDGPU_MACH_AMDGCN_GFX909 = 0x031,
+  // AMDGCN GFX10.
+  EF_AMDGPU_MACH_AMDGCN_GFX1010 = 0x033,
+  EF_AMDGPU_MACH_AMDGCN_GFX1011 = 0x034,
+  EF_AMDGPU_MACH_AMDGCN_GFX1012 = 0x035,
 
   // Reserved for AMDGCN-based processors.
   EF_AMDGPU_MACH_AMDGCN_RESERVED0 = 0x027,
-  EF_AMDGPU_MACH_AMDGCN_RESERVED1 = 0x02e,
-  EF_AMDGPU_MACH_AMDGCN_RESERVED2 = 0x02f,
-  EF_AMDGPU_MACH_AMDGCN_RESERVED3 = 0x030,
+  EF_AMDGPU_MACH_AMDGCN_RESERVED1 = 0x032,
 
-  // Indicates if the xnack target feature is enabled for all code contained in
-  // the object.
+  // First/last AMDGCN-based processors.
+  EF_AMDGPU_MACH_AMDGCN_FIRST = EF_AMDGPU_MACH_AMDGCN_GFX600,
+  EF_AMDGPU_MACH_AMDGCN_LAST = EF_AMDGPU_MACH_AMDGCN_GFX1012,
+
+  // Indicates if the "xnack" target feature is enabled for all code contained
+  // in the object.
   EF_AMDGPU_XNACK = 0x100,
+  // Indicates if the "sram-ecc" target feature is enabled for all code
+  // contained in the object.
+  EF_AMDGPU_SRAM_ECC = 0x200,
 };
 
 // ELF Relocation types for AMDGPU
@@ -725,6 +733,38 @@ enum {
 // ELF Relocation types for BPF
 enum {
 #include "ELFRelocs/BPF.def"
+};
+
+// MSP430 specific e_flags
+enum : unsigned {
+  EF_MSP430_MACH_MSP430x11 = 11,
+  EF_MSP430_MACH_MSP430x11x1 = 110,
+  EF_MSP430_MACH_MSP430x12 = 12,
+  EF_MSP430_MACH_MSP430x13 = 13,
+  EF_MSP430_MACH_MSP430x14 = 14,
+  EF_MSP430_MACH_MSP430x15 = 15,
+  EF_MSP430_MACH_MSP430x16 = 16,
+  EF_MSP430_MACH_MSP430x20 = 20,
+  EF_MSP430_MACH_MSP430x22 = 22,
+  EF_MSP430_MACH_MSP430x23 = 23,
+  EF_MSP430_MACH_MSP430x24 = 24,
+  EF_MSP430_MACH_MSP430x26 = 26,
+  EF_MSP430_MACH_MSP430x31 = 31,
+  EF_MSP430_MACH_MSP430x32 = 32,
+  EF_MSP430_MACH_MSP430x33 = 33,
+  EF_MSP430_MACH_MSP430x41 = 41,
+  EF_MSP430_MACH_MSP430x42 = 42,
+  EF_MSP430_MACH_MSP430x43 = 43,
+  EF_MSP430_MACH_MSP430x44 = 44,
+  EF_MSP430_MACH_MSP430X = 45,
+  EF_MSP430_MACH_MSP430x46 = 46,
+  EF_MSP430_MACH_MSP430x47 = 47,
+  EF_MSP430_MACH_MSP430x54 = 54,
+};
+
+// ELF Relocation types for MSP430
+enum {
+#include "ELFRelocs/MSP430.def"
 };
 
 #undef ELF_RELOC
@@ -790,6 +830,9 @@ enum : unsigned {
   SHT_PREINIT_ARRAY = 16,               // Pointers to pre-init functions.
   SHT_GROUP = 17,                       // Section group.
   SHT_SYMTAB_SHNDX = 18,                // Indices for SHN_XINDEX entries.
+  // Experimental support for SHT_RELR sections. For details, see proposal
+  // at https://groups.google.com/forum/#!topic/generic-abi/bX460iggiKg
+  SHT_RELR = 19,                        // Relocation entries; only offsets.
   SHT_LOOS = 0x60000000,                // Lowest operating system-specific type.
   // Android packed relocation section types.
   // https://android.googlesource.com/platform/bionic/+/6f12bfece5dcc01325e0abba56a46b1bcf991c69/tools/relocation_packer/src/elf_file.cc#37
@@ -797,6 +840,16 @@ enum : unsigned {
   SHT_ANDROID_RELA = 0x60000002,
   SHT_LLVM_ODRTAB = 0x6fff4c00,         // LLVM ODR table.
   SHT_LLVM_LINKER_OPTIONS = 0x6fff4c01, // LLVM Linker Options.
+  SHT_LLVM_CALL_GRAPH_PROFILE = 0x6fff4c02, // LLVM Call Graph Profile.
+  SHT_LLVM_ADDRSIG = 0x6fff4c03,        // List of address-significant symbols
+                                        // for safe ICF.
+  SHT_LLVM_DEPENDENT_LIBRARIES = 0x6fff4c04, // LLVM Dependent Library Specifiers.
+  SHT_LLVM_SYMPART = 0x6fff4c05,        // Symbol partition specification.
+  SHT_LLVM_PART_EHDR = 0x6fff4c06,      // ELF header for loadable partition.
+  SHT_LLVM_PART_PHDR = 0x6fff4c07,      // Phdrs for loadable partition.
+  // Android's experimental support for SHT_RELR sections.
+  // https://android.googlesource.com/platform/bionic/+/b7feec74547f84559a1467aca02708ff61346d2a/libc/include/elf.h#512
+  SHT_ANDROID_RELR = 0x6fffff00,        // Relocation entries; only offsets.
   SHT_GNU_ATTRIBUTES = 0x6ffffff5,      // Object attributes.
   SHT_GNU_HASH = 0x6ffffff6,            // GNU-style hash table.
   SHT_GNU_verdef = 0x6ffffffd,          // GNU version definitions.
@@ -821,6 +874,8 @@ enum : unsigned {
   SHT_MIPS_OPTIONS = 0x7000000d,        // General options
   SHT_MIPS_DWARF = 0x7000001e,          // DWARF debugging section.
   SHT_MIPS_ABIFLAGS = 0x7000002a,       // ABI information.
+
+  SHT_MSP430_ATTRIBUTES = 0x70000003U,
 
   SHT_HIPROC = 0x7fffffff,              // Highest processor arch-specific type.
   SHT_LOUSER = 0x80000000,              // Lowest type reserved for applications.
@@ -1060,6 +1115,9 @@ struct Elf32_Rela {
   }
 };
 
+// Relocation entry without explicit addend or info (relative relocations only).
+typedef Elf32_Word Elf32_Relr; // offset/bitmap for relative relocations
+
 // Relocation entry, without explicit addend.
 struct Elf64_Rel {
   Elf64_Addr r_offset; // Location (file byte offset, or program virtual addr).
@@ -1092,6 +1150,9 @@ struct Elf64_Rela {
     r_info = ((Elf64_Xword)s << 32) + (t & 0xffffffffL);
   }
 };
+
+// Relocation entry without explicit addend or info (relative relocations only).
+typedef Elf64_Xword Elf64_Relr; // offset/bitmap for relative relocations
 
 // Program header for ELF32.
 struct Elf32_Phdr {
@@ -1156,9 +1217,6 @@ enum {
   PT_MIPS_RTPROC = 0x70000001,   // Runtime procedure table.
   PT_MIPS_OPTIONS = 0x70000002,  // Options segment.
   PT_MIPS_ABIFLAGS = 0x70000003, // Abiflags segment.
-
-  // WebAssembly program header types.
-  PT_WEBASSEMBLY_FUNCTIONS = PT_LOPROC + 0, // Function definitions.
 };
 
 // Segment flag bits.
@@ -1290,6 +1348,80 @@ enum {
   NT_FREEBSD_PROCSTAT_AUXV = 16,
 };
 
+// Generic note types
+enum : unsigned {
+  NT_VERSION = 1,
+  NT_ARCH = 2,
+  NT_GNU_BUILD_ATTRIBUTE_OPEN = 0x100,
+  NT_GNU_BUILD_ATTRIBUTE_FUNC = 0x101,
+};
+
+// Core note types
+enum : unsigned {
+  NT_PRSTATUS = 1,
+  NT_FPREGSET = 2,
+  NT_PRPSINFO = 3,
+  NT_TASKSTRUCT = 4,
+  NT_AUXV = 6,
+  NT_PSTATUS = 10,
+  NT_FPREGS = 12,
+  NT_PSINFO = 13,
+  NT_LWPSTATUS = 16,
+  NT_LWPSINFO = 17,
+  NT_WIN32PSTATUS = 18,
+
+  NT_PPC_VMX = 0x100,
+  NT_PPC_VSX = 0x102,
+  NT_PPC_TAR = 0x103,
+  NT_PPC_PPR = 0x104,
+  NT_PPC_DSCR = 0x105,
+  NT_PPC_EBB = 0x106,
+  NT_PPC_PMU = 0x107,
+  NT_PPC_TM_CGPR = 0x108,
+  NT_PPC_TM_CFPR = 0x109,
+  NT_PPC_TM_CVMX = 0x10a,
+  NT_PPC_TM_CVSX = 0x10b,
+  NT_PPC_TM_SPR = 0x10c,
+  NT_PPC_TM_CTAR = 0x10d,
+  NT_PPC_TM_CPPR = 0x10e,
+  NT_PPC_TM_CDSCR = 0x10f,
+
+  NT_386_TLS = 0x200,
+  NT_386_IOPERM = 0x201,
+  NT_X86_XSTATE = 0x202,
+
+  NT_S390_HIGH_GPRS = 0x300,
+  NT_S390_TIMER = 0x301,
+  NT_S390_TODCMP = 0x302,
+  NT_S390_TODPREG = 0x303,
+  NT_S390_CTRS = 0x304,
+  NT_S390_PREFIX = 0x305,
+  NT_S390_LAST_BREAK = 0x306,
+  NT_S390_SYSTEM_CALL = 0x307,
+  NT_S390_TDB = 0x308,
+  NT_S390_VXRS_LOW = 0x309,
+  NT_S390_VXRS_HIGH = 0x30a,
+  NT_S390_GS_CB = 0x30b,
+  NT_S390_GS_BC = 0x30c,
+
+  NT_ARM_VFP = 0x400,
+  NT_ARM_TLS = 0x401,
+  NT_ARM_HW_BREAK = 0x402,
+  NT_ARM_HW_WATCH = 0x403,
+  NT_ARM_SVE = 0x405,
+  NT_ARM_PAC_MASK = 0x406,
+
+  NT_FILE = 0x46494c45,
+  NT_PRXFPREG = 0x46e62b7f,
+  NT_SIGINFO = 0x53494749,
+};
+
+// LLVM-specific notes.
+enum {
+  NT_LLVM_HWASAN_GLOBALS = 3,
+};
+
+// GNU note types
 enum {
   NT_GNU_ABI_TAG = 1,
   NT_GNU_HWCAP = 2,
@@ -1299,17 +1431,82 @@ enum {
 };
 
 // Property types used in GNU_PROPERTY_TYPE_0 notes.
-enum {
+enum : unsigned {
   GNU_PROPERTY_STACK_SIZE = 1,
   GNU_PROPERTY_NO_COPY_ON_PROTECTED = 2,
+  GNU_PROPERTY_AARCH64_FEATURE_1_AND = 0xc0000000,
+  GNU_PROPERTY_X86_FEATURE_1_AND = 0xc0000002,
+  GNU_PROPERTY_X86_ISA_1_NEEDED = 0xc0008000,
+  GNU_PROPERTY_X86_FEATURE_2_NEEDED = 0xc0008001,
+  GNU_PROPERTY_X86_ISA_1_USED = 0xc0010000,
+  GNU_PROPERTY_X86_FEATURE_2_USED = 0xc0010001,
 };
 
-// AMDGPU specific notes.
+// aarch64 processor feature bits.
+enum : unsigned {
+  GNU_PROPERTY_AARCH64_FEATURE_1_BTI = 1 << 0,
+  GNU_PROPERTY_AARCH64_FEATURE_1_PAC = 1 << 1,
+};
+
+// x86 processor feature bits.
+enum : unsigned {
+  GNU_PROPERTY_X86_FEATURE_1_IBT = 1 << 0,
+  GNU_PROPERTY_X86_FEATURE_1_SHSTK = 1 << 1,
+
+  GNU_PROPERTY_X86_ISA_1_CMOV = 1 << 0,
+  GNU_PROPERTY_X86_ISA_1_SSE = 1 << 1,
+  GNU_PROPERTY_X86_ISA_1_SSE2 = 1 << 2,
+  GNU_PROPERTY_X86_ISA_1_SSE3 = 1 << 3,
+  GNU_PROPERTY_X86_ISA_1_SSSE3 = 1 << 4,
+  GNU_PROPERTY_X86_ISA_1_SSE4_1 = 1 << 5,
+  GNU_PROPERTY_X86_ISA_1_SSE4_2 = 1 << 6,
+  GNU_PROPERTY_X86_ISA_1_AVX = 1 << 7,
+  GNU_PROPERTY_X86_ISA_1_AVX2 = 1 << 8,
+  GNU_PROPERTY_X86_ISA_1_FMA = 1 << 9,
+  GNU_PROPERTY_X86_ISA_1_AVX512F = 1 << 10,
+  GNU_PROPERTY_X86_ISA_1_AVX512CD = 1 << 11,
+  GNU_PROPERTY_X86_ISA_1_AVX512ER = 1 << 12,
+  GNU_PROPERTY_X86_ISA_1_AVX512PF = 1 << 13,
+  GNU_PROPERTY_X86_ISA_1_AVX512VL = 1 << 14,
+  GNU_PROPERTY_X86_ISA_1_AVX512DQ = 1 << 15,
+  GNU_PROPERTY_X86_ISA_1_AVX512BW = 1 << 16,
+  GNU_PROPERTY_X86_ISA_1_AVX512_4FMAPS = 1 << 17,
+  GNU_PROPERTY_X86_ISA_1_AVX512_4VNNIW = 1 << 18,
+  GNU_PROPERTY_X86_ISA_1_AVX512_BITALG = 1 << 19,
+  GNU_PROPERTY_X86_ISA_1_AVX512_IFMA = 1 << 20,
+  GNU_PROPERTY_X86_ISA_1_AVX512_VBMI = 1 << 21,
+  GNU_PROPERTY_X86_ISA_1_AVX512_VBMI2 = 1 << 22,
+  GNU_PROPERTY_X86_ISA_1_AVX512_VNNI = 1 << 23,
+
+  GNU_PROPERTY_X86_FEATURE_2_X86 = 1 << 0,
+  GNU_PROPERTY_X86_FEATURE_2_X87 = 1 << 1,
+  GNU_PROPERTY_X86_FEATURE_2_MMX = 1 << 2,
+  GNU_PROPERTY_X86_FEATURE_2_XMM = 1 << 3,
+  GNU_PROPERTY_X86_FEATURE_2_YMM = 1 << 4,
+  GNU_PROPERTY_X86_FEATURE_2_ZMM = 1 << 5,
+  GNU_PROPERTY_X86_FEATURE_2_FXSR = 1 << 6,
+  GNU_PROPERTY_X86_FEATURE_2_XSAVE = 1 << 7,
+  GNU_PROPERTY_X86_FEATURE_2_XSAVEOPT = 1 << 8,
+  GNU_PROPERTY_X86_FEATURE_2_XSAVEC = 1 << 9,
+};
+
+// AMDGPU-specific section indices.
+enum {
+  SHN_AMDGPU_LDS = 0xff00, // Variable in LDS; symbol encoded like SHN_COMMON
+};
+
+// AMD specific notes. (Code Object V2)
 enum {
   // Note types with values between 0 and 9 (inclusive) are reserved.
   NT_AMD_AMDGPU_HSA_METADATA = 10,
   NT_AMD_AMDGPU_ISA = 11,
   NT_AMD_AMDGPU_PAL_METADATA = 12
+};
+
+// AMDGPU specific notes. (Code Object V3)
+enum {
+  // Note types with values between 0 and 31 (inclusive) are reserved.
+  NT_AMDGPU_METADATA = 32
 };
 
 enum {
@@ -1321,6 +1518,8 @@ enum {
   GNU_ABI_TAG_SYLLABLE = 5,
   GNU_ABI_TAG_NACL = 6,
 };
+
+constexpr const char *ELF_NOTE_GNU = "GNU";
 
 // Android packed relocation group flags.
 enum {

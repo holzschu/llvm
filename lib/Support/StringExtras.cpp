@@ -1,9 +1,8 @@
 //===-- StringExtras.cpp - Implement the StringExtras header --------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -58,13 +57,32 @@ void llvm::SplitString(StringRef Source,
   }
 }
 
-void llvm::PrintEscapedString(StringRef Name, raw_ostream &Out) {
+void llvm::printEscapedString(StringRef Name, raw_ostream &Out) {
   for (unsigned i = 0, e = Name.size(); i != e; ++i) {
     unsigned char C = Name[i];
-    if (isprint(C) && C != '\\' && C != '"')
+    if (C == '\\')
+      Out << '\\' << C;
+    else if (isPrint(C) && C != '"')
       Out << C;
     else
       Out << '\\' << hexdigit(C >> 4) << hexdigit(C & 0x0F);
+  }
+}
+
+void llvm::printHTMLEscaped(StringRef String, raw_ostream &Out) {
+  for (char C : String) {
+    if (C == '&')
+      Out << "&amp;";
+    else if (C == '<')
+      Out << "&lt;";
+    else if (C == '>')
+      Out << "&gt;";
+    else if (C == '\"')
+      Out << "&quot;";
+    else if (C == '\'')
+      Out << "&apos;";
+    else
+      Out << C;
   }
 }
 

@@ -1,9 +1,8 @@
 //===-- MipsISelDAGToDAG.cpp - A Dag to Dag Inst Selector for Mips --------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -24,6 +23,7 @@
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/SelectionDAGNodes.h"
+#include "llvm/CodeGen/StackProtector.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/Instructions.h"
@@ -46,6 +46,13 @@ using namespace llvm;
 // instructions for SelectionDAG operations.
 //===----------------------------------------------------------------------===//
 
+void MipsDAGToDAGISel::getAnalysisUsage(AnalysisUsage &AU) const {
+  // There are multiple MipsDAGToDAGISel instances added to the pass pipeline.
+  // We need to preserve StackProtector for the next one.
+  AU.addPreserved<StackProtector>();
+  SelectionDAGISel::getAnalysisUsage(AU);
+}
+
 bool MipsDAGToDAGISel::runOnMachineFunction(MachineFunction &MF) {
   Subtarget = &static_cast<const MipsSubtarget &>(MF.getSubtarget());
   bool Ret = SelectionDAGISel::runOnMachineFunction(MF);
@@ -58,7 +65,7 @@ bool MipsDAGToDAGISel::runOnMachineFunction(MachineFunction &MF) {
 /// getGlobalBaseReg - Output the instructions required to put the
 /// GOT address into a register.
 SDNode *MipsDAGToDAGISel::getGlobalBaseReg() {
-  unsigned GlobalBaseReg = MF->getInfo<MipsFunctionInfo>()->getGlobalBaseReg();
+  Register GlobalBaseReg = MF->getInfo<MipsFunctionInfo>()->getGlobalBaseReg();
   return CurDAG->getRegister(GlobalBaseReg, getTargetLowering()->getPointerTy(
                                                 CurDAG->getDataLayout()))
       .getNode();
@@ -210,6 +217,51 @@ bool MipsDAGToDAGISel::selectVSplatMaskR(SDValue N, SDValue &Imm) const {
   return false;
 }
 
+/// Convert vector addition with vector subtraction if that allows to encode
+/// constant as an immediate and thus avoid extra 'ldi' instruction.
+/// add X, <-1, -1...> --> sub X, <1, 1...>
+bool MipsDAGToDAGISel::selectVecAddAsVecSubIfProfitable(SDNode *Node) {
+  assert(Node->getOpcode() == ISD::ADD && "Should only get 'add' here.");
+
+  EVT VT = Node->getValueType(0);
+  assert(VT.isVector() && "Should only be called for vectors.");
+
+  SDValue X = Node->getOperand(0);
+  SDValue C = Node->getOperand(1);
+
+  auto *BVN = dyn_cast<BuildVectorSDNode>(C);
+  if (!BVN)
+    return false;
+
+  APInt SplatValue, SplatUndef;
+  unsigned SplatBitSize;
+  bool HasAnyUndefs;
+
+  if (!BVN->isConstantSplat(SplatValue, SplatUndef, SplatBitSize, HasAnyUndefs,
+                            8, !Subtarget->isLittle()))
+    return false;
+
+  auto IsInlineConstant = [](const APInt &Imm) { return Imm.isIntN(5); };
+
+  if (IsInlineConstant(SplatValue))
+    return false; // Can already be encoded as an immediate.
+
+  APInt NegSplatValue = 0 - SplatValue;
+  if (!IsInlineConstant(NegSplatValue))
+    return false; // Even if we negate it it won't help.
+
+  SDLoc DL(Node);
+
+  SDValue NegC = CurDAG->FoldConstantArithmetic(
+      ISD::SUB, DL, VT, CurDAG->getConstant(0, DL, VT).getNode(), C.getNode());
+  assert(NegC && "Constant-folding failed!");
+  SDValue NewNode = CurDAG->getNode(ISD::SUB, DL, VT, X, NegC);
+
+  ReplaceNode(Node, NewNode.getNode());
+  SelectCode(NewNode.getNode());
+  return true;
+}
+
 /// Select instructions not customized! Used for
 /// expanded, promoted and normal instructions
 void MipsDAGToDAGISel::Select(SDNode *Node) {
@@ -217,7 +269,7 @@ void MipsDAGToDAGISel::Select(SDNode *Node) {
 
   // If we have a custom node, we already have selected!
   if (Node->isMachineOpcode()) {
-    DEBUG(errs() << "== "; Node->dump(CurDAG); errs() << "\n");
+    LLVM_DEBUG(errs() << "== "; Node->dump(CurDAG); errs() << "\n");
     Node->setNodeId(-1);
     return;
   }
@@ -228,6 +280,12 @@ void MipsDAGToDAGISel::Select(SDNode *Node) {
 
   switch(Opcode) {
   default: break;
+
+  case ISD::ADD:
+    if (Node->getSimpleValueType(0).isVector() &&
+        selectVecAddAsVecSubIfProfitable(Node))
+      return;
+    break;
 
   // Get target GOT address.
   case ISD::GLOBAL_OFFSET_TABLE:

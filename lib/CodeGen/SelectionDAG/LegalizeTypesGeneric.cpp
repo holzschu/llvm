@@ -1,9 +1,8 @@
 //===-------- LegalizeTypesGeneric.cpp - Generic type legalization --------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -53,17 +52,11 @@ void DAGTypeLegalizer::ExpandRes_BITCAST(SDNode *N, SDValue &Lo, SDValue &Hi) {
     case TargetLowering::TypePromoteFloat:
       llvm_unreachable("Bitcast of a promotion-needing float should never need"
                        "expansion");
-    case TargetLowering::TypeSoftenFloat: {
-      // Expand the floating point operand only if it was converted to integers.
-      // Otherwise, it is a legal type like f128 that can be saved in a register.
-      auto SoftenedOp = GetSoftenedFloat(InOp);
-      if (isLegalInHWReg(SoftenedOp.getValueType()))
-        break;
-      SplitInteger(SoftenedOp, Lo, Hi);
+    case TargetLowering::TypeSoftenFloat:
+      SplitInteger(GetSoftenedFloat(InOp), Lo, Hi);
       Lo = DAG.getNode(ISD::BITCAST, dl, NOutVT, Lo);
       Hi = DAG.getNode(ISD::BITCAST, dl, NOutVT, Hi);
       return;
-    }
     case TargetLowering::TypeExpandInteger:
     case TargetLowering::TypeExpandFloat: {
       auto &DL = DAG.getDataLayout();
@@ -300,6 +293,7 @@ void DAGTypeLegalizer::ExpandRes_VAARG(SDNode *N, SDValue &Lo, SDValue &Hi) {
 
   Lo = DAG.getVAArg(NVT, dl, Chain, Ptr, N->getOperand(2), Align);
   Hi = DAG.getVAArg(NVT, dl, Lo.getValue(1), Ptr, N->getOperand(2), 0);
+  Chain = Hi.getValue(1);
 
   // Handle endianness of the load.
   if (TLI.hasBigEndianPartOrdering(OVT, DAG.getDataLayout()))
@@ -307,7 +301,7 @@ void DAGTypeLegalizer::ExpandRes_VAARG(SDNode *N, SDValue &Lo, SDValue &Hi) {
 
   // Modified the chain - switch anything that used the old chain to use
   // the new one.
-  ReplaceValueWith(SDValue(N, 1), Hi.getValue(1));
+  ReplaceValueWith(SDValue(N, 1), Chain);
 }
 
 
@@ -326,7 +320,7 @@ void DAGTypeLegalizer::IntegerToVector(SDValue Op, unsigned NumElements,
     NumElements >>= 1;
     SplitInteger(Op, Parts[0], Parts[1]);
     if (DAG.getDataLayout().isBigEndian())
-        std::swap(Parts[0], Parts[1]);
+      std::swap(Parts[0], Parts[1]);
     IntegerToVector(Parts[0], NumElements, Ops, EltVT);
     IntegerToVector(Parts[1], NumElements, Ops, EltVT);
   } else {
@@ -509,23 +503,6 @@ void DAGTypeLegalizer::SplitRes_MERGE_VALUES(SDNode *N, unsigned ResNo,
   GetSplitOp(Op, Lo, Hi);
 }
 
-static std::pair<SDValue, SDValue> SplitVSETCC(const SDNode *N,
-                                               SelectionDAG &DAG) {
-  SDLoc DL(N);
-  EVT LoVT, HiVT;
-  std::tie(LoVT, HiVT) = DAG.GetSplitDestVTs(N->getValueType(0));
-
-  // Split the inputs.
-  SDValue Lo, Hi, LL, LH, RL, RH;
-  std::tie(LL, LH) = DAG.SplitVectorOperand(N, 0);
-  std::tie(RL, RH) = DAG.SplitVectorOperand(N, 1);
-
-  Lo = DAG.getNode(N->getOpcode(), DL, LoVT, LL, RL, N->getOperand(2));
-  Hi = DAG.getNode(N->getOpcode(), DL, HiVT, LH, RH, N->getOperand(2));
-
-  return std::make_pair(Lo, Hi);
-}
-
 void DAGTypeLegalizer::SplitRes_SELECT(SDNode *N, SDValue &Lo, SDValue &Hi) {
   SDValue LL, LH, RL, RH, CL, CH;
   SDLoc dl(N);
@@ -537,16 +514,25 @@ void DAGTypeLegalizer::SplitRes_SELECT(SDNode *N, SDValue &Lo, SDValue &Hi) {
   if (Cond.getValueType().isVector()) {
     if (SDValue Res = WidenVSELECTAndMask(N))
       std::tie(CL, CH) = DAG.SplitVector(Res->getOperand(0), dl);
-    // It seems to improve code to generate two narrow SETCCs as opposed to
-    // splitting a wide result vector.
-    else if (Cond.getOpcode() == ISD::SETCC)
-      std::tie(CL, CH) = SplitVSETCC(Cond.getNode(), DAG);
     // Check if there are already splitted versions of the vector available and
     // use those instead of splitting the mask operand again.
     else if (getTypeAction(Cond.getValueType()) ==
              TargetLowering::TypeSplitVector)
       GetSplitVector(Cond, CL, CH);
-    else
+    // It seems to improve code to generate two narrow SETCCs as opposed to
+    // splitting a wide result vector.
+    else if (Cond.getOpcode() == ISD::SETCC) {
+      // If the condition is a vXi1 vector, and the LHS of the setcc is a legal
+      // type and the setcc result type is the same vXi1, then leave the setcc
+      // alone.
+      EVT CondLHSVT = Cond.getOperand(0).getValueType();
+      if (Cond.getValueType().getVectorElementType() == MVT::i1 &&
+          isTypeLegal(CondLHSVT) &&
+          getSetCCResultType(CondLHSVT) == Cond.getValueType())
+        std::tie(CL, CH) = DAG.SplitVector(Cond, dl);
+      else
+        SplitVecRes_SETCC(Cond.getNode(), CL, CH);
+    } else
       std::tie(CL, CH) = DAG.SplitVector(Cond, dl);
   }
 

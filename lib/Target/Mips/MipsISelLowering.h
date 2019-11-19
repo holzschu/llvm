@@ -1,9 +1,8 @@
 //===- MipsISelLowering.h - Mips DAG Lowering Interface ---------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -83,6 +82,9 @@ class TargetRegisterClass;
 
       // Get the High 16 bits from a 32 bit immediate for accessing the GOT.
       GotHi,
+
+      // Get the High 16 bits from a 32-bit immediate for accessing TLS.
+      TlsHi,
 
       // Handle gp_rel (small data/bss sections) relocation.
       GPRel,
@@ -277,34 +279,37 @@ class TargetRegisterClass;
       return MVT::i32;
     }
 
+    EVT getTypeForExtReturn(LLVMContext &Context, EVT VT,
+                            ISD::NodeType) const override;
+
     bool isCheapToSpeculateCttz() const override;
     bool isCheapToSpeculateCtlz() const override;
+    bool shouldFoldConstantShiftPairToMask(const SDNode *N,
+                                           CombineLevel Level) const override;
 
     /// Return the register type for a given MVT, ensuring vectors are treated
     /// as a series of gpr sized integers.
-    MVT getRegisterTypeForCallingConv(MVT VT) const override;
-
-    /// Return the register type for a given MVT, ensuring vectors are treated
-    /// as a series of gpr sized integers.
-    MVT getRegisterTypeForCallingConv(LLVMContext &Context,
+    MVT getRegisterTypeForCallingConv(LLVMContext &Context, CallingConv::ID CC,
                                       EVT VT) const override;
 
     /// Return the number of registers for a given MVT, ensuring vectors are
     /// treated as a series of gpr sized integers.
     unsigned getNumRegistersForCallingConv(LLVMContext &Context,
+                                           CallingConv::ID CC,
                                            EVT VT) const override;
 
     /// Break down vectors to the correct number of gpr sized integers.
     unsigned getVectorTypeBreakdownForCallingConv(
-        LLVMContext &Context, EVT VT, EVT &IntermediateVT,
+        LLVMContext &Context, CallingConv::ID CC, EVT VT, EVT &IntermediateVT,
         unsigned &NumIntermediates, MVT &RegisterVT) const override;
 
     /// Return the correct alignment for the current calling convention.
-    unsigned getABIAlignmentForCallingConv(Type *ArgTy,
-                                           DataLayout DL) const override {
+    Align getABIAlignmentForCallingConv(Type *ArgTy,
+                                        DataLayout DL) const override {
+      const Align ABIAlign(DL.getABITypeAlignment(ArgTy));
       if (ArgTy->isVectorTy())
-        return std::min(DL.getABITypeAlignment(ArgTy), 8U);
-      return DL.getABITypeAlignment(ArgTy);
+        return std::min(ABIAlign, Align(8));
+      return ABIAlign;
     }
 
     ISD::NodeType getExtendForAtomicOps() const override {
@@ -338,10 +343,13 @@ class TargetRegisterClass;
     EmitInstrWithCustomInserter(MachineInstr &MI,
                                 MachineBasicBlock *MBB) const override;
 
+    void AdjustInstrPostInstrSelection(MachineInstr &MI,
+                                       SDNode *Node) const override;
+
     void HandleByVal(CCState *, unsigned &, unsigned) const override;
 
-    unsigned getRegisterByName(const char* RegName, EVT VT,
-                               SelectionDAG &DAG) const override;
+    Register getRegisterByName(const char* RegName, EVT VT,
+                               const MachineFunction &MF) const override;
 
     /// If a physical register, this returns the register that receives the
     /// exception address on entry to an EH pad.
@@ -646,9 +654,11 @@ class TargetRegisterClass;
 
     unsigned
     getInlineAsmMemConstraint(StringRef ConstraintCode) const override {
+      if (ConstraintCode == "o")
+        return InlineAsm::Constraint_o;
       if (ConstraintCode == "R")
         return InlineAsm::Constraint_R;
-      else if (ConstraintCode == "ZC")
+      if (ConstraintCode == "ZC")
         return InlineAsm::Constraint_ZC;
       return TargetLowering::getInlineAsmMemConstraint(ConstraintCode);
     }
@@ -663,12 +673,13 @@ class TargetRegisterClass;
                             unsigned SrcAlign,
                             bool IsMemset, bool ZeroMemset,
                             bool MemcpyStrSrc,
-                            MachineFunction &MF) const override;
+                            const AttributeList &FuncAttributes) const override;
 
     /// isFPImmLegal - Returns true if the target can instruction select the
     /// specified FP immediate natively. If false, the legalizer will
     /// materialize the FP immediate as a load from a constant pool.
-    bool isFPImmLegal(const APFloat &Imm, EVT VT) const override;
+    bool isFPImmLegal(const APFloat &Imm, EVT VT,
+                      bool ForCodeSize) const override;
 
     unsigned getJumpTableEncoding() const override;
     bool useSoftFloat() const override;
@@ -683,23 +694,21 @@ class TargetRegisterClass;
                                                 unsigned Size, unsigned DstReg,
                                                 unsigned SrcRec) const;
 
-    MachineBasicBlock *emitAtomicBinary(MachineInstr &MI, MachineBasicBlock *BB,
-                                        unsigned Size, unsigned BinOpcode,
-                                        bool Nand = false) const;
+    MachineBasicBlock *emitAtomicBinary(MachineInstr &MI,
+                                        MachineBasicBlock *BB) const;
     MachineBasicBlock *emitAtomicBinaryPartword(MachineInstr &MI,
                                                 MachineBasicBlock *BB,
-                                                unsigned Size,
-                                                unsigned BinOpcode,
-                                                bool Nand = false) const;
+                                                unsigned Size) const;
     MachineBasicBlock *emitAtomicCmpSwap(MachineInstr &MI,
-                                         MachineBasicBlock *BB,
-                                         unsigned Size) const;
+                                         MachineBasicBlock *BB) const;
     MachineBasicBlock *emitAtomicCmpSwapPartword(MachineInstr &MI,
                                                  MachineBasicBlock *BB,
                                                  unsigned Size) const;
     MachineBasicBlock *emitSEL_D(MachineInstr &MI, MachineBasicBlock *BB) const;
     MachineBasicBlock *emitPseudoSELECT(MachineInstr &MI, MachineBasicBlock *BB,
                                         bool isFPCmp, unsigned Opc) const;
+    MachineBasicBlock *emitPseudoD_SELECT(MachineInstr &MI,
+                                          MachineBasicBlock *BB) const;
   };
 
   /// Create MipsTargetLowering objects.

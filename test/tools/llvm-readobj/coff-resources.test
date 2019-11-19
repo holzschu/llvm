@@ -4,9 +4,9 @@
 // > rc /fo test_resource.res /nologo test_resource.rc
 // > cvtres /machine:X86 /readonly /nologo /out:test_resource.o test_resource.res
 
-RUN: llvm-readobj -coff-resources -section-data %p/Inputs/zero-string-table.obj.coff-i386 \
+RUN: llvm-readobj --coff-resources --section-data %p/Inputs/zero-string-table.obj.coff-i386 \
 RUN:   | FileCheck %s -check-prefix ZERO
-RUN: llvm-readobj -coff-resources %p/Inputs/resources/test_resource.obj.coff \
+RUN: llvm-readobj --coff-resources %p/Inputs/resources/test_resource.obj.coff \
 RUN:   | FileCheck %s -check-prefix TEST_RES
 
 ZERO:     Resources [
@@ -14,7 +14,7 @@ ZERO-NEXT:  Total Number of Resources: 1
 ZERO-NEXT:  Base Table Address: 0x188
 ZERO-DAG:   Number of String Entries: 0
 ZERO-NEXT:  Number of ID Entries: 1
-ZERO-NEXT:  Type: kRT_STRING (ID 6) [
+ZERO-NEXT:  Type: STRINGTABLE (ID 6) [
 ZERO-NEXT:    Table Offset: 0x18
 ZERO-NEXT:    Number of String Entries: 0
 ZERO-NEXT:    Number of ID Entries: 1
@@ -28,6 +28,17 @@ ZERO-NEXT:        Time/Date Stamp: 1970-01-01 00:00:00 (0x0)
 ZERO-NEXT:        Major Version: 0
 ZERO-NEXT:        Minor Version: 0
 ZERO-NEXT:        Characteristics: 0
+ZERO-NEXT:        Data [
+ZERO-NEXT:          DataRVA: 0x0
+ZERO-NEXT:          DataSize: 42
+ZERO-NEXT:          Codepage: 0
+ZERO-NEXT:          Reserved: 0
+ZERO-NEXT:          Data (
+ZERO-NEXT:            0000: 00000500 48006500 6C006C00 6F000000  |....H.e.l.l.o...|
+ZERO-NEXT:            0010: 00000000 00000000 00000000 00000000  |................|
+ZERO-NEXT:            0020: 00000000 00000000 0000               |..........|
+ZERO-NEXT:          )
+ZERO-NEXT:        ]
 ZERO-NEXT:      ]
 ZERO-NEXT:    ]
 ZERO-NEXT:  ]
@@ -37,7 +48,7 @@ TEST_RES-NEXT:  Total Number of Resources: 7
 TEST_RES-NEXT:  Base Table Address: 0x1C0  
 TEST_RES-DAG:   Number of String Entries: 0
 TEST_RES-NEXT:  Number of ID Entries: 4
-TEST_RES-NEXT:  Type: kRT_BITMAP (ID 2) [
+TEST_RES-NEXT:  Type: BITMAP (ID 2) [
 TEST_RES-NEXT:    Table Offset: 0x30
 TEST_RES-NEXT:    Number of String Entries: 2
 TEST_RES-NEXT:    Number of ID Entries: 0
@@ -51,6 +62,14 @@ TEST_RES-NEXT:        Time/Date Stamp: 1970-01-01 00:00:00 (0x0)
 TEST_RES-NEXT:        Major Version: 0
 TEST_RES-NEXT:        Minor Version: 0
 TEST_RES-NEXT:        Characteristics: 0
+TEST_RES-NEXT:        Data [
+TEST_RES-NEXT:          DataRVA: 0x0
+TEST_RES-NEXT:          DataSize: 808
+TEST_RES-NEXT:          Codepage: 0
+TEST_RES-NEXT:          Reserved: 0
+TEST_RES-NEXT:          Data (
+TEST_RES:               )
+TEST_RES-NEXT:        ]
 TEST_RES-NEXT:      ]
 TEST_RES-NEXT:    ]
 TEST_RES-NEXT:    Name: OKAY [
@@ -63,10 +82,18 @@ TEST_RES-NEXT:        Time/Date Stamp: 1970-01-01 00:00:00 (0x0)
 TEST_RES-NEXT:        Major Version: 0
 TEST_RES-NEXT:        Minor Version: 0
 TEST_RES-NEXT:        Characteristics: 0
+TEST_RES-NEXT:        Data [
+TEST_RES-NEXT:          DataRVA: 0x0
+TEST_RES-NEXT:          DataSize: 808
+TEST_RES-NEXT:          Codepage: 0
+TEST_RES-NEXT:          Reserved: 0
+TEST_RES-NEXT:          Data (
+TEST_RES:               )
+TEST_RES-NEXT:        ]
 TEST_RES-NEXT:      ]
 TEST_RES-NEXT:    ]
 TEST_RES-NEXT:  ]
-TEST_RES-NEXT:  Type: kRT_MENU (ID 4) [
+TEST_RES-NEXT:  Type: MENU (ID 4) [
 TEST_RES-NEXT:    Table Offset: 0x50
 TEST_RES-NEXT:    Number of String Entries: 1
 TEST_RES-NEXT:    Number of ID Entries: 1
@@ -80,6 +107,14 @@ TEST_RES-NEXT:        Time/Date Stamp: 1970-01-01 00:00:00 (0x0)
 TEST_RES-NEXT:        Major Version: 0
 TEST_RES-NEXT:        Minor Version: 0
 TEST_RES-NEXT:        Characteristics: 0
+TEST_RES-NEXT:        Data [
+TEST_RES-NEXT:          DataRVA: 0x0
+TEST_RES-NEXT:          DataSize: 48
+TEST_RES-NEXT:          Codepage: 0
+TEST_RES-NEXT:          Reserved: 0
+TEST_RES-NEXT:          Data (
+TEST_RES:               )
+TEST_RES-NEXT:        ]
 TEST_RES-NEXT:      ]
 TEST_RES-NEXT:    ]
 TEST_RES-NEXT:    Name: (ID 14432) [
@@ -92,10 +127,18 @@ TEST_RES-NEXT:        Time/Date Stamp: 1970-01-01 00:00:00 (0x0)
 TEST_RES-NEXT:        Major Version: 0
 TEST_RES-NEXT:        Minor Version: 0
 TEST_RES-NEXT:        Characteristics: 0
+TEST_RES-NEXT:        Data [
+TEST_RES-NEXT:          DataRVA: 0x0
+TEST_RES-NEXT:          DataSize: 46
+TEST_RES-NEXT:          Codepage: 0
+TEST_RES-NEXT:          Reserved: 0
+TEST_RES-NEXT:          Data (
+TEST_RES:               )
+TEST_RES-NEXT:        ]
 TEST_RES-NEXT:      ]
 TEST_RES-NEXT:    ]
 TEST_RES-NEXT:  ]
-TEST_RES-NEXT:  Type: kRT_DIALOG (ID 5) [
+TEST_RES-NEXT:  Type: DIALOG (ID 5) [
 TEST_RES-NEXT:    Table Offset: 0x70
 TEST_RES-NEXT:    Number of String Entries: 1
 TEST_RES-NEXT:    Number of ID Entries: 0
@@ -109,10 +152,18 @@ TEST_RES-NEXT:        Time/Date Stamp: 1970-01-01 00:00:00 (0x0)
 TEST_RES-NEXT:        Major Version: 0
 TEST_RES-NEXT:        Minor Version: 0
 TEST_RES-NEXT:        Characteristics: 0
+TEST_RES-NEXT:        Data [
+TEST_RES-NEXT:          DataRVA: 0x0
+TEST_RES-NEXT:          DataSize: 108
+TEST_RES-NEXT:          Codepage: 0
+TEST_RES-NEXT:          Reserved: 0
+TEST_RES-NEXT:          Data (
+TEST_RES:               )
+TEST_RES-NEXT:        ]
 TEST_RES-NEXT:      ]
 TEST_RES-NEXT:    ]
 TEST_RES-NEXT:  ]
-TEST_RES-NEXT:  Type: kRT_ACCELERATOR (ID 9) [
+TEST_RES-NEXT:  Type: ACCELERATOR (ID 9) [
 TEST_RES-NEXT:    Table Offset: 0x88
 TEST_RES-NEXT:    Number of String Entries: 1
 TEST_RES-NEXT:    Number of ID Entries: 1
@@ -126,6 +177,14 @@ TEST_RES-NEXT:        Time/Date Stamp: 1970-01-01 00:00:00 (0x0)
 TEST_RES-NEXT:        Major Version: 0
 TEST_RES-NEXT:        Minor Version: 0
 TEST_RES-NEXT:        Characteristics: 0
+TEST_RES-NEXT:        Data [
+TEST_RES-NEXT:          DataRVA: 0x0
+TEST_RES-NEXT:          DataSize: 24
+TEST_RES-NEXT:          Codepage: 0
+TEST_RES-NEXT:          Reserved: 0
+TEST_RES-NEXT:          Data (
+TEST_RES:               )
+TEST_RES-NEXT:        ]
 TEST_RES-NEXT:      ]
 TEST_RES-NEXT:    ]
 TEST_RES-NEXT:    Name: (ID 12) [
@@ -138,6 +197,14 @@ TEST_RES-NEXT:        Time/Date Stamp: 1970-01-01 00:00:00 (0x0)
 TEST_RES-NEXT:        Major Version: 0
 TEST_RES-NEXT:        Minor Version: 0
 TEST_RES-NEXT:        Characteristics: 0
+TEST_RES-NEXT:        Data [
+TEST_RES-NEXT:          DataRVA: 0x0
+TEST_RES-NEXT:          DataSize: 24
+TEST_RES-NEXT:          Codepage: 0
+TEST_RES-NEXT:          Reserved: 0
+TEST_RES-NEXT:          Data (
+TEST_RES:               )
+TEST_RES-NEXT:        ]
 TEST_RES-NEXT:      ]
 TEST_RES-NEXT:    ]
 TEST_RES-NEXT:  ]

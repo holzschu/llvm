@@ -1,9 +1,8 @@
 //===-- X86InstrVMX.td - TSX Instruction Set Extension -----*- tablegen -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -46,7 +45,7 @@ def XTEST : I<0x01, MRM_D6, (outs), (ins),
 
 def XABORT : Ii8<0xc6, MRM_F8, (outs), (ins i8imm:$imm),
                  "xabort\t$imm",
-                 [(int_x86_xabort imm:$imm)]>, Requires<[HasRTM]>;
+                 [(int_x86_xabort timm:$imm)]>, Requires<[HasRTM]>;
 } // SchedRW
 
 // HLE prefixes

@@ -1,9 +1,8 @@
 //===- ELFTypes.h - Endian specific types for ELF ---------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -43,6 +42,7 @@ template <class ELFT> struct Elf_Chdr_Impl;
 template <class ELFT> struct Elf_Nhdr_Impl;
 template <class ELFT> class Elf_Note_Impl;
 template <class ELFT> class Elf_Note_Iterator_Impl;
+template <class ELFT> struct Elf_CGProfile_Impl;
 
 template <endianness E, bool Is64> struct ELFType {
 private:
@@ -61,6 +61,7 @@ public:
   using Phdr = Elf_Phdr_Impl<ELFType<E, Is64>>;
   using Rel = Elf_Rel_Impl<ELFType<E, Is64>, false>;
   using Rela = Elf_Rel_Impl<ELFType<E, Is64>, true>;
+  using Relr = packed<uint>;
   using Verdef = Elf_Verdef_Impl<ELFType<E, Is64>>;
   using Verdaux = Elf_Verdaux_Impl<ELFType<E, Is64>>;
   using Verneed = Elf_Verneed_Impl<ELFType<E, Is64>>;
@@ -72,11 +73,13 @@ public:
   using Nhdr = Elf_Nhdr_Impl<ELFType<E, Is64>>;
   using Note = Elf_Note_Impl<ELFType<E, Is64>>;
   using NoteIterator = Elf_Note_Iterator_Impl<ELFType<E, Is64>>;
+  using CGProfile = Elf_CGProfile_Impl<ELFType<E, Is64>>;
   using DynRange = ArrayRef<Dyn>;
   using ShdrRange = ArrayRef<Shdr>;
   using SymRange = ArrayRef<Sym>;
   using RelRange = ArrayRef<Rel>;
   using RelaRange = ArrayRef<Rela>;
+  using RelrRange = ArrayRef<Relr>;
   using PhdrRange = ArrayRef<Phdr>;
 
   using Half = packed<uint16_t>;
@@ -148,7 +151,7 @@ struct Elf_Shdr_Impl : Elf_Shdr_Base<ELFT> {
   using Elf_Shdr_Base<ELFT>::sh_entsize;
   using Elf_Shdr_Base<ELFT>::sh_size;
 
-  /// @brief Get the number of entities this section contains if it has any.
+  /// Get the number of entities this section contains if it has any.
   unsigned getEntityCount() const {
     if (sh_entsize == 0)
       return 0;
@@ -245,7 +248,11 @@ template <class ELFT>
 Expected<StringRef> Elf_Sym_Impl<ELFT>::getName(StringRef StrTab) const {
   uint32_t Offset = this->st_name;
   if (Offset >= StrTab.size())
-    return errorCodeToError(object_error::parse_failed);
+    return createStringError(object_error::parse_failed,
+                             "st_name (0x%" PRIx32
+                             ") is past the end of the string table"
+                             " of size 0x%zx",
+                             Offset, StrTab.size());
   return StringRef(StrTab.data() + Offset);
 }
 
@@ -589,9 +596,9 @@ class Elf_Note_Impl {
 
   template <class NoteIteratorELFT> friend class Elf_Note_Iterator_Impl;
 
+public:
   Elf_Note_Impl(const Elf_Nhdr_Impl<ELFT> &Nhdr) : Nhdr(Nhdr) {}
 
-public:
   /// Get the note's name, excluding the terminating null byte.
   StringRef getName() const {
     if (!Nhdr.n_namesz)
@@ -601,13 +608,12 @@ public:
   }
 
   /// Get the note's descriptor.
-  ArrayRef<Elf_Word> getDesc() const {
+  ArrayRef<uint8_t> getDesc() const {
     if (!Nhdr.n_descsz)
-      return ArrayRef<Elf_Word>();
-    return ArrayRef<Elf_Word>(
-        reinterpret_cast<const Elf_Word *>(
-            reinterpret_cast<const uint8_t *>(&Nhdr) + sizeof(Nhdr) +
-            alignTo<Elf_Nhdr_Impl<ELFT>::Align>(Nhdr.n_namesz)),
+      return ArrayRef<uint8_t>();
+    return ArrayRef<uint8_t>(
+        reinterpret_cast<const uint8_t *>(&Nhdr) + sizeof(Nhdr) +
+          alignTo<Elf_Nhdr_Impl<ELFT>::Align>(Nhdr.n_namesz),
         Nhdr.n_descsz);
   }
 
@@ -639,14 +645,19 @@ class Elf_Note_Iterator_Impl
   // container, either cleanly or with an overflow error.
   void advanceNhdr(const uint8_t *NhdrPos, size_t NoteSize) {
     RemainingSize -= NoteSize;
-    if (RemainingSize == 0u)
+    if (RemainingSize == 0u) {
+      // Ensure that if the iterator walks to the end, the error is checked
+      // afterwards.
+      *Err = Error::success();
       Nhdr = nullptr;
-    else if (sizeof(*Nhdr) > RemainingSize)
+    } else if (sizeof(*Nhdr) > RemainingSize)
       stopWithOverflowError();
     else {
       Nhdr = reinterpret_cast<const Elf_Nhdr_Impl<ELFT> *>(NhdrPos + NoteSize);
       if (Nhdr->getSize() > RemainingSize)
         stopWithOverflowError();
+      else
+        *Err = Error::success();
     }
   }
 
@@ -654,6 +665,7 @@ class Elf_Note_Iterator_Impl
   explicit Elf_Note_Iterator_Impl(Error &Err) : Err(&Err) {}
   Elf_Note_Iterator_Impl(const uint8_t *Start, size_t Size, Error &Err)
       : RemainingSize(Size), Err(&Err) {
+    consumeError(std::move(Err));
     assert(Start && "ELF note iterator starting at NULL");
     advanceNhdr(Start, 0u);
   }
@@ -667,6 +679,10 @@ public:
     return *this;
   }
   bool operator==(Elf_Note_Iterator_Impl Other) const {
+    if (!Nhdr && Other.Err)
+      (void)(bool)(*Other.Err);
+    if (!Other.Nhdr && Err)
+      (void)(bool)(*Err);
     return Nhdr == Other.Nhdr;
   }
   bool operator!=(Elf_Note_Iterator_Impl Other) const {
@@ -676,6 +692,13 @@ public:
     assert(Nhdr && "dereferenced ELF note end iterator");
     return Elf_Note_Impl<ELFT>(*Nhdr);
   }
+};
+
+template <class ELFT> struct Elf_CGProfile_Impl {
+  LLVM_ELF_IMPORT_TYPES_ELFT(ELFT)
+  Elf_Word cgp_from;
+  Elf_Word cgp_to;
+  Elf_Xword cgp_weight;
 };
 
 // MIPS .reginfo section

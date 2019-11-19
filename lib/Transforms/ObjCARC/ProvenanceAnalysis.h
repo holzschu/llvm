@@ -1,9 +1,8 @@
 //===- ProvenanceAnalysis.h - ObjC ARC Optimization -------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -28,6 +27,7 @@
 
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/Analysis/AliasAnalysis.h"
+#include "llvm/IR/ValueHandle.h"
 #include <utility>
 
 namespace llvm {
@@ -39,7 +39,7 @@ class Value;
 
 namespace objcarc {
 
-/// \brief This is similar to BasicAliasAnalysis, and it uses many of the same
+/// This is similar to BasicAliasAnalysis, and it uses many of the same
 /// techniques, except it uses special ObjC-specific reasoning about pointer
 /// relationships.
 ///
@@ -56,7 +56,7 @@ class ProvenanceAnalysis {
 
   CachedResultsTy CachedResults;
 
-  DenseMap<const Value *, const Value *> UnderlyingObjCPtrCache;
+  DenseMap<const Value *, WeakTrackingVH> UnderlyingObjCPtrCache;
 
   bool relatedCheck(const Value *A, const Value *B, const DataLayout &DL);
   bool relatedSelect(const SelectInst *A, const Value *B);

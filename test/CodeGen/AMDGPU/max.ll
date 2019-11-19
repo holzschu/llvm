@@ -1,5 +1,5 @@
-; RUN:  llc -amdgpu-scalarize-global-loads=false  -march=amdgcn < %s | FileCheck -check-prefix=SI -check-prefix=FUNC %s
-; RUN:  llc -amdgpu-scalarize-global-loads=false  -march=r600 -mcpu=cypress < %s | FileCheck -check-prefix=EG -check-prefix=FUNC %s
+; RUN: llc -march=amdgcn -mcpu=pitcairn < %s | FileCheck -enable-var-scope -check-prefix=SI -check-prefix=FUNC %s
+; RUN: llc -march=r600 -mcpu=cypress < %s | FileCheck -enable-var-scope -check-prefix=EG -check-prefix=FUNC %s
 
 
 ; FUNC-LABEL: {{^}}v_test_imax_sge_i32:
@@ -7,8 +7,10 @@
 
 ; EG: MAX_INT
 define amdgpu_kernel void @v_test_imax_sge_i32(i32 addrspace(1)* %out, i32 addrspace(1)* %aptr, i32 addrspace(1)* %bptr) nounwind {
+  %tid = call i32 @llvm.r600.read.tidig.x()
+  %gep.in = getelementptr inbounds i32, i32 addrspace(1)* %bptr, i32 %tid
   %a = load i32, i32 addrspace(1)* %aptr, align 4
-  %b = load i32, i32 addrspace(1)* %bptr, align 4
+  %b = load i32, i32 addrspace(1)* %gep.in, align 4
   %cmp = icmp sge i32 %a, %b
   %val = select i1 %cmp, i32 %a, i32 %b
   store i32 %val, i32 addrspace(1)* %out, align 4
@@ -27,8 +29,10 @@ define amdgpu_kernel void @v_test_imax_sge_i32(i32 addrspace(1)* %out, i32 addrs
 ; EG: MAX_INT
 ; EG: MAX_INT
 define amdgpu_kernel void @v_test_imax_sge_v4i32(<4 x i32> addrspace(1)* %out, <4 x i32> addrspace(1)* %aptr, <4 x i32> addrspace(1)* %bptr) nounwind {
+  %tid = call i32 @llvm.r600.read.tidig.x()
+  %gep.in = getelementptr inbounds <4 x i32>, <4 x i32> addrspace(1)* %bptr, i32 %tid
   %a = load <4 x i32>, <4 x i32> addrspace(1)* %aptr, align 4
-  %b = load <4 x i32>, <4 x i32> addrspace(1)* %bptr, align 4
+  %b = load <4 x i32>, <4 x i32> addrspace(1)* %gep.in, align 4
   %cmp = icmp sge <4 x i32> %a, %b
   %val = select <4 x i1> %cmp, <4 x i32> %a, <4 x i32> %b
   store <4 x i32> %val, <4 x i32> addrspace(1)* %out, align 4
@@ -101,8 +105,10 @@ define amdgpu_kernel void @s_test_imax_sgt_imm_v2i32(<2 x i32> addrspace(1)* %ou
 
 ; EG: MAX_INT
 define amdgpu_kernel void @v_test_imax_sgt_i32(i32 addrspace(1)* %out, i32 addrspace(1)* %aptr, i32 addrspace(1)* %bptr) nounwind {
+  %tid = call i32 @llvm.r600.read.tidig.x()
+  %gep.in = getelementptr inbounds i32, i32 addrspace(1)* %bptr, i32 %tid
   %a = load i32, i32 addrspace(1)* %aptr, align 4
-  %b = load i32, i32 addrspace(1)* %bptr, align 4
+  %b = load i32, i32 addrspace(1)* %gep.in, align 4
   %cmp = icmp sgt i32 %a, %b
   %val = select i1 %cmp, i32 %a, i32 %b
   store i32 %val, i32 addrspace(1)* %out, align 4
@@ -125,8 +131,10 @@ define amdgpu_kernel void @s_test_imax_sgt_i32(i32 addrspace(1)* %out, i32 %a, i
 
 ; EG: MAX_UINT
 define amdgpu_kernel void @v_test_umax_uge_i32(i32 addrspace(1)* %out, i32 addrspace(1)* %aptr, i32 addrspace(1)* %bptr) nounwind {
+  %tid = call i32 @llvm.r600.read.tidig.x()
+  %gep.in = getelementptr inbounds i32, i32 addrspace(1)* %bptr, i32 %tid
   %a = load i32, i32 addrspace(1)* %aptr, align 4
-  %b = load i32, i32 addrspace(1)* %bptr, align 4
+  %b = load i32, i32 addrspace(1)* %gep.in, align 4
   %cmp = icmp uge i32 %a, %b
   %val = select i1 %cmp, i32 %a, i32 %b
   store i32 %val, i32 addrspace(1)* %out, align 4
@@ -182,7 +190,9 @@ define amdgpu_kernel void @v_test_umax_uge_i8(i8 addrspace(1)* %out, i8 addrspac
 
 ; EG: MAX_UINT
 define amdgpu_kernel void @v_test_umax_ugt_i32(i32 addrspace(1)* %out, i32 addrspace(1)* %aptr, i32 addrspace(1)* %bptr) nounwind {
-  %a = load i32, i32 addrspace(1)* %aptr, align 4
+  %tid = call i32 @llvm.r600.read.tidig.x()
+  %gep.in = getelementptr inbounds i32, i32 addrspace(1)* %bptr, i32 %tid
+  %a = load i32, i32 addrspace(1)* %gep.in, align 4
   %b = load i32, i32 addrspace(1)* %bptr, align 4
   %cmp = icmp ugt i32 %a, %b
   %val = select i1 %cmp, i32 %a, i32 %b
@@ -216,14 +226,14 @@ define amdgpu_kernel void @s_test_umax_ugt_imm_v2i32(<2 x i32> addrspace(1)* %ou
 
 ; Make sure redundant and removed
 ; FUNC-LABEL: {{^}}simplify_demanded_bits_test_umax_ugt_i16:
-; SI-DAG: s_load_dword [[A:s[0-9]+]], {{s\[[0-9]+:[0-9]+\]}}, 0xb
-; SI-DAG: s_load_dword [[B:s[0-9]+]], {{s\[[0-9]+:[0-9]+\]}}, 0xc
+; SI-DAG: s_load_dword [[A:s[0-9]+]], {{s\[[0-9]+:[0-9]+\]}}, 0x13
+; SI-DAG: s_load_dword [[B:s[0-9]+]], {{s\[[0-9]+:[0-9]+\]}}, 0x1c
 ; SI: s_max_u32 [[MAX:s[0-9]+]], [[A]], [[B]]
 ; SI: v_mov_b32_e32 [[VMAX:v[0-9]+]], [[MAX]]
 ; SI: buffer_store_dword [[VMAX]]
 
 ; EG: MAX_UINT
-define amdgpu_kernel void @simplify_demanded_bits_test_umax_ugt_i16(i32 addrspace(1)* %out, i16 zeroext %a, i16 zeroext %b) nounwind {
+define amdgpu_kernel void @simplify_demanded_bits_test_umax_ugt_i16(i32 addrspace(1)* %out, [8 x i32], i16 zeroext %a, [8 x i32], i16 zeroext %b) nounwind {
   %a.ext = zext i16 %a to i32
   %b.ext = zext i16 %b to i32
   %cmp = icmp ugt i32 %a.ext, %b.ext
@@ -236,14 +246,17 @@ define amdgpu_kernel void @simplify_demanded_bits_test_umax_ugt_i16(i32 addrspac
 ; Make sure redundant sign_extend_inreg removed.
 
 ; FUNC-LABEL: {{^}}simplify_demanded_bits_test_max_slt_i16:
-; SI-DAG: s_load_dword [[A:s[0-9]+]], {{s\[[0-9]+:[0-9]+\]}}, 0xb
-; SI-DAG: s_load_dword [[B:s[0-9]+]], {{s\[[0-9]+:[0-9]+\]}}, 0xc
-; SI: s_max_i32 [[MAX:s[0-9]+]], [[A]], [[B]]
+; SI-DAG: s_load_dword [[A:s[0-9]+]], {{s\[[0-9]+:[0-9]+\]}}, 0x13
+; SI-DAG: s_load_dword [[B:s[0-9]+]], {{s\[[0-9]+:[0-9]+\]}}, 0x1c
+; SI-DAG: s_sext_i32_i16 [[EXT_A:s[0-9]+]], [[A]]
+; SI-DAG: s_sext_i32_i16 [[EXT_B:s[0-9]+]], [[B]]
+
+; SI: s_max_i32 [[MAX:s[0-9]+]], [[EXT_A]], [[EXT_B]]
 ; SI: v_mov_b32_e32 [[VMAX:v[0-9]+]], [[MAX]]
 ; SI: buffer_store_dword [[VMAX]]
 
 ; EG: MAX_INT
-define amdgpu_kernel void @simplify_demanded_bits_test_max_slt_i16(i32 addrspace(1)* %out, i16 signext %a, i16 signext %b) nounwind {
+define amdgpu_kernel void @simplify_demanded_bits_test_max_slt_i16(i32 addrspace(1)* %out, [8 x i32], i16 signext %a, [8 x i32], i16 signext %b) nounwind {
   %a.ext = sext i16 %a to i32
   %b.ext = sext i16 %b to i32
   %cmp = icmp sgt i32 %a.ext, %b.ext
@@ -262,7 +275,7 @@ define amdgpu_kernel void @simplify_demanded_bits_test_max_slt_i16(i32 addrspace
 ; SI: s_max_i32
 
 ; EG: MAX_INT
-define amdgpu_kernel void @s_test_imax_sge_i16(i16 addrspace(1)* %out, i16 %a, i16 %b) nounwind {
+define amdgpu_kernel void @s_test_imax_sge_i16(i16 addrspace(1)* %out, [8 x i32], i16 %a, [8 x i32], i16 %b) nounwind {
   %cmp = icmp sge i16 %a, %b
   %val = select i1 %cmp, i16 %a, i16 %b
   store i16 %val, i16 addrspace(1)* %out
@@ -317,3 +330,9 @@ define amdgpu_kernel void @test_imax_sge_i64(i64 addrspace(1)* %out, i64 %a, i64
   store i64 %val, i64 addrspace(1)* %out, align 8
   ret void
 }
+
+
+declare i32 @llvm.r600.read.tidig.x() #0
+
+attributes #0 = { nounwind readnone }
+attributes #1 = { nounwind }

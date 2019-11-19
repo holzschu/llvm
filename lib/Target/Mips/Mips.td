@@ -1,9 +1,8 @@
 //===-- Mips.td - Describe the Mips Target Machine ---------*- tablegen -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 // This is the top level entry point for the Mips target.
@@ -26,6 +25,8 @@ class PredicateControl {
   list<Predicate> GPRPredicates = [];
   // Predicates for the PTR size such as IsPTR64bit
   list<Predicate> PTRPredicates = [];
+  // Predicates for a symbol's size such as hasSym32.
+  list<Predicate> SYMPredicates = [];
   // Predicates for the FGR size and layout such as IsFP64bit
   list<Predicate> FGRPredicates = [];
   // Predicates for the instruction group membership such as ISA's.
@@ -39,6 +40,7 @@ class PredicateControl {
   list<Predicate> Predicates = !listconcat(EncodingPredicates,
                                            GPRPredicates,
                                            PTRPredicates,
+                                           SYMPredicates,
                                            FGRPredicates,
                                            InsnPredicates,
                                            HardFloatPredicate,
@@ -83,6 +85,8 @@ def FeatureFPXX        : SubtargetFeature<"fpxx", "IsFPXX", "true",
                                 "Support for FPXX">;
 def FeatureNaN2008     : SubtargetFeature<"nan2008", "IsNaN2008bit", "true",
                                 "IEEE 754-2008 NaN encoding">;
+def FeatureAbs2008     : SubtargetFeature<"abs2008", "Abs2008", "true",
+                                          "Disable IEEE 754-2008 abs.fmt mode">;
 def FeatureSingleFloat : SubtargetFeature<"single-float", "IsSingleFloat",
                                 "true", "Only supports single precision float">;
 def FeatureSoftFloat   : SubtargetFeature<"soft-float", "IsSoftFloat", "true",
@@ -142,7 +146,7 @@ def FeatureMips32r6    : SubtargetFeature<"mips32r6", "MipsArchVersion",
                                 "Mips32r6",
                                 "Mips32r6 ISA Support [experimental]",
                                 [FeatureMips32r5, FeatureFP64Bit,
-                                 FeatureNaN2008]>;
+                                 FeatureNaN2008, FeatureAbs2008]>;
 def FeatureMips64      : SubtargetFeature<"mips64", "MipsArchVersion",
                                 "Mips64", "Mips64 ISA Support",
                                 [FeatureMips5, FeatureMips32]>;
@@ -159,7 +163,7 @@ def FeatureMips64r6    : SubtargetFeature<"mips64r6", "MipsArchVersion",
                                 "Mips64r6",
                                 "Mips64r6 ISA Support [experimental]",
                                 [FeatureMips32r6, FeatureMips64r5,
-                                 FeatureNaN2008]>;
+                                 FeatureNaN2008, FeatureAbs2008]>;
 def FeatureSym32       : SubtargetFeature<"sym32", "HasSym32", "true",
                                           "Symbols are 32 bit on Mips64">;
 
@@ -182,6 +186,9 @@ def FeatureCRC : SubtargetFeature<"crc", "HasCRC", "true", "Mips R6 CRC ASE">;
 def FeatureVirt : SubtargetFeature<"virt", "HasVirt", "true",
                                    "Mips Virtualization ASE">;
 
+def FeatureGINV : SubtargetFeature<"ginv", "HasGINV", "true",
+                                   "Mips Global Invalidate ASE">;
+
 def FeatureMicroMips  : SubtargetFeature<"micromips", "InMicroMipsMode", "true",
                                          "microMips mode">;
 
@@ -201,6 +208,9 @@ def FeatureMT : SubtargetFeature<"mt", "HasMT", "true", "Mips MT ASE">;
 
 def FeatureLongCalls : SubtargetFeature<"long-calls", "UseLongCalls", "true",
                                         "Disable use of the jal instruction">;
+
+def FeatureXGOT
+    : SubtargetFeature<"xgot", "UseXGOT", "true", "Assume 32-bit GOT">;
 
 def FeatureUseIndirectJumpsHazard : SubtargetFeature<"use-indirect-jump-hazard",
                                                     "UseIndirectJumpsHazard",
@@ -253,3 +263,9 @@ def Mips : Target {
   let AssemblyParserVariants = [MipsAsmParserVariant];
   let AllowRegisterRenaming = 1;
 }
+
+//===----------------------------------------------------------------------===//
+// Pfm Counters
+//===----------------------------------------------------------------------===//
+
+include "MipsPfmCounters.td"

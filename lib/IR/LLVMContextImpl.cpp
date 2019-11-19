@@ -1,9 +1,8 @@
 //===- LLVMContextImpl.cpp - Implement LLVMContextImpl --------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -22,7 +21,7 @@
 using namespace llvm;
 
 LLVMContextImpl::LLVMContextImpl(LLVMContext &C)
-  : DiagHandler(llvm::make_unique<DiagnosticHandler>()),
+  : DiagHandler(std::make_unique<DiagnosticHandler>()),
     VoidTy(C, Type::VoidTyID),
     LabelTy(C, Type::LabelTyID),
     HalfTy(C, Type::HalfTyID),
@@ -47,6 +46,14 @@ LLVMContextImpl::~LLVMContextImpl() {
   // the container. Avoid iterators during this operation:
   while (!OwnedModules.empty())
     delete *OwnedModules.begin();
+
+#ifndef NDEBUG
+  // Check for metadata references from leaked Instructions.
+  for (auto &Pair : InstructionMetadata)
+    Pair.first->dump();
+  assert(InstructionMetadata.empty() &&
+         "Instructions with metadata have been leaked");
+#endif
 
   // Drop references for MDNodes.  Do this before Values get deleted to avoid
   // unnecessary RAUW when nodes are still unresolved.
@@ -155,7 +162,7 @@ void Module::dropTriviallyDeadConstantArrays() {
 
 namespace llvm {
 
-/// \brief Make MDOperand transparent for hashing.
+/// Make MDOperand transparent for hashing.
 ///
 /// This overload of an implementation detail of the hashing library makes
 /// MDOperand hash to the same value as a \a Metadata pointer.

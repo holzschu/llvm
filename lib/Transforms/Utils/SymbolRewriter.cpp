@@ -1,9 +1,8 @@
 //===- SymbolRewriter.cpp - Symbol Rewriter -------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -381,11 +380,11 @@ parseRewriteFunctionDescriptor(yaml::Stream &YS, yaml::ScalarNode *K,
   // TODO see if there is a more elegant solution to selecting the rewrite
   // descriptor type
   if (!Target.empty())
-    DL->push_back(llvm::make_unique<ExplicitRewriteFunctionDescriptor>(
+    DL->push_back(std::make_unique<ExplicitRewriteFunctionDescriptor>(
         Source, Target, Naked));
   else
     DL->push_back(
-        llvm::make_unique<PatternRewriteFunctionDescriptor>(Source, Transform));
+        std::make_unique<PatternRewriteFunctionDescriptor>(Source, Transform));
 
   return true;
 }
@@ -443,11 +442,11 @@ parseRewriteGlobalVariableDescriptor(yaml::Stream &YS, yaml::ScalarNode *K,
   }
 
   if (!Target.empty())
-    DL->push_back(llvm::make_unique<ExplicitRewriteGlobalVariableDescriptor>(
+    DL->push_back(std::make_unique<ExplicitRewriteGlobalVariableDescriptor>(
         Source, Target,
         /*Naked*/ false));
   else
-    DL->push_back(llvm::make_unique<PatternRewriteGlobalVariableDescriptor>(
+    DL->push_back(std::make_unique<PatternRewriteGlobalVariableDescriptor>(
         Source, Transform));
 
   return true;
@@ -506,11 +505,11 @@ parseRewriteGlobalAliasDescriptor(yaml::Stream &YS, yaml::ScalarNode *K,
   }
 
   if (!Target.empty())
-    DL->push_back(llvm::make_unique<ExplicitRewriteNamedAliasDescriptor>(
+    DL->push_back(std::make_unique<ExplicitRewriteNamedAliasDescriptor>(
         Source, Target,
         /*Naked*/ false));
   else
-    DL->push_back(llvm::make_unique<PatternRewriteNamedAliasDescriptor>(
+    DL->push_back(std::make_unique<PatternRewriteNamedAliasDescriptor>(
         Source, Transform));
 
   return true;
@@ -536,7 +535,7 @@ private:
 char RewriteSymbolsLegacyPass::ID = 0;
 
 RewriteSymbolsLegacyPass::RewriteSymbolsLegacyPass() : ModulePass(ID) {
-  initializeRewriteSymbolsLegacyPassPass(*PassRegistry::getPassRegistry());  
+  initializeRewriteSymbolsLegacyPassPass(*PassRegistry::getPassRegistry());
 }
 
 RewriteSymbolsLegacyPass::RewriteSymbolsLegacyPass(
