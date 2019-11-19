@@ -51,6 +51,7 @@
 #undef exit
 #define exit(a) { llvm_shutdown(); ios_exit(a); }
 #endif
+#endif
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
