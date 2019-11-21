@@ -785,14 +785,17 @@ int main(int argc, char **argv, char * const *envp) {
     // function later on to make an explicit call, so get the function now.
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 	  // on iOS, normally, ForceInterpreter = true, but if your run the JIT you need this:
+	  FunctionCallee Exit;
 	  if (!ForceInterpreter) {
-		  FunctionCallee Exit = Mod->getOrInsertFunction("llvm_ios_exit", Type::getVoidTy(Context),
+		  Exit = Mod->getOrInsertFunction("llvm_ios_exit", Type::getVoidTy(Context),
                                                       Type::getInt32Ty(Context));
 	  } else 
-#endif
-		  FunctionCallee Exit = Mod->getOrInsertFunction(
+		  Exit = Mod->getOrInsertFunction(
 				  "exit", Type::getVoidTy(Context), Type::getInt32Ty(Context));
-
+#else 
+	  FunctionCallee Exit = Mod->getOrInsertFunction(
+				  "exit", Type::getVoidTy(Context), Type::getInt32Ty(Context));
+#endif
     // Run static constructors.
     if (!ForceInterpreter) {
       // Give MCJIT a chance to apply relocations and set page permissions.

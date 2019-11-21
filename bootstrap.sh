@@ -74,7 +74,7 @@ fi
 # compile ios_system where we want to find it:
 echo "Compiling ios_system:" 
 pushd $IOS_SYSTEM
-xcodebuild -project ios_system.xcodeproj -target ios_system -sdk iphoneos -configuration Debug -quiet
+xcodebuild -project ios_system.xcodeproj -target ios_system -sdk iphoneos -configuration Release -quiet
 popd
 
 # TODO: some combination of build variables might allow us to build these too. 
@@ -113,6 +113,7 @@ cmake -G Ninja \
 -DCMAKE_INCLUDE_PATH=${OSX_BUILDDIR}/include/ \
 -DCMAKE_C_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0  -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS  -I${OSX_BUILDDIR}/include/ -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11  " \
 -DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -stdlib=libc++ -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS -I${OSX_BUILDDIR}/include/  -I${IOS_SYSTEM} -miphoneos-version-min=11 " \
+-DCMAKE_MODULE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system -lobjc " \
 -DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system -lobjc " \
 -DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system -lobjc " \
 ..

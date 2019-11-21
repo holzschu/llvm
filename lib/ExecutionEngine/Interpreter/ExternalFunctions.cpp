@@ -656,7 +656,7 @@ void Interpreter::initializeExternalFunctions() {
   (*FuncNames)["lle_X_errx"]     = lle_X_errx;
   (*FuncNames)["lle_X_warn"]     = lle_X_warn;
   (*FuncNames)["lle_X_warnx"]     = lle_X_warnx;
-  // objective-C
-  (*FuncNames)["lle_X_objc_msgSend"]     = lle_X_objc_msgSend;
+  // objective-C -- todo again
+  // (*FuncNames)["lle_X_objc_msgSend"]     = lle_X_objc_msgSend;
 #endif
 }
