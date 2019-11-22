@@ -48,6 +48,7 @@
 #undef HAVE_POSIX_SPAWN // function is present, but not working
 #include "ios_error.h"
 #undef getenv 
+#define fork ios_fork
 #endif
 #endif
 
@@ -279,11 +280,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
 #endif
 
   // Create a child process.
-#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-	int child = 0;  // no fork available
-#else 
   int child = fork();
-#endif
   switch (child) {
     // An error occurred:  Return to the caller.
     case -1:
@@ -351,7 +348,9 @@ ProcessInfo sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
   int status;
   ProcessInfo WaitResult;
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-  // This is relatively crude, but there's not much we can do:
+  // iOS: just wait for the process to terminate
+  // TODO: check whether the more sophisticated version below works
+  // with latest iOS_system.
   WaitResult.Pid = waitpid(PI.Pid, &status, 0);
 #else
   struct sigaction Act, Old;

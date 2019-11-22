@@ -113,9 +113,9 @@ cmake -G Ninja \
 -DCMAKE_INCLUDE_PATH=${OSX_BUILDDIR}/include/ \
 -DCMAKE_C_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0  -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS  -I${OSX_BUILDDIR}/include/ -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11  " \
 -DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -stdlib=libc++ -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS -I${OSX_BUILDDIR}/include/  -I${IOS_SYSTEM} -miphoneos-version-min=11 " \
--DCMAKE_MODULE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system -lobjc " \
--DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system -lobjc " \
--DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Debug-iphoneos/ -framework ios_system -lobjc " \
+-DCMAKE_MODULE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Release-iphoneos/ -framework ios_system -lobjc " \
+-DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Release-iphoneos/ -framework ios_system -lobjc " \
+-DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Release-iphoneos/ -framework ios_system -lobjc " \
 ..
 ninja
 # Now build the static libraries for the executables:
@@ -123,7 +123,7 @@ rm -f lib/liblli.a
 # Xcode gets confused if a static and a dynamic library share the same name:
 rm -f lib/libclang_tool.a
 rm -f lib/libopt.a
-ar -r lib/liblli.a tools/lli/CMakeFiles/lli.dir/lli.cpp.o tools/lli/CMakeFiles/lli.dir/OrcLazyJIT.cpp.o 
+ar -r lib/liblli.a tools/lli/CMakeFiles/lli.dir/lli.cpp.o 
 ar -r lib/libclang_tool.a tools/clang/tools/driver/CMakeFiles/clang.dir/driver.cpp.o tools/clang/tools/driver/CMakeFiles/clang.dir/cc1_main.cpp.o tools/clang/tools/driver/CMakeFiles/clang.dir/cc1as_main.cpp.o tools/clang/tools/driver/CMakeFiles/clang.dir/cc1gen_reproducer_main.cpp.o  
 ar -r lib/libopt.a  tools/opt/CMakeFiles/opt.dir/AnalysisWrappers.cpp.o tools/opt/CMakeFiles/opt.dir/BreakpointPrinter.cpp.o tools/opt/CMakeFiles/opt.dir/Debugify.cpp.o tools/opt/CMakeFiles/opt.dir/GraphPrinters.cpp.o tools/opt/CMakeFiles/opt.dir/NewPMDriver.cpp.o tools/opt/CMakeFiles/opt.dir/PassPrinters.cpp.o tools/opt/CMakeFiles/opt.dir/PrintSCC.cpp.o tools/opt/CMakeFiles/opt.dir/opt.cpp.o
 # No need to make static libraries for these:
@@ -137,6 +137,6 @@ popd
 # mv $LLVM_SRCDIR/dontBuild/libcxxabi .
 # popd
 # And then build the frameworks from these static libraries:
-xcodebuild -project frameworks/frameworks.xcodeproj -alltargets -sdk iphoneos -configuration Debug -quiet
+xcodebuild -project frameworks/frameworks.xcodeproj -alltargets -sdk iphoneos -configuration Release -quiet
 cp build_ios/lib/libc++.1.0.dylib frameworks/libc++.1.dylib
 cp build_ios/lib/libc++abi.1.0.dylib frameworks/libc++abi.1.dylib

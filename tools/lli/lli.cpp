@@ -133,12 +133,6 @@ int llvm_ios_putw(int w, FILE *stream) {
 	if (fileno(stream) == STDERR_FILENO) return putw(w, thread_stderr); 
 	return putw(w, stream);
 }
-pid_t llvm_ios_fork(void) { return 0; } // Always go through the child branch
-pid_t llvm_ios_waitpid(pid_t pid, int *stat_loc, int options) {
-	pthread_join(ios_getLastThreadId(), NULL); // best we can do
-	if (stat_loc) *stat_loc = W_EXITCODE(ios_getCommandStatus(), 0); 
-	return 0; 
-}
 // 
 void llvm_ios_vwarn(const char *fmt, va_list args)
 {
@@ -607,8 +601,8 @@ int main(int argc, char **argv, char * const *envp) {
 	  sys::DynamicLibrary::AddSymbol("execvp", (void*)&ios_execv);
 	  sys::DynamicLibrary::AddSymbol("execve", (void*)&ios_execve);
 	  // External functions defined locally:
-	  sys::DynamicLibrary::AddSymbol("exit", (void*)&llvm_ios_exit);
-	  sys::DynamicLibrary::AddSymbol("_exit", (void*)&llvm_ios_exit);
+	  sys::DynamicLibrary::AddSymbol("exit", (void*)&ios_exit);
+	  sys::DynamicLibrary::AddSymbol("_exit", (void*)&ios_exit);
 	  sys::DynamicLibrary::AddSymbol("abort", (void*)&llvm_ios_abort);
 	  sys::DynamicLibrary::AddSymbol("putchar", (void*)&llvm_ios_putchar);
 	  sys::DynamicLibrary::AddSymbol("getchar", (void*)&llvm_ios_getchar);
@@ -617,14 +611,14 @@ int main(int argc, char **argv, char * const *envp) {
 	  // scanf, printf, write: redirect to right stream
 	  sys::DynamicLibrary::AddSymbol("printf", (void*)&llvm_ios_printf);
 	  sys::DynamicLibrary::AddSymbol("scanf", (void*)&llvm_ios_scanf);
-	  sys::DynamicLibrary::AddSymbol("write", (void*)&llvm_ios_write);
-	  sys::DynamicLibrary::AddSymbol("puts", (void*)&llvm_ios_puts);
-	  sys::DynamicLibrary::AddSymbol("fputs", (void*)&llvm_ios_fputs);
-	  sys::DynamicLibrary::AddSymbol("fputc", (void*)&llvm_ios_fputc);
-	  sys::DynamicLibrary::AddSymbol("putw", (void*)&llvm_ios_putw);
+	  sys::DynamicLibrary::AddSymbol("write", (void*)&ios_write);
+	  sys::DynamicLibrary::AddSymbol("puts", (void*)&ios_puts);
+	  sys::DynamicLibrary::AddSymbol("fputs", (void*)&ios_fputs);
+	  sys::DynamicLibrary::AddSymbol("fputc", (void*)&ios_fputc);
+	  sys::DynamicLibrary::AddSymbol("putw", (void*)&ios_putw);
 	  // fork, waitpid: minimal service here:
-	  sys::DynamicLibrary::AddSymbol("fork", (void*)&llvm_ios_fork);
-	  sys::DynamicLibrary::AddSymbol("waitpid", (void*)&llvm_ios_waitpid);
+	  sys::DynamicLibrary::AddSymbol("fork", (void*)&ios_fork);
+	  sys::DynamicLibrary::AddSymbol("waitpid", (void*)&ios_waitpid);
 	  // err, errx, warnx, warn (because they call exit)
 	  llvm_ios_progname = InputFile.c_str(); 
 	  sys::DynamicLibrary::AddSymbol("err", (void*)&llvm_ios_err);
@@ -1113,7 +1107,8 @@ void disallowOrcOptions() {
 }
 
 std::unique_ptr<FDRawChannel> launchRemote() {
-	// TODO. The usual.
+	// iOS: this function has not yet been converted even though it uses fork() because 
+	// it only applies to remote execution
 #ifndef LLVM_ON_UNIX
   llvm_unreachable("launchRemote not supported on non-Unix platforms");
 #else
