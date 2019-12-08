@@ -98,7 +98,7 @@ cmake -G Ninja \
 -DLLVM_LINK_LLVM_DYLIB=ON \
 -DLLVM_TARGET_ARCH=AArch64 \
 -DLLVM_TARGETS_TO_BUILD="AArch64" \
--DLLVM_DEFAULT_TARGET_TRIPLE=arm64-apple-darwin17.5.0 \
+-DLLVM_DEFAULT_TARGET_TRIPLE=arm64-apple-darwin19.0.0 \
 -DLLVM_ENABLE_FFI=ON \
 -DLLVM_ENABLE_THREADS=OFF \
 -DLLVM_ENABLE_TERMINFO=OFF \
@@ -111,25 +111,31 @@ cmake -G Ninja \
 -DCMAKE_C_COMPILER=${OSX_BUILDDIR}/bin/clang \
 -DCMAKE_LIBRARY_PATH=${OSX_BUILDDIR}/lib/ \
 -DCMAKE_INCLUDE_PATH=${OSX_BUILDDIR}/include/ \
--DCMAKE_C_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0  -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS  -I${OSX_BUILDDIR}/include/ -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11  " \
--DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin17.5.0 -stdlib=libc++ -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS -I${OSX_BUILDDIR}/include/  -I${IOS_SYSTEM} -miphoneos-version-min=11 " \
--DCMAKE_MODULE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Release-iphoneos/ -framework ios_system -lobjc " \
--DCMAKE_SHARED_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Release-iphoneos/ -framework ios_system -lobjc " \
--DCMAKE_EXE_LINKER_FLAGS="-F${IOS_SYSTEM}/build/Release-iphoneos/ -framework ios_system -lobjc " \
+-DCMAKE_C_FLAGS="-arch arm64 -target arm64-apple-darwin19.0.0 -O2 -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS  -I${OSX_BUILDDIR}/include/ -I${OSX_BUILDDIR}/include/c++/v1/ -I${IOS_SYSTEM} -miphoneos-version-min=11  " \
+-DCMAKE_CXX_FLAGS="-arch arm64 -target arm64-apple-darwin19.0.0 -O2 -D_LIBCPP_STRING_H_HAS_CONST_OVERLOADS -I${OSX_BUILDDIR}/include/  -I${IOS_SYSTEM} -miphoneos-version-min=11 " \
+-DCMAKE_MODULE_LINKER_FLAGS="-nostdlib -F${IOS_SYSTEM}/build/Release-iphoneos/ -O2 -framework ios_system -lobjc -lc -lc++" \
+-DCMAKE_SHARED_LINKER_FLAGS="-nostdlib -F${IOS_SYSTEM}/build/Release-iphoneos/ -O2 -framework ios_system -lobjc -lc -lc++" \
+-DCMAKE_EXE_LINKER_FLAGS="-nostdlib -F${IOS_SYSTEM}/build/Release-iphoneos/ -O2 -framework ios_system -lobjc -lc -lc++" \
 ..
 ninja
 # Now build the static libraries for the executables:
+# -stdlib=libc++: not required with OSX > Mavericks
+# -nostdlib: so ios_system is linked *before* libc and libc++ 
+# try with: -fvisibility=hidden -fvisibility-inlines-hidden in CFLAGS for the warning
+# -L lib = crashes every time (self-reference).
+# lli crashes, but only lli. When creating main() (before the first line)
 rm -f lib/liblli.a
 # Xcode gets confused if a static and a dynamic library share the same name:
 rm -f lib/libclang_tool.a
 rm -f lib/libopt.a
-ar -r lib/liblli.a tools/lli/CMakeFiles/lli.dir/lli.cpp.o 
 ar -r lib/libclang_tool.a tools/clang/tools/driver/CMakeFiles/clang.dir/driver.cpp.o tools/clang/tools/driver/CMakeFiles/clang.dir/cc1_main.cpp.o tools/clang/tools/driver/CMakeFiles/clang.dir/cc1as_main.cpp.o tools/clang/tools/driver/CMakeFiles/clang.dir/cc1gen_reproducer_main.cpp.o  
 ar -r lib/libopt.a  tools/opt/CMakeFiles/opt.dir/AnalysisWrappers.cpp.o tools/opt/CMakeFiles/opt.dir/BreakpointPrinter.cpp.o tools/opt/CMakeFiles/opt.dir/Debugify.cpp.o tools/opt/CMakeFiles/opt.dir/GraphPrinters.cpp.o tools/opt/CMakeFiles/opt.dir/NewPMDriver.cpp.o tools/opt/CMakeFiles/opt.dir/PassPrinters.cpp.o tools/opt/CMakeFiles/opt.dir/PrintSCC.cpp.o tools/opt/CMakeFiles/opt.dir/opt.cpp.o
 # No need to make static libraries for these:
+# lli: tools/lli/CMakeFiles/lli.dir/lli.cpp.o 
 # llvm-link: tools/llvm-link/CMakeFiles/llvm-link.dir/llvm-link.cpp.o
 # llvm-nm:  tools/llvm-nm/CMakeFiles/llvm-nm.dir/llvm-nm.cpp.o
 # llvm-dis:  tools/llvm-dis/CMakeFiles/llvm-dis.dir/llvm-dis.cpp.o
+# TODO, for Wasm: llc and ld.lld 
 popd
 # Move libcxx, libcxxabi back in place:
 # pushd projects

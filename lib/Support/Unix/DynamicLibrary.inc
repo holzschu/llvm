@@ -24,7 +24,7 @@ DynamicLibrary::HandleSet::~HandleSet() {
 }
 
 void *DynamicLibrary::HandleSet::DLOpen(const char *File, std::string *Err) {
-  fprintf(stderr, "DLOpen %s \n", File); fflush(stderr);
+  // fprintf(stderr, "DLOpen %s \n", File); fflush(stderr);
   void *Handle = ::dlopen(File, RTLD_LAZY|RTLD_GLOBAL);
   if (!Handle) {
 	  fprintf(stderr, "Could not load library %s: %s \n", File, ::dlerror()); fflush(stderr);
@@ -51,18 +51,18 @@ void *DynamicLibrary::HandleSet::DLSym(void *Handle, const char *Symbol) {
 	const char* symbolName = Symbol;
 	// Works, but why? deMangleName?
 	void* returnPtr = ::dlsym(Handle, symbolName);
-	fprintf(stderr, "Trying %s, got %x \n", symbolName, returnPtr);  fflush(stderr);  
+	// fprintf(stderr, "Trying %s, got %x \n", symbolName, returnPtr);  fflush(stderr);  
 	if (returnPtr) return returnPtr;
 	if (symbolName[0] == '\x01') {
 		symbolName += 1;
 		returnPtr = ::dlsym(Handle, symbolName);
-		fprintf(stderr, "Trying %s, got %x \n", symbolName, returnPtr);  fflush(stderr);  
+		// fprintf(stderr, "Trying %s, got %x \n", symbolName, returnPtr);  fflush(stderr);  
 	}
 	if (returnPtr) return returnPtr;
 	if (symbolName[0] == '_') {
 		symbolName += 1;
 		returnPtr = ::dlsym(Handle, symbolName);
-		fprintf(stderr, "Trying %s, got %x \n", symbolName, returnPtr);  fflush(stderr);  
+		// fprintf(stderr, "Trying %s, got %x \n", symbolName, returnPtr);  fflush(stderr);  
 	}
 	return returnPtr;
 #else

@@ -282,7 +282,11 @@ bool Process::FileDescriptorIsDisplayed(int fd) {
 
 static unsigned getColumns(int FileID) {
   // If COLUMNS is defined in the environment, wrap to that many columns.
+#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+  if (const char *ColumnsStr = ios_getenv("COLUMNS")) {
+#else 
   if (const char *ColumnsStr = std::getenv("COLUMNS")) {
+#endif 
     int Columns = std::atoi(ColumnsStr);
     if (Columns > 0)
       return Columns;

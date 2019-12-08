@@ -206,8 +206,12 @@ static void out_of_memory_new_handler() {
 // InitLLVM.
 void llvm::install_out_of_memory_new_handler() {
   std::new_handler old = std::set_new_handler(out_of_memory_new_handler);
+#if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
+    // We are sharing memory between threads on iOS.
+    // The handler could have been installed earlier without it being a bug.    
   (void)old;
   assert(old == nullptr && "new-handler already installed");
+#endif
 }
 #endif
 

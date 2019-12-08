@@ -22,7 +22,7 @@
 #include <TargetConditionals.h>
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 #include "ios_error.h"
-#include "llvm/Support/DynamicLibrary.h"
+// #include "llvm/Support/DynamicLibrary.h"
 #endif
 #endif
 
@@ -68,10 +68,8 @@ Interpreter::Interpreter(std::unique_ptr<Module> M)
   initializeExecutionEngine();
   initializeExternalFunctions();
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-  // Works without it if you don't need the ios_system modifications
-  // (writing to thread_stdout, calling system()...)
-  llvm::sys::DynamicLibrary::LoadLibraryPermanently("libc++.1.dylib");
-  llvm::sys::DynamicLibrary::LoadLibraryPermanently("libc++abi.1.dylib");
+  // llvm::sys::DynamicLibrary::LoadLibraryPermanently("libc++.1.dylib");
+  // llvm::sys::DynamicLibrary::LoadLibraryPermanently("libc++abi.1.dylib");
 #endif
   emitGlobals();
 

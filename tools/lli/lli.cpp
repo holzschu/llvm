@@ -67,7 +67,7 @@
 
 #ifdef __APPLE__
 #include <TargetConditionals.h>
-#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
 #include "ios_error.h"
 #undef write
 #include <stdio.h>
@@ -75,11 +75,6 @@
 #define exit(a) { llvm_shutdown(); ios_exit(a); }
 extern "C" {
 extern const char* llvm_ios_progname;
-// TODO: add these to the list of symbols, plus _dso_handle, plus __cxa_atexit
-// Q = interpreter only?
-// dso_handle *could* be the pointer for libstdc++?
-// raw_fd_ostream standard_out(STDOUT_FILENO, false, false);
-// raw_fd_ostream standard_err(STDERR_FILENO, false, true);
 
 void llvm_ios_exit(int a) { llvm_shutdown(); ios_exit(a); }
 void llvm_ios_abort(int a) { report_fatal_error("LLVM JIT compiled program raised SIGABRT"); }
@@ -87,16 +82,6 @@ int llvm_ios_putchar(char c) { return fputc(c, thread_stdout); }
 int llvm_ios_getchar(void) { return fgetc(thread_stdin); }
 wint_t llvm_ios_getwchar(void) { return fgetwc(thread_stdin); }
 int llvm_ios_iswprint(wint_t a) { return 1; }
-int llvm_ios_printf (const char *format, ...) {
-	va_list arg;
-	int done;
-
-	va_start (arg, format);
-	done = vfprintf (thread_stdout, format, arg);
-	va_end (arg);
-
-	return done;
-}
 int llvm_ios_scanf (const char *format, ...) {
     int             count;
     va_list ap;
@@ -107,22 +92,6 @@ int llvm_ios_scanf (const char *format, ...) {
     va_end (ap);
     return (count);
 }
-ssize_t llvm_ios_write(int fildes, const void *buf, size_t nbyte) {
-	if (fildes == STDOUT_FILENO) return write(fileno(thread_stdout), buf, nbyte); 
-	if (fildes == STDERR_FILENO) return write(fileno(thread_stderr), buf, nbyte); 
-	return write(fildes, buf, nbyte); 
-}
-int llvm_ios_puts(const char *s) {
-	// puts adds a newline at the end.
-	int returnValue = fputs(s, thread_stdout);
-	fputc('\n', thread_stdout); 
-	return returnValue;
-}
-int llvm_ios_fputs(const char* s, FILE *stream) {
-	if (fileno(stream) == STDOUT_FILENO) return fputs(s, thread_stdout); 
-	if (fileno(stream) == STDERR_FILENO) return fputs(s, thread_stderr); 
-	return fputs(s, stream);
-}
 int llvm_ios_fputc(int c, FILE *stream) {
 	if (fileno(stream) == STDOUT_FILENO) return fputc(c, thread_stdout); 
 	if (fileno(stream) == STDERR_FILENO) return fputc(c, thread_stderr); 
@@ -132,58 +101,6 @@ int llvm_ios_putw(int w, FILE *stream) {
 	if (fileno(stream) == STDOUT_FILENO) return putw(w, thread_stdout); 
 	if (fileno(stream) == STDERR_FILENO) return putw(w, thread_stderr); 
 	return putw(w, stream);
-}
-// 
-void llvm_ios_vwarn(const char *fmt, va_list args)
-{
-	fputs(llvm_ios_progname, thread_stderr);
-	if (fmt != NULL)
-	{
-		fputs(": ", thread_stderr);
-		vfprintf(thread_stderr, fmt, args);
-	}
-	fputs(": ", thread_stderr);
-	fputs(strerror(errno), thread_stderr);
-	putc('\n', thread_stderr);
-}
-
-void llvm_ios_vwarnx(const char *fmt, va_list args)
-{
-	fputs(llvm_ios_progname, thread_stderr);
-	fputs(": ", thread_stderr);
-	if (fmt != NULL)
-		vfprintf(thread_stderr, fmt, args);
-	putc('\n', thread_stderr);
-}
-// void err(int eval, const char *fmt, ...);
-void llvm_ios_err(int eval, const char *fmt, ...) {
-	va_list argptr;
-	va_start(argptr, fmt);
-	llvm_ios_vwarn(fmt, argptr);
-	va_end(argptr);
-	llvm_ios_exit(eval);
-}
-//	 void errx(int eval, const char *fmt, ...);
-void llvm_ios_errx(int eval, const char *fmt, ...) {
-	va_list argptr;
-	va_start(argptr, fmt);
-	llvm_ios_vwarnx(fmt, argptr);
-	va_end(argptr);
-	llvm_ios_exit(eval);
-}
-//   void warn(const char *fmt, ...);
-void llvm_ios_warn(const char *fmt, ...) {
-	va_list argptr;
-	va_start(argptr, fmt);
-	llvm_ios_vwarn(fmt, argptr);
-	va_end(argptr);
-}
-//   void warnx(const char *fmt, ...);
-void llvm_ios_warnx(const char *fmt, ...) {
-	va_list argptr;
-	va_start(argptr, fmt);
-	llvm_ios_vwarnx(fmt, argptr);
-	va_end(argptr);
 }
 }
 #endif
@@ -505,9 +422,9 @@ int main(int argc, char **argv, char * const *envp) {
   if (DisableCoreFiles)
     sys::Process::PreventCoreFiles();
 
-  if (UseJITKind == JITKind::OrcLazy)
+  if (UseJITKind == JITKind::OrcLazy) {
     return runOrcLazyJIT(argv[0]);
-  else
+  } else
     disallowOrcOptions();
 
   LLVMContext Context;
@@ -588,9 +505,6 @@ int main(int argc, char **argv, char * const *envp) {
 	  sys::DynamicLibrary::AddSymbol("__stdinp", &thread_stdin);
 	  sys::DynamicLibrary::AddSymbol("__stdoutp", &thread_stdout);
 	  sys::DynamicLibrary::AddSymbol("__stderrp", &thread_stderr);
-	  sys::DynamicLibrary::AddSymbol("thread_stdin", &thread_stdin);
-	  sys::DynamicLibrary::AddSymbol("thread_stdout", &thread_stdout);
-	  sys::DynamicLibrary::AddSymbol("thread_stderr", &thread_stderr);
 	  // External functions defined in ios_system:
 	  sys::DynamicLibrary::AddSymbol("system", (void*)&ios_system);
 	  sys::DynamicLibrary::AddSymbol("popen", (void*)&ios_popen);
@@ -603,13 +517,13 @@ int main(int argc, char **argv, char * const *envp) {
 	  // External functions defined locally:
 	  sys::DynamicLibrary::AddSymbol("exit", (void*)&ios_exit);
 	  sys::DynamicLibrary::AddSymbol("_exit", (void*)&ios_exit);
-	  sys::DynamicLibrary::AddSymbol("abort", (void*)&llvm_ios_abort);
+	  // sys::DynamicLibrary::AddSymbol("abort", (void*)&llvm_ios_abort);
 	  sys::DynamicLibrary::AddSymbol("putchar", (void*)&llvm_ios_putchar);
 	  sys::DynamicLibrary::AddSymbol("getchar", (void*)&llvm_ios_getchar);
 	  sys::DynamicLibrary::AddSymbol("getwchar", (void*)&llvm_ios_getwchar);
 	  sys::DynamicLibrary::AddSymbol("iswprint", (void*)&llvm_ios_iswprint);
 	  // scanf, printf, write: redirect to right stream
-	  sys::DynamicLibrary::AddSymbol("printf", (void*)&llvm_ios_printf);
+	  // printf, fprintf: already redirected to lle_X_printf in ExternalFunctions.cpp
 	  sys::DynamicLibrary::AddSymbol("scanf", (void*)&llvm_ios_scanf);
 	  sys::DynamicLibrary::AddSymbol("write", (void*)&ios_write);
 	  sys::DynamicLibrary::AddSymbol("puts", (void*)&ios_puts);
@@ -619,19 +533,9 @@ int main(int argc, char **argv, char * const *envp) {
 	  // fork, waitpid: minimal service here:
 	  sys::DynamicLibrary::AddSymbol("fork", (void*)&ios_fork);
 	  sys::DynamicLibrary::AddSymbol("waitpid", (void*)&ios_waitpid);
-	  // err, errx, warnx, warn (because they call exit)
+	  // err, errx, warnx, warn:  already redirected to lle_X_printf in ExternalFunctions.cpp
 	  llvm_ios_progname = InputFile.c_str(); 
-	  sys::DynamicLibrary::AddSymbol("err", (void*)&llvm_ios_err);
-	  sys::DynamicLibrary::AddSymbol("errx", (void*)&llvm_ios_errx);
-	  sys::DynamicLibrary::AddSymbol("warn", (void*)&llvm_ios_warn);
-	  sys::DynamicLibrary::AddSymbol("warnx", (void*)&llvm_ios_warnx);
-	  sys::DynamicLibrary::AddSymbol("vwarn", (void*)&llvm_ios_vwarn);
-	  sys::DynamicLibrary::AddSymbol("vwarnx", (void*)&llvm_ios_vwarnx);
-	  // External C++ symbols (todo)
-	  sys::DynamicLibrary::AddSymbol("__dso_handle", NULL);
-	  // sys::DynamicLibrary::AddSymbol("_ZSt4cout", &standard_out);
-	  // sys::DynamicLibrary::AddSymbol("_ZSt4cerr", &standard_err);
-#endif  
+#endif
 
   std::unique_ptr<ExecutionEngine> EE(builder.create());
   if (!EE) {

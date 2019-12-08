@@ -28,6 +28,15 @@
 #include <io.h>
 #endif
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "ios_error.h"
+#undef getenv
+#endif
+#endif
+
+
 using namespace llvm;
 using namespace llvm::support::endian;
 

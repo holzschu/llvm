@@ -47,6 +47,7 @@
 #if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 #undef HAVE_POSIX_SPAWN // function is present, but not working
 #include "ios_error.h"
+#include <libgen.h>
 #undef getenv 
 #define fork ios_fork
 #endif
@@ -287,8 +288,13 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
       MakeErrMsg(ErrMsg, "Couldn't fork");
       return false;
 
+#if (!TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR)
     // Child process: Execute the program.
     case 0: {
+#else  
+	// iOS: execute both branches each time
+	default: {
+#endif 
       // Redirect file descriptors...
       if (!Redirects.empty()) {
         // Redirect stdin
@@ -331,9 +337,11 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
 #endif 
     }
 
+#if (!TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR)
     // Parent process: Break out of the switch to do our processing.
     default:
       break;
+#endif 
   }
   PI.Pid = child;
   PI.Process = child;
