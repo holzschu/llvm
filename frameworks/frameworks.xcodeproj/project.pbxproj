@@ -130,9 +130,9 @@
 		22720AAB2386E9A3005BEB9E /* libLLVMJITLink.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AAA2386E9A3005BEB9E /* libLLVMJITLink.a */; };
 		22720AAF2386EBF7005BEB9E /* libclangToolingInclusions.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AAE2386EBF6005BEB9E /* libclangToolingInclusions.a */; };
 		22720AB12386EC03005BEB9E /* libclangToolingSyntax.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AB02386EC02005BEB9E /* libclangToolingSyntax.a */; };
-		22C505C9209A3B8700FDDFA9 /* liblli.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505C8209A3B8700FDDFA9 /* liblli.a */; };
 		22C505CD209A3CB500FDDFA9 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
 		22C505D1209A3CF700FDDFA9 /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505D0209A3CF700FDDFA9 /* ios_system.framework */; };
+		22F4B308238C8BD8002C1DD6 /* lli.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 22F4B307238C8BD8002C1DD6 /* lli.cpp.o */; };
 		22F9512F20AF0677006268D5 /* libobjc.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C1D2E720A841E60093127F /* libobjc.tbd */; };
 /* End PBXBuildFile section */
 
@@ -269,6 +269,7 @@
 		22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVM.dylib; path = ../build_ios/lib/libLLVM.dylib; sourceTree = "<group>"; };
 		22C505CC209A3CB500FDDFA9 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		22C505D0209A3CF700FDDFA9 /* ios_system.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ios_system.framework; path = "../../ios_system/build/Debug-iphoneos/ios_system.framework"; sourceTree = "<group>"; };
+		22F4B307238C8BD8002C1DD6 /* lli.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = lli.cpp.o; path = ../build_ios/tools/lli/CMakeFiles/lli.dir/lli.cpp.o; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -434,10 +435,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				22C505C9209A3B8700FDDFA9 /* liblli.a in Frameworks */,
 				223794CE209B571000B15016 /* libLLVM.framework in Frameworks */,
-				22C505CD209A3CB500FDDFA9 /* libc++.tbd in Frameworks */,
+				22F4B308238C8BD8002C1DD6 /* lli.cpp.o in Frameworks */,
 				22C505D1209A3CF700FDDFA9 /* ios_system.framework in Frameworks */,
+				22C505CD209A3CB500FDDFA9 /* libc++.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -530,6 +531,7 @@
 		22C505C7209A3B8700FDDFA9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				22F4B307238C8BD8002C1DD6 /* lli.cpp.o */,
 				22C1D2E720A841E60093127F /* libobjc.tbd */,
 				223794CC209B56AF00B15016 /* libcurses.tbd */,
 				223794CA209B568A00B15016 /* libz.tbd */,
@@ -1035,6 +1037,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = VG8Z23C8YL;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -1361,8 +1364,6 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-all_load",
-					"-L",
-					../build_ios/lib,
 					"-F",
 					"../../ios_system/build/Debug-iphoneos/",
 				);
@@ -1407,7 +1408,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_BITCODE = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1423,8 +1424,6 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = (
 					"-all_load",
-					"-L",
-					../build_ios/lib,
 					"-F",
 					"../../ios_system/build/Debug-iphoneos/",
 				);
