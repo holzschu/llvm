@@ -134,6 +134,11 @@
 		22C505D1209A3CF700FDDFA9 /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505D0209A3CF700FDDFA9 /* ios_system.framework */; };
 		22F4B308238C8BD8002C1DD6 /* lli.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 22F4B307238C8BD8002C1DD6 /* lli.cpp.o */; };
 		22F9512F20AF0677006268D5 /* libobjc.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C1D2E720A841E60093127F /* libobjc.tbd */; };
+		89DD5C61239CDE7100382F34 /* libLLVMWebAssemblyAsmParser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 89DD5C5D239CDE3D00382F34 /* libLLVMWebAssemblyAsmParser.a */; };
+		89DD5C62239CDE7100382F34 /* libLLVMWebAssemblyCodeGen.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 89DD5C5E239CDE3D00382F34 /* libLLVMWebAssemblyCodeGen.a */; };
+		89DD5C63239CDE7100382F34 /* libLLVMWebAssemblyDesc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 89DD5C5C239CDE3D00382F34 /* libLLVMWebAssemblyDesc.a */; };
+		89DD5C64239CDE7100382F34 /* libLLVMWebAssemblyDisassembler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 89DD5C5F239CDE3D00382F34 /* libLLVMWebAssemblyDisassembler.a */; };
+		89DD5C65239CDE7100382F34 /* libLLVMWebAssemblyInfo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 89DD5C60239CDE3D00382F34 /* libLLVMWebAssemblyInfo.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -270,6 +275,11 @@
 		22C505CC209A3CB500FDDFA9 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		22C505D0209A3CF700FDDFA9 /* ios_system.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ios_system.framework; path = "../../ios_system/build/Debug-iphoneos/ios_system.framework"; sourceTree = "<group>"; };
 		22F4B307238C8BD8002C1DD6 /* lli.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = lli.cpp.o; path = ../build_ios/tools/lli/CMakeFiles/lli.dir/lli.cpp.o; sourceTree = "<group>"; };
+		89DD5C5C239CDE3D00382F34 /* libLLVMWebAssemblyDesc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyDesc.a; path = ../build_ios/lib/libLLVMWebAssemblyDesc.a; sourceTree = "<group>"; };
+		89DD5C5D239CDE3D00382F34 /* libLLVMWebAssemblyAsmParser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyAsmParser.a; path = ../build_ios/lib/libLLVMWebAssemblyAsmParser.a; sourceTree = "<group>"; };
+		89DD5C5E239CDE3D00382F34 /* libLLVMWebAssemblyCodeGen.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyCodeGen.a; path = ../build_ios/lib/libLLVMWebAssemblyCodeGen.a; sourceTree = "<group>"; };
+		89DD5C5F239CDE3D00382F34 /* libLLVMWebAssemblyDisassembler.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyDisassembler.a; path = ../build_ios/lib/libLLVMWebAssemblyDisassembler.a; sourceTree = "<group>"; };
+		89DD5C60239CDE3D00382F34 /* libLLVMWebAssemblyInfo.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyInfo.a; path = ../build_ios/lib/libLLVMWebAssemblyInfo.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -428,6 +438,11 @@
 				223794C5209B557A00B15016 /* libLLVMBitReader.a in Frameworks */,
 				22379449209B554900B15016 /* libffi.a in Frameworks */,
 				22379447209B553100B15016 /* libllvm.cpp.o in Frameworks */,
+				89DD5C61239CDE7100382F34 /* libLLVMWebAssemblyAsmParser.a in Frameworks */,
+				89DD5C62239CDE7100382F34 /* libLLVMWebAssemblyCodeGen.a in Frameworks */,
+				89DD5C63239CDE7100382F34 /* libLLVMWebAssemblyDesc.a in Frameworks */,
+				89DD5C64239CDE7100382F34 /* libLLVMWebAssemblyDisassembler.a in Frameworks */,
+				89DD5C65239CDE7100382F34 /* libLLVMWebAssemblyInfo.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -531,6 +546,11 @@
 		22C505C7209A3B8700FDDFA9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				89DD5C5D239CDE3D00382F34 /* libLLVMWebAssemblyAsmParser.a */,
+				89DD5C5E239CDE3D00382F34 /* libLLVMWebAssemblyCodeGen.a */,
+				89DD5C5C239CDE3D00382F34 /* libLLVMWebAssemblyDesc.a */,
+				89DD5C5F239CDE3D00382F34 /* libLLVMWebAssemblyDisassembler.a */,
+				89DD5C60239CDE3D00382F34 /* libLLVMWebAssemblyInfo.a */,
 				22F4B307238C8BD8002C1DD6 /* lli.cpp.o */,
 				22C1D2E720A841E60093127F /* libobjc.tbd */,
 				223794CC209B56AF00B15016 /* libcurses.tbd */,
