@@ -139,6 +139,10 @@
 		89DD5C63239CDE7100382F34 /* libLLVMWebAssemblyDesc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 89DD5C5C239CDE3D00382F34 /* libLLVMWebAssemblyDesc.a */; };
 		89DD5C64239CDE7100382F34 /* libLLVMWebAssemblyDisassembler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 89DD5C5F239CDE3D00382F34 /* libLLVMWebAssemblyDisassembler.a */; };
 		89DD5C65239CDE7100382F34 /* libLLVMWebAssemblyInfo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 89DD5C60239CDE3D00382F34 /* libLLVMWebAssemblyInfo.a */; };
+		89058C32239E66F20094F4DE /* llc.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 89058C31239E66D10094F4DE /* llc.cpp.o */; };
+		89058C39239E7F860094F4DE /* llc.h in Headers */ = {isa = PBXBuildFile; fileRef = 89058C34239E7EFB0094F4DE /* llc.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		89DD5C6A239D1A1D00382F34 /* libLLVM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237943E209B523500B15016 /* libLLVM.framework */; };
+		89DD5C6B239D1A1D00382F34 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -280,6 +284,10 @@
 		89DD5C5E239CDE3D00382F34 /* libLLVMWebAssemblyCodeGen.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyCodeGen.a; path = ../build_ios/lib/libLLVMWebAssemblyCodeGen.a; sourceTree = "<group>"; };
 		89DD5C5F239CDE3D00382F34 /* libLLVMWebAssemblyDisassembler.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyDisassembler.a; path = ../build_ios/lib/libLLVMWebAssemblyDisassembler.a; sourceTree = "<group>"; };
 		89DD5C60239CDE3D00382F34 /* libLLVMWebAssemblyInfo.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyInfo.a; path = ../build_ios/lib/libLLVMWebAssemblyInfo.a; sourceTree = "<group>"; };
+		89058C31239E66D10094F4DE /* llc.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = llc.cpp.o; path = ../build_ios/tools/llc/CMakeFiles/llc.dir/llc.cpp.o; sourceTree = "<group>"; };
+		89058C34239E7EFB0094F4DE /* llc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = llc.h; sourceTree = "<group>"; };
+		89058C35239E7EFB0094F4DE /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		89DD5C73239D1A1D00382F34 /* llc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = llc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -457,6 +465,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		89DD5C68239D1A1D00382F34 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				89DD5C6A239D1A1D00382F34 /* libLLVM.framework in Frameworks */,
+				89058C32239E66F20094F4DE /* llc.cpp.o in Frameworks */,
+				89DD5C6B239D1A1D00382F34 /* libc++.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -518,6 +536,7 @@
 			isa = PBXGroup;
 			children = (
 				22379437209B51F200B15016 /* lli.h */,
+				89058C33239E7EFB0094F4DE /* llc */,
 				22379387209B028600B15016 /* clang */,
 				22379396209B047C00B15016 /* opt */,
 				223793FF209B2B8B00B15016 /* nm */,
@@ -539,6 +558,7 @@
 				22379411209B4E3900B15016 /* dis.framework */,
 				22379425209B4F2300B15016 /* link.framework */,
 				2237943E209B523500B15016 /* libLLVM.framework */,
+				89DD5C73239D1A1D00382F34 /* llc.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -546,6 +566,7 @@
 		22C505C7209A3B8700FDDFA9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				89058C31239E66D10094F4DE /* llc.cpp.o */,
 				89DD5C5D239CDE3D00382F34 /* libLLVMWebAssemblyAsmParser.a */,
 				89DD5C5E239CDE3D00382F34 /* libLLVMWebAssemblyCodeGen.a */,
 				89DD5C5C239CDE3D00382F34 /* libLLVMWebAssemblyDesc.a */,
@@ -668,6 +689,15 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		89058C33239E7EFB0094F4DE /* llc */ = {
+			isa = PBXGroup;
+			children = (
+				89058C34239E7EFB0094F4DE /* llc.h */,
+				89058C35239E7EFB0094F4DE /* Info.plist */,
+			);
+			path = llc;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -724,6 +754,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				22379438209B51F200B15016 /* lli.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		89058C38239E7F7B0094F4DE /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				89058C39239E7F860094F4DE /* llc.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -856,6 +894,24 @@
 			productReference = 22C505BC209A3B5800FDDFA9 /* lli.framework */;
 			productType = "com.apple.product-type.framework";
 		};
+		89DD5C66239D1A1D00382F34 /* llc */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 89DD5C70239D1A1D00382F34 /* Build configuration list for PBXNativeTarget "llc" */;
+			buildPhases = (
+				89DD5C67239D1A1D00382F34 /* Sources */,
+				89DD5C68239D1A1D00382F34 /* Frameworks */,
+				89058C38239E7F7B0094F4DE /* Headers */,
+				89DD5C6F239D1A1D00382F34 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = llc;
+			productName = frameworks;
+			productReference = 89DD5C73239D1A1D00382F34 /* llc.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -893,6 +949,9 @@
 						CreatedOnToolsVersion = 9.4;
 						ProvisioningStyle = Automatic;
 					};
+					89DD5C66239D1A1D00382F34 = {
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 22C505B6209A3B5800FDDFA9 /* Build configuration list for PBXProject "frameworks" */;
@@ -914,6 +973,7 @@
 				223793FD209B2B8B00B15016 /* nm */,
 				22379410209B4E3900B15016 /* dis */,
 				22379424209B4F2300B15016 /* link */,
+				89DD5C66239D1A1D00382F34 /* llc */,
 			);
 		};
 /* End PBXProject section */
@@ -968,6 +1028,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		89DD5C6F239D1A1D00382F34 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -1014,6 +1081,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		22C505B7209A3B5800FDDFA9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		89DD5C67239D1A1D00382F34 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1512,6 +1586,64 @@
 			};
 			name = Release;
 		};
+		89DD5C71239D1A1D00382F34 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/llc/Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				OTHER_LDFLAGS = (
+					"-all_load",
+					"-L",
+					../build_ios/lib/,
+					"-F",
+					"../../ios_system/build/Debug-iphoneos/",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.llc";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		89DD5C72239D1A1D00382F34 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/llc/Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				OTHER_LDFLAGS = (
+					"-all_load",
+					"-L",
+					../build_ios/lib/,
+					"-F",
+					"../../ios_system/build/Debug-iphoneos/",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.llc";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1583,6 +1715,15 @@
 			buildConfigurations = (
 				22C505C5209A3B5800FDDFA9 /* Debug */,
 				22C505C6209A3B5800FDDFA9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		89DD5C70239D1A1D00382F34 /* Build configuration list for PBXNativeTarget "llc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				89DD5C71239D1A1D00382F34 /* Debug */,
+				89DD5C72239D1A1D00382F34 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

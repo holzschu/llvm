@@ -126,6 +126,7 @@ ninja
 # -L lib = crashes every time (self-reference).
 # lli crashes, but only lli. When creating main() (before the first line)
 rm -f lib/liblli.a
+rm -f lib/libllc.a
 # Xcode gets confused if a static and a dynamic library share the same name:
 rm -f lib/libclang_tool.a
 rm -f lib/libopt.a
@@ -136,7 +137,8 @@ ar -r lib/libopt.a  tools/opt/CMakeFiles/opt.dir/AnalysisWrappers.cpp.o tools/op
 # llvm-link: tools/llvm-link/CMakeFiles/llvm-link.dir/llvm-link.cpp.o
 # llvm-nm:  tools/llvm-nm/CMakeFiles/llvm-nm.dir/llvm-nm.cpp.o
 # llvm-dis:  tools/llvm-dis/CMakeFiles/llvm-dis.dir/llvm-dis.cpp.o
-# TODO, for Wasm: llc and ld.lld 
+# llc: tools/llc/CMakeFiles/llc.dir/llc.cpp.o
+# TODO, for Wasm: ld.lld 
 popd
 # Move libcxx, libcxxabi back in place:
 # pushd projects
