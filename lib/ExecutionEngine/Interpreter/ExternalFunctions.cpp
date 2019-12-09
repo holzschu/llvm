@@ -604,25 +604,6 @@ static GenericValue lle_X_errx(FunctionType *FT, ArrayRef<GenericValue> Args) {
 	return GenericValue();
 }
 
-static GenericValue lle_X_vfprintf(FunctionType *FT,
-                                  ArrayRef<GenericValue> Args) {
-  assert(Args.size() >= 2);
-  FILE* stream = (FILE*) GVTOP(Args[0]);
-  char* format = (char*) GVTOP(Args[1]); 
-  va_list list = (va_list) GVTOP(Args[2]);
-    
-    int returnValue = 0;
-    fprintf(stderr, "Calling vfprintf: %x %s %s\n", stream, format, list);
-    if (stream == NULL) {
-        returnValue = -1;
-    } else {
-        returnValue = vfprintf(stream, format, list);
-    }
-  GenericValue GV;
-  GV.IntVal = APInt(32, returnValue);
-  return GV;
-}
-
 #if 0
 // Objective-C:
 static GenericValue lle_X_objc_msgSend(FunctionType *FT,
@@ -675,8 +656,6 @@ void Interpreter::initializeExternalFunctions() {
   (*FuncNames)["lle_X_errx"]     = lle_X_errx;
   (*FuncNames)["lle_X_warn"]     = lle_X_warn;
   (*FuncNames)["lle_X_warnx"]     = lle_X_warnx;
-  //
-  (*FuncNames)["lle_X_vfprintf"]      = lle_X_vfprintf;
   // objective-C -- todo again
   // (*FuncNames)["lle_X_objc_msgSend"]     = lle_X_objc_msgSend;
 #endif
