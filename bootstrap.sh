@@ -97,8 +97,7 @@ pushd $IOS_BUILDDIR
 cmake -G Ninja \
 -DLLVM_LINK_LLVM_DYLIB=ON \
 -DLLVM_TARGET_ARCH=AArch64 \
--DLLVM_TARGETS_TO_BUILD="AArch64" \
--DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly \
+-DLLVM_TARGETS_TO_BUILD="AArch64;WebAssembly" \
 -DLLVM_DEFAULT_TARGET_TRIPLE=arm64-apple-darwin19.0.0 \
 -DLLVM_ENABLE_FFI=ON \
 -DLLVM_ENABLE_THREADS=OFF \
@@ -147,5 +146,3 @@ popd
 # popd
 # And then build the frameworks from these static libraries:
 xcodebuild -project frameworks/frameworks.xcodeproj -alltargets -sdk iphoneos -configuration Release -quiet
-cp build_ios/lib/libc++.1.0.dylib frameworks/libc++.1.dylib
-cp build_ios/lib/libc++abi.1.0.dylib frameworks/libc++abi.1.dylib
