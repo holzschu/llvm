@@ -130,17 +130,129 @@
 		22720AAB2386E9A3005BEB9E /* libLLVMJITLink.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AAA2386E9A3005BEB9E /* libLLVMJITLink.a */; };
 		22720AAF2386EBF7005BEB9E /* libclangToolingInclusions.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AAE2386EBF6005BEB9E /* libclangToolingInclusions.a */; };
 		22720AB12386EC03005BEB9E /* libclangToolingSyntax.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AB02386EC02005BEB9E /* libclangToolingSyntax.a */; };
+		228B13ED23A81EC700FE5B43 /* libLLVM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237943E209B523500B15016 /* libLLVM.framework */; };
+		228B140E23A81EC700FE5B43 /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505D0209A3CF700FDDFA9 /* ios_system.framework */; };
+		228B141023A81EC700FE5B43 /* clang.h in Headers */ = {isa = PBXBuildFile; fileRef = 22379388209B028600B15016 /* clang.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		228B142323A81FA200FE5B43 /* LTO.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B141723A81FA200FE5B43 /* LTO.cpp.o */; };
+		228B142423A81FA200FE5B43 /* MarkLive.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B141823A81FA200FE5B43 /* MarkLive.cpp.o */; };
+		228B142523A81FA200FE5B43 /* WriterUtils.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B141923A81FA200FE5B43 /* WriterUtils.cpp.o */; };
+		228B142623A81FA200FE5B43 /* Writer.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B141A23A81FA200FE5B43 /* Writer.cpp.o */; };
+		228B142723A81FA200FE5B43 /* InputChunks.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B141B23A81FA200FE5B43 /* InputChunks.cpp.o */; };
+		228B142823A81FA300FE5B43 /* OutputSections.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B141C23A81FA200FE5B43 /* OutputSections.cpp.o */; };
+		228B142923A81FA300FE5B43 /* InputFiles.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B141D23A81FA200FE5B43 /* InputFiles.cpp.o */; };
+		228B142A23A81FA300FE5B43 /* Relocations.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B141E23A81FA200FE5B43 /* Relocations.cpp.o */; };
+		228B142B23A81FA300FE5B43 /* Symbols.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B141F23A81FA200FE5B43 /* Symbols.cpp.o */; };
+		228B142C23A81FA300FE5B43 /* Driver.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B142023A81FA200FE5B43 /* Driver.cpp.o */; };
+		228B142D23A81FA300FE5B43 /* SymbolTable.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B142123A81FA200FE5B43 /* SymbolTable.cpp.o */; };
+		228B142E23A81FA300FE5B43 /* SyntheticSections.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B142223A81FA200FE5B43 /* SyntheticSections.cpp.o */; };
+		228B143023A8200200FE5B43 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B142F23A8200200FE5B43 /* libc++.tbd */; };
+		228B143223A8201F00FE5B43 /* lld.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B143123A8201F00FE5B43 /* lld.cpp.o */; };
+		228B144223A8203300FE5B43 /* PDB.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B143323A8203300FE5B43 /* PDB.cpp.o */; };
+		228B144323A8203300FE5B43 /* InputFiles.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B143423A8203300FE5B43 /* InputFiles.cpp.o */; };
+		228B144423A8203300FE5B43 /* LTO.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B143523A8203300FE5B43 /* LTO.cpp.o */; };
+		228B144523A8203300FE5B43 /* DLL.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B143623A8203300FE5B43 /* DLL.cpp.o */; };
+		228B144623A8203400FE5B43 /* MinGW.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B143723A8203300FE5B43 /* MinGW.cpp.o */; };
+		228B144723A8203400FE5B43 /* SymbolTable.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B143823A8203300FE5B43 /* SymbolTable.cpp.o */; };
+		228B144823A8203400FE5B43 /* DebugTypes.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B143923A8203300FE5B43 /* DebugTypes.cpp.o */; };
+		228B144923A8203400FE5B43 /* ICF.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B143A23A8203300FE5B43 /* ICF.cpp.o */; };
+		228B144A23A8203400FE5B43 /* DriverUtils.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B143B23A8203300FE5B43 /* DriverUtils.cpp.o */; };
+		228B144B23A8203400FE5B43 /* Symbols.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B143C23A8203300FE5B43 /* Symbols.cpp.o */; };
+		228B144C23A8203400FE5B43 /* Chunks.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B143D23A8203300FE5B43 /* Chunks.cpp.o */; };
+		228B144D23A8203400FE5B43 /* Driver.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B143E23A8203300FE5B43 /* Driver.cpp.o */; };
+		228B144E23A8203400FE5B43 /* MarkLive.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B143F23A8203300FE5B43 /* MarkLive.cpp.o */; };
+		228B144F23A8203400FE5B43 /* Writer.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B144023A8203300FE5B43 /* Writer.cpp.o */; };
+		228B145023A8203400FE5B43 /* MapFile.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B144123A8203300FE5B43 /* MapFile.cpp.o */; };
+		228B145C23A8204A00FE5B43 /* Memory.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B145123A8204A00FE5B43 /* Memory.cpp.o */; };
+		228B145D23A8204A00FE5B43 /* Version.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B145223A8204A00FE5B43 /* Version.cpp.o */; };
+		228B145E23A8204A00FE5B43 /* Strings.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B145323A8204A00FE5B43 /* Strings.cpp.o */; };
+		228B145F23A8204A00FE5B43 /* Timer.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B145423A8204A00FE5B43 /* Timer.cpp.o */; };
+		228B146023A8204A00FE5B43 /* Reproduce.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B145523A8204A00FE5B43 /* Reproduce.cpp.o */; };
+		228B146123A8204A00FE5B43 /* TargetOptionsCommandFlags.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B145623A8204A00FE5B43 /* TargetOptionsCommandFlags.cpp.o */; };
+		228B146223A8204A00FE5B43 /* Filesystem.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B145723A8204A00FE5B43 /* Filesystem.cpp.o */; };
+		228B146323A8204A00FE5B43 /* ErrorHandler.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B145823A8204A00FE5B43 /* ErrorHandler.cpp.o */; };
+		228B146423A8204A00FE5B43 /* DWARF.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B145923A8204A00FE5B43 /* DWARF.cpp.o */; };
+		228B146523A8204A00FE5B43 /* Args.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B145A23A8204A00FE5B43 /* Args.cpp.o */; };
+		228B146623A8204A00FE5B43 /* Threads.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B145B23A8204A00FE5B43 /* Threads.cpp.o */; };
+		228B148023A8206A00FE5B43 /* Writer.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B146723A8206700FE5B43 /* Writer.cpp.o */; };
+		228B148123A8206A00FE5B43 /* InputSection.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B146823A8206700FE5B43 /* InputSection.cpp.o */; };
+		228B148223A8206A00FE5B43 /* DWARF.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B146923A8206700FE5B43 /* DWARF.cpp.o */; };
+		228B148323A8206A00FE5B43 /* AArch64ErrataFix.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B146A23A8206700FE5B43 /* AArch64ErrataFix.cpp.o */; };
+		228B148423A8206A00FE5B43 /* EhFrame.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B146B23A8206800FE5B43 /* EhFrame.cpp.o */; };
+		228B148523A8206A00FE5B43 /* Target.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B146C23A8206800FE5B43 /* Target.cpp.o */; };
+		228B148623A8206A00FE5B43 /* DriverUtils.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B146D23A8206800FE5B43 /* DriverUtils.cpp.o */; };
+		228B148723A8206A00FE5B43 /* InputFiles.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B146E23A8206800FE5B43 /* InputFiles.cpp.o */; };
+		228B148823A8206A00FE5B43 /* Relocations.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B146F23A8206800FE5B43 /* Relocations.cpp.o */; };
+		228B148923A8206A00FE5B43 /* OutputSections.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B147023A8206800FE5B43 /* OutputSections.cpp.o */; };
+		228B148A23A8206A00FE5B43 /* Driver.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B147123A8206800FE5B43 /* Driver.cpp.o */; };
+		228B148B23A8206A00FE5B43 /* ICF.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B147223A8206800FE5B43 /* ICF.cpp.o */; };
+		228B148C23A8206A00FE5B43 /* MarkLive.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B147323A8206800FE5B43 /* MarkLive.cpp.o */; };
+		228B148D23A8206A00FE5B43 /* ScriptParser.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B147423A8206900FE5B43 /* ScriptParser.cpp.o */; };
+		228B148E23A8206A00FE5B43 /* CallGraphSort.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B147523A8206900FE5B43 /* CallGraphSort.cpp.o */; };
+		228B148F23A8206A00FE5B43 /* LTO.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B147623A8206900FE5B43 /* LTO.cpp.o */; };
+		228B149023A8206A00FE5B43 /* SyntheticSections.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B147723A8206900FE5B43 /* SyntheticSections.cpp.o */; };
+		228B149223A8206A00FE5B43 /* ScriptLexer.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B147923A8206900FE5B43 /* ScriptLexer.cpp.o */; };
+		228B149323A8206A00FE5B43 /* SymbolTable.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B147A23A8206900FE5B43 /* SymbolTable.cpp.o */; };
+		228B149423A8206A00FE5B43 /* MapFile.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B147B23A8206900FE5B43 /* MapFile.cpp.o */; };
+		228B149523A8206A00FE5B43 /* ARMErrataFix.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B147C23A8206900FE5B43 /* ARMErrataFix.cpp.o */; };
+		228B149623A8206A00FE5B43 /* Thunks.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B147D23A8206900FE5B43 /* Thunks.cpp.o */; };
+		228B149723A8206A00FE5B43 /* Symbols.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B147E23A8206900FE5B43 /* Symbols.cpp.o */; };
+		228B149823A8206A00FE5B43 /* LinkerScript.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B147F23A8206A00FE5B43 /* LinkerScript.cpp.o */; };
+		228B14A723A8208100FE5B43 /* RISCV.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B149923A8208100FE5B43 /* RISCV.cpp.o */; };
+		228B14A823A8208100FE5B43 /* X86_64.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B149A23A8208100FE5B43 /* X86_64.cpp.o */; };
+		228B14A923A8208100FE5B43 /* ARM.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B149B23A8208100FE5B43 /* ARM.cpp.o */; };
+		228B14AA23A8208100FE5B43 /* MipsArchTree.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B149C23A8208100FE5B43 /* MipsArchTree.cpp.o */; };
+		228B14AB23A8208100FE5B43 /* AArch64.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B149D23A8208100FE5B43 /* AArch64.cpp.o */; };
+		228B14AC23A8208100FE5B43 /* AMDGPU.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B149E23A8208100FE5B43 /* AMDGPU.cpp.o */; };
+		228B14AD23A8208100FE5B43 /* Hexagon.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B149F23A8208100FE5B43 /* Hexagon.cpp.o */; };
+		228B14AE23A8208100FE5B43 /* MSP430.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14A023A8208100FE5B43 /* MSP430.cpp.o */; };
+		228B14AF23A8208100FE5B43 /* PPC64.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14A123A8208100FE5B43 /* PPC64.cpp.o */; };
+		228B14B023A8208100FE5B43 /* PPC.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14A223A8208100FE5B43 /* PPC.cpp.o */; };
+		228B14B123A8208100FE5B43 /* AVR.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14A323A8208100FE5B43 /* AVR.cpp.o */; };
+		228B14B223A8208200FE5B43 /* SPARCV9.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14A423A8208100FE5B43 /* SPARCV9.cpp.o */; };
+		228B14B323A8208200FE5B43 /* Mips.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14A523A8208100FE5B43 /* Mips.cpp.o */; };
+		228B14B423A8208200FE5B43 /* X86.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14A623A8208100FE5B43 /* X86.cpp.o */; };
+		228B14B623A8209F00FE5B43 /* Driver.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14B523A8209F00FE5B43 /* Driver.cpp.o */; };
+		228B14CA23A820D300FE5B43 /* CompactUnwindPass.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14B723A820D200FE5B43 /* CompactUnwindPass.cpp.o */; };
+		228B14CB23A820D300FE5B43 /* MachONormalizedFileFromAtoms.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14B823A820D200FE5B43 /* MachONormalizedFileFromAtoms.cpp.o */; };
+		228B14CC23A820D300FE5B43 /* MachONormalizedFileBinaryWriter.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14B923A820D200FE5B43 /* MachONormalizedFileBinaryWriter.cpp.o */; };
+		228B14CD23A820D300FE5B43 /* ArchHandler_arm64.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14BA23A820D200FE5B43 /* ArchHandler_arm64.cpp.o */; };
+		228B14CE23A820D300FE5B43 /* ArchHandler_x86_64.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14BB23A820D200FE5B43 /* ArchHandler_x86_64.cpp.o */; };
+		228B14CF23A820D300FE5B43 /* MachOLinkingContext.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14BC23A820D200FE5B43 /* MachOLinkingContext.cpp.o */; };
+		228B14D023A820D300FE5B43 /* StubsPass.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14BD23A820D200FE5B43 /* StubsPass.cpp.o */; };
+		228B14D123A820D300FE5B43 /* MachONormalizedFileBinaryReader.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14BE23A820D200FE5B43 /* MachONormalizedFileBinaryReader.cpp.o */; };
+		228B14D223A820D300FE5B43 /* GOTPass.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14BF23A820D200FE5B43 /* GOTPass.cpp.o */; };
+		228B14D323A820D300FE5B43 /* LayoutPass.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14C023A820D200FE5B43 /* LayoutPass.cpp.o */; };
+		228B14D423A820D300FE5B43 /* ArchHandler_x86.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14C123A820D300FE5B43 /* ArchHandler_x86.cpp.o */; };
+		228B14D523A820D300FE5B43 /* MachONormalizedFileToAtoms.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14C223A820D300FE5B43 /* MachONormalizedFileToAtoms.cpp.o */; };
+		228B14D623A820D300FE5B43 /* ArchHandler_arm.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14C323A820D300FE5B43 /* ArchHandler_arm.cpp.o */; };
+		228B14D723A820D300FE5B43 /* TLVPass.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14C423A820D300FE5B43 /* TLVPass.cpp.o */; };
+		228B14D823A820D300FE5B43 /* WriterMachO.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14C523A820D300FE5B43 /* WriterMachO.cpp.o */; };
+		228B14D923A820D300FE5B43 /* MachONormalizedFileYAML.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14C623A820D300FE5B43 /* MachONormalizedFileYAML.cpp.o */; };
+		228B14DA23A820D300FE5B43 /* ArchHandler.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14C723A820D300FE5B43 /* ArchHandler.cpp.o */; };
+		228B14DB23A820D300FE5B43 /* ObjCPass.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14C823A820D300FE5B43 /* ObjCPass.cpp.o */; };
+		228B14DC23A820D300FE5B43 /* ShimPass.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14C923A820D300FE5B43 /* ShimPass.cpp.o */; };
+		228B14DE23A820E100FE5B43 /* ReaderWriterYAML.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14DD23A820E100FE5B43 /* ReaderWriterYAML.cpp.o */; };
+		228B14E023A820E900FE5B43 /* FileArchive.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14DF23A820E900FE5B43 /* FileArchive.cpp.o */; };
+		228B14E223A820F700FE5B43 /* DarwinLdDriver.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14E123A820F700FE5B43 /* DarwinLdDriver.cpp.o */; };
+		228B14EB23A8210000FE5B43 /* File.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14E323A8210000FE5B43 /* File.cpp.o */; };
+		228B14EC23A8210000FE5B43 /* SymbolTable.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14E423A8210000FE5B43 /* SymbolTable.cpp.o */; };
+		228B14ED23A8210000FE5B43 /* Writer.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14E523A8210000FE5B43 /* Writer.cpp.o */; };
+		228B14EE23A8210000FE5B43 /* Error.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14E623A8210000FE5B43 /* Error.cpp.o */; };
+		228B14EF23A8210000FE5B43 /* Reader.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14E723A8210000FE5B43 /* Reader.cpp.o */; };
+		228B14F023A8210100FE5B43 /* LinkingContext.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14E823A8210000FE5B43 /* LinkingContext.cpp.o */; };
+		228B14F123A8210100FE5B43 /* DefinedAtom.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14E923A8210000FE5B43 /* DefinedAtom.cpp.o */; };
+		228B14F223A8210100FE5B43 /* Resolver.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14EA23A8210000FE5B43 /* Resolver.cpp.o */; };
 		22C505CD209A3CB500FDDFA9 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
 		22C505D1209A3CF700FDDFA9 /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505D0209A3CF700FDDFA9 /* ios_system.framework */; };
 		22F4B308238C8BD8002C1DD6 /* lli.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 22F4B307238C8BD8002C1DD6 /* lli.cpp.o */; };
 		22F9512F20AF0677006268D5 /* libobjc.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C1D2E720A841E60093127F /* libobjc.tbd */; };
+		89058C32239E66F20094F4DE /* llc.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 89058C31239E66D10094F4DE /* llc.cpp.o */; };
+		89058C39239E7F860094F4DE /* llc.h in Headers */ = {isa = PBXBuildFile; fileRef = 89058C34239E7EFB0094F4DE /* llc.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		89DD5C61239CDE7100382F34 /* libLLVMWebAssemblyAsmParser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 89DD5C5D239CDE3D00382F34 /* libLLVMWebAssemblyAsmParser.a */; };
 		89DD5C62239CDE7100382F34 /* libLLVMWebAssemblyCodeGen.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 89DD5C5E239CDE3D00382F34 /* libLLVMWebAssemblyCodeGen.a */; };
 		89DD5C63239CDE7100382F34 /* libLLVMWebAssemblyDesc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 89DD5C5C239CDE3D00382F34 /* libLLVMWebAssemblyDesc.a */; };
 		89DD5C64239CDE7100382F34 /* libLLVMWebAssemblyDisassembler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 89DD5C5F239CDE3D00382F34 /* libLLVMWebAssemblyDisassembler.a */; };
 		89DD5C65239CDE7100382F34 /* libLLVMWebAssemblyInfo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 89DD5C60239CDE3D00382F34 /* libLLVMWebAssemblyInfo.a */; };
-		89058C32239E66F20094F4DE /* llc.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 89058C31239E66D10094F4DE /* llc.cpp.o */; };
-		89058C39239E7F860094F4DE /* llc.h in Headers */ = {isa = PBXBuildFile; fileRef = 89058C34239E7EFB0094F4DE /* llc.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		89DD5C6A239D1A1D00382F34 /* libLLVM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237943E209B523500B15016 /* libLLVM.framework */; };
 		89DD5C6B239D1A1D00382F34 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
 /* End PBXBuildFile section */
@@ -272,6 +384,118 @@
 		22720AAA2386E9A3005BEB9E /* libLLVMJITLink.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMJITLink.a; path = ../build_ios/lib/libLLVMJITLink.a; sourceTree = "<group>"; };
 		22720AAE2386EBF6005BEB9E /* libclangToolingInclusions.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangToolingInclusions.a; path = ../build_ios/lib/libclangToolingInclusions.a; sourceTree = "<group>"; };
 		22720AB02386EC02005BEB9E /* libclangToolingSyntax.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangToolingSyntax.a; path = ../build_ios/lib/libclangToolingSyntax.a; sourceTree = "<group>"; };
+		228B141523A81EC700FE5B43 /* lld.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = lld.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		228B141623A81ECE00FE5B43 /* clang copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "clang copy-Info.plist"; path = "/Users/holzschu/src/Xcode_iPad/llvm/frameworks/clang copy-Info.plist"; sourceTree = "<absolute>"; };
+		228B141723A81FA200FE5B43 /* LTO.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LTO.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/LTO.cpp.o; sourceTree = "<group>"; };
+		228B141823A81FA200FE5B43 /* MarkLive.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MarkLive.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/MarkLive.cpp.o; sourceTree = "<group>"; };
+		228B141923A81FA200FE5B43 /* WriterUtils.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = WriterUtils.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/WriterUtils.cpp.o; sourceTree = "<group>"; };
+		228B141A23A81FA200FE5B43 /* Writer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Writer.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/Writer.cpp.o; sourceTree = "<group>"; };
+		228B141B23A81FA200FE5B43 /* InputChunks.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = InputChunks.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/InputChunks.cpp.o; sourceTree = "<group>"; };
+		228B141C23A81FA200FE5B43 /* OutputSections.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = OutputSections.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/OutputSections.cpp.o; sourceTree = "<group>"; };
+		228B141D23A81FA200FE5B43 /* InputFiles.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = InputFiles.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/InputFiles.cpp.o; sourceTree = "<group>"; };
+		228B141E23A81FA200FE5B43 /* Relocations.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Relocations.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/Relocations.cpp.o; sourceTree = "<group>"; };
+		228B141F23A81FA200FE5B43 /* Symbols.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Symbols.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/Symbols.cpp.o; sourceTree = "<group>"; };
+		228B142023A81FA200FE5B43 /* Driver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Driver.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/Driver.cpp.o; sourceTree = "<group>"; };
+		228B142123A81FA200FE5B43 /* SymbolTable.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SymbolTable.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/SymbolTable.cpp.o; sourceTree = "<group>"; };
+		228B142223A81FA200FE5B43 /* SyntheticSections.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SyntheticSections.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/SyntheticSections.cpp.o; sourceTree = "<group>"; };
+		228B142F23A8200200FE5B43 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
+		228B143123A8201F00FE5B43 /* lld.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = lld.cpp.o; path = ../build_ios/tools/lld/tools/lld/CMakeFiles/lld.dir/lld.cpp.o; sourceTree = "<group>"; };
+		228B143323A8203300FE5B43 /* PDB.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = PDB.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/PDB.cpp.o; sourceTree = "<group>"; };
+		228B143423A8203300FE5B43 /* InputFiles.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = InputFiles.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/InputFiles.cpp.o; sourceTree = "<group>"; };
+		228B143523A8203300FE5B43 /* LTO.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LTO.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/LTO.cpp.o; sourceTree = "<group>"; };
+		228B143623A8203300FE5B43 /* DLL.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DLL.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/DLL.cpp.o; sourceTree = "<group>"; };
+		228B143723A8203300FE5B43 /* MinGW.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MinGW.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/MinGW.cpp.o; sourceTree = "<group>"; };
+		228B143823A8203300FE5B43 /* SymbolTable.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SymbolTable.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/SymbolTable.cpp.o; sourceTree = "<group>"; };
+		228B143923A8203300FE5B43 /* DebugTypes.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DebugTypes.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/DebugTypes.cpp.o; sourceTree = "<group>"; };
+		228B143A23A8203300FE5B43 /* ICF.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ICF.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/ICF.cpp.o; sourceTree = "<group>"; };
+		228B143B23A8203300FE5B43 /* DriverUtils.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DriverUtils.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/DriverUtils.cpp.o; sourceTree = "<group>"; };
+		228B143C23A8203300FE5B43 /* Symbols.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Symbols.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/Symbols.cpp.o; sourceTree = "<group>"; };
+		228B143D23A8203300FE5B43 /* Chunks.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Chunks.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/Chunks.cpp.o; sourceTree = "<group>"; };
+		228B143E23A8203300FE5B43 /* Driver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Driver.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/Driver.cpp.o; sourceTree = "<group>"; };
+		228B143F23A8203300FE5B43 /* MarkLive.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MarkLive.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/MarkLive.cpp.o; sourceTree = "<group>"; };
+		228B144023A8203300FE5B43 /* Writer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Writer.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/Writer.cpp.o; sourceTree = "<group>"; };
+		228B144123A8203300FE5B43 /* MapFile.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MapFile.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/MapFile.cpp.o; sourceTree = "<group>"; };
+		228B145123A8204A00FE5B43 /* Memory.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Memory.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Memory.cpp.o; sourceTree = "<group>"; };
+		228B145223A8204A00FE5B43 /* Version.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Version.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Version.cpp.o; sourceTree = "<group>"; };
+		228B145323A8204A00FE5B43 /* Strings.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Strings.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Strings.cpp.o; sourceTree = "<group>"; };
+		228B145423A8204A00FE5B43 /* Timer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Timer.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Timer.cpp.o; sourceTree = "<group>"; };
+		228B145523A8204A00FE5B43 /* Reproduce.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Reproduce.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Reproduce.cpp.o; sourceTree = "<group>"; };
+		228B145623A8204A00FE5B43 /* TargetOptionsCommandFlags.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = TargetOptionsCommandFlags.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/TargetOptionsCommandFlags.cpp.o; sourceTree = "<group>"; };
+		228B145723A8204A00FE5B43 /* Filesystem.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Filesystem.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Filesystem.cpp.o; sourceTree = "<group>"; };
+		228B145823A8204A00FE5B43 /* ErrorHandler.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ErrorHandler.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/ErrorHandler.cpp.o; sourceTree = "<group>"; };
+		228B145923A8204A00FE5B43 /* DWARF.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DWARF.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/DWARF.cpp.o; sourceTree = "<group>"; };
+		228B145A23A8204A00FE5B43 /* Args.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Args.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Args.cpp.o; sourceTree = "<group>"; };
+		228B145B23A8204A00FE5B43 /* Threads.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Threads.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Threads.cpp.o; sourceTree = "<group>"; };
+		228B146723A8206700FE5B43 /* Writer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Writer.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Writer.cpp.o; sourceTree = "<group>"; };
+		228B146823A8206700FE5B43 /* InputSection.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = InputSection.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/InputSection.cpp.o; sourceTree = "<group>"; };
+		228B146923A8206700FE5B43 /* DWARF.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DWARF.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/DWARF.cpp.o; sourceTree = "<group>"; };
+		228B146A23A8206700FE5B43 /* AArch64ErrataFix.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = AArch64ErrataFix.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/AArch64ErrataFix.cpp.o; sourceTree = "<group>"; };
+		228B146B23A8206800FE5B43 /* EhFrame.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = EhFrame.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/EhFrame.cpp.o; sourceTree = "<group>"; };
+		228B146C23A8206800FE5B43 /* Target.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Target.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Target.cpp.o; sourceTree = "<group>"; };
+		228B146D23A8206800FE5B43 /* DriverUtils.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DriverUtils.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/DriverUtils.cpp.o; sourceTree = "<group>"; };
+		228B146E23A8206800FE5B43 /* InputFiles.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = InputFiles.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/InputFiles.cpp.o; sourceTree = "<group>"; };
+		228B146F23A8206800FE5B43 /* Relocations.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Relocations.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Relocations.cpp.o; sourceTree = "<group>"; };
+		228B147023A8206800FE5B43 /* OutputSections.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = OutputSections.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/OutputSections.cpp.o; sourceTree = "<group>"; };
+		228B147123A8206800FE5B43 /* Driver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Driver.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Driver.cpp.o; sourceTree = "<group>"; };
+		228B147223A8206800FE5B43 /* ICF.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ICF.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/ICF.cpp.o; sourceTree = "<group>"; };
+		228B147323A8206800FE5B43 /* MarkLive.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MarkLive.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/MarkLive.cpp.o; sourceTree = "<group>"; };
+		228B147423A8206900FE5B43 /* ScriptParser.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ScriptParser.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/ScriptParser.cpp.o; sourceTree = "<group>"; };
+		228B147523A8206900FE5B43 /* CallGraphSort.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = CallGraphSort.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/CallGraphSort.cpp.o; sourceTree = "<group>"; };
+		228B147623A8206900FE5B43 /* LTO.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LTO.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/LTO.cpp.o; sourceTree = "<group>"; };
+		228B147723A8206900FE5B43 /* SyntheticSections.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SyntheticSections.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/SyntheticSections.cpp.o; sourceTree = "<group>"; };
+		228B147823A8206900FE5B43 /* Arch */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Arch; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch; sourceTree = "<group>"; };
+		228B147923A8206900FE5B43 /* ScriptLexer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ScriptLexer.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/ScriptLexer.cpp.o; sourceTree = "<group>"; };
+		228B147A23A8206900FE5B43 /* SymbolTable.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SymbolTable.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/SymbolTable.cpp.o; sourceTree = "<group>"; };
+		228B147B23A8206900FE5B43 /* MapFile.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MapFile.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/MapFile.cpp.o; sourceTree = "<group>"; };
+		228B147C23A8206900FE5B43 /* ARMErrataFix.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ARMErrataFix.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/ARMErrataFix.cpp.o; sourceTree = "<group>"; };
+		228B147D23A8206900FE5B43 /* Thunks.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Thunks.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Thunks.cpp.o; sourceTree = "<group>"; };
+		228B147E23A8206900FE5B43 /* Symbols.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Symbols.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Symbols.cpp.o; sourceTree = "<group>"; };
+		228B147F23A8206A00FE5B43 /* LinkerScript.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LinkerScript.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/LinkerScript.cpp.o; sourceTree = "<group>"; };
+		228B149923A8208100FE5B43 /* RISCV.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = RISCV.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/RISCV.cpp.o; sourceTree = "<group>"; };
+		228B149A23A8208100FE5B43 /* X86_64.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = X86_64.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/X86_64.cpp.o; sourceTree = "<group>"; };
+		228B149B23A8208100FE5B43 /* ARM.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ARM.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/ARM.cpp.o; sourceTree = "<group>"; };
+		228B149C23A8208100FE5B43 /* MipsArchTree.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MipsArchTree.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/MipsArchTree.cpp.o; sourceTree = "<group>"; };
+		228B149D23A8208100FE5B43 /* AArch64.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = AArch64.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/AArch64.cpp.o; sourceTree = "<group>"; };
+		228B149E23A8208100FE5B43 /* AMDGPU.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = AMDGPU.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/AMDGPU.cpp.o; sourceTree = "<group>"; };
+		228B149F23A8208100FE5B43 /* Hexagon.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Hexagon.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/Hexagon.cpp.o; sourceTree = "<group>"; };
+		228B14A023A8208100FE5B43 /* MSP430.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MSP430.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/MSP430.cpp.o; sourceTree = "<group>"; };
+		228B14A123A8208100FE5B43 /* PPC64.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = PPC64.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/PPC64.cpp.o; sourceTree = "<group>"; };
+		228B14A223A8208100FE5B43 /* PPC.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = PPC.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/PPC.cpp.o; sourceTree = "<group>"; };
+		228B14A323A8208100FE5B43 /* AVR.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = AVR.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/AVR.cpp.o; sourceTree = "<group>"; };
+		228B14A423A8208100FE5B43 /* SPARCV9.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SPARCV9.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/SPARCV9.cpp.o; sourceTree = "<group>"; };
+		228B14A523A8208100FE5B43 /* Mips.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Mips.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/Mips.cpp.o; sourceTree = "<group>"; };
+		228B14A623A8208100FE5B43 /* X86.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = X86.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/X86.cpp.o; sourceTree = "<group>"; };
+		228B14B523A8209F00FE5B43 /* Driver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Driver.cpp.o; path = ../build_ios/tools/lld/MinGW/CMakeFiles/lldMinGW.dir/Driver.cpp.o; sourceTree = "<group>"; };
+		228B14B723A820D200FE5B43 /* CompactUnwindPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = CompactUnwindPass.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/CompactUnwindPass.cpp.o; sourceTree = "<group>"; };
+		228B14B823A820D200FE5B43 /* MachONormalizedFileFromAtoms.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachONormalizedFileFromAtoms.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachONormalizedFileFromAtoms.cpp.o; sourceTree = "<group>"; };
+		228B14B923A820D200FE5B43 /* MachONormalizedFileBinaryWriter.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachONormalizedFileBinaryWriter.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachONormalizedFileBinaryWriter.cpp.o; sourceTree = "<group>"; };
+		228B14BA23A820D200FE5B43 /* ArchHandler_arm64.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ArchHandler_arm64.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ArchHandler_arm64.cpp.o; sourceTree = "<group>"; };
+		228B14BB23A820D200FE5B43 /* ArchHandler_x86_64.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ArchHandler_x86_64.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ArchHandler_x86_64.cpp.o; sourceTree = "<group>"; };
+		228B14BC23A820D200FE5B43 /* MachOLinkingContext.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachOLinkingContext.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachOLinkingContext.cpp.o; sourceTree = "<group>"; };
+		228B14BD23A820D200FE5B43 /* StubsPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = StubsPass.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/StubsPass.cpp.o; sourceTree = "<group>"; };
+		228B14BE23A820D200FE5B43 /* MachONormalizedFileBinaryReader.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachONormalizedFileBinaryReader.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachONormalizedFileBinaryReader.cpp.o; sourceTree = "<group>"; };
+		228B14BF23A820D200FE5B43 /* GOTPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = GOTPass.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/GOTPass.cpp.o; sourceTree = "<group>"; };
+		228B14C023A820D200FE5B43 /* LayoutPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LayoutPass.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/LayoutPass.cpp.o; sourceTree = "<group>"; };
+		228B14C123A820D300FE5B43 /* ArchHandler_x86.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ArchHandler_x86.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ArchHandler_x86.cpp.o; sourceTree = "<group>"; };
+		228B14C223A820D300FE5B43 /* MachONormalizedFileToAtoms.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachONormalizedFileToAtoms.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachONormalizedFileToAtoms.cpp.o; sourceTree = "<group>"; };
+		228B14C323A820D300FE5B43 /* ArchHandler_arm.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ArchHandler_arm.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ArchHandler_arm.cpp.o; sourceTree = "<group>"; };
+		228B14C423A820D300FE5B43 /* TLVPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = TLVPass.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/TLVPass.cpp.o; sourceTree = "<group>"; };
+		228B14C523A820D300FE5B43 /* WriterMachO.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = WriterMachO.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/WriterMachO.cpp.o; sourceTree = "<group>"; };
+		228B14C623A820D300FE5B43 /* MachONormalizedFileYAML.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachONormalizedFileYAML.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachONormalizedFileYAML.cpp.o; sourceTree = "<group>"; };
+		228B14C723A820D300FE5B43 /* ArchHandler.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ArchHandler.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ArchHandler.cpp.o; sourceTree = "<group>"; };
+		228B14C823A820D300FE5B43 /* ObjCPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ObjCPass.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ObjCPass.cpp.o; sourceTree = "<group>"; };
+		228B14C923A820D300FE5B43 /* ShimPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ShimPass.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ShimPass.cpp.o; sourceTree = "<group>"; };
+		228B14DD23A820E100FE5B43 /* ReaderWriterYAML.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ReaderWriterYAML.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/YAML/CMakeFiles/lldYAML.dir/ReaderWriterYAML.cpp.o; sourceTree = "<group>"; };
+		228B14DF23A820E900FE5B43 /* FileArchive.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = FileArchive.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/CMakeFiles/lldReaderWriter.dir/FileArchive.cpp.o; sourceTree = "<group>"; };
+		228B14E123A820F700FE5B43 /* DarwinLdDriver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DarwinLdDriver.cpp.o; path = ../build_ios/tools/lld/lib/Driver/CMakeFiles/lldDriver.dir/DarwinLdDriver.cpp.o; sourceTree = "<group>"; };
+		228B14E323A8210000FE5B43 /* File.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = File.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/File.cpp.o; sourceTree = "<group>"; };
+		228B14E423A8210000FE5B43 /* SymbolTable.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SymbolTable.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/SymbolTable.cpp.o; sourceTree = "<group>"; };
+		228B14E523A8210000FE5B43 /* Writer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Writer.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/Writer.cpp.o; sourceTree = "<group>"; };
+		228B14E623A8210000FE5B43 /* Error.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Error.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/Error.cpp.o; sourceTree = "<group>"; };
+		228B14E723A8210000FE5B43 /* Reader.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Reader.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/Reader.cpp.o; sourceTree = "<group>"; };
+		228B14E823A8210000FE5B43 /* LinkingContext.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LinkingContext.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/LinkingContext.cpp.o; sourceTree = "<group>"; };
+		228B14E923A8210000FE5B43 /* DefinedAtom.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DefinedAtom.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/DefinedAtom.cpp.o; sourceTree = "<group>"; };
+		228B14EA23A8210000FE5B43 /* Resolver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Resolver.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/Resolver.cpp.o; sourceTree = "<group>"; };
 		22C1D2E720A841E60093127F /* libobjc.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libobjc.tbd; path = usr/lib/libobjc.tbd; sourceTree = SDKROOT; };
 		22C505BC209A3B5800FDDFA9 /* lli.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = lli.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22C505C8209A3B8700FDDFA9 /* liblli.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblli.a; path = ../build_ios/lib/liblli.a; sourceTree = "<group>"; };
@@ -279,14 +503,14 @@
 		22C505CC209A3CB500FDDFA9 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		22C505D0209A3CF700FDDFA9 /* ios_system.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ios_system.framework; path = "../../ios_system/build/Debug-iphoneos/ios_system.framework"; sourceTree = "<group>"; };
 		22F4B307238C8BD8002C1DD6 /* lli.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = lli.cpp.o; path = ../build_ios/tools/lli/CMakeFiles/lli.dir/lli.cpp.o; sourceTree = "<group>"; };
+		89058C31239E66D10094F4DE /* llc.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = llc.cpp.o; path = ../build_ios/tools/llc/CMakeFiles/llc.dir/llc.cpp.o; sourceTree = "<group>"; };
+		89058C34239E7EFB0094F4DE /* llc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = llc.h; sourceTree = "<group>"; };
+		89058C35239E7EFB0094F4DE /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		89DD5C5C239CDE3D00382F34 /* libLLVMWebAssemblyDesc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyDesc.a; path = ../build_ios/lib/libLLVMWebAssemblyDesc.a; sourceTree = "<group>"; };
 		89DD5C5D239CDE3D00382F34 /* libLLVMWebAssemblyAsmParser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyAsmParser.a; path = ../build_ios/lib/libLLVMWebAssemblyAsmParser.a; sourceTree = "<group>"; };
 		89DD5C5E239CDE3D00382F34 /* libLLVMWebAssemblyCodeGen.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyCodeGen.a; path = ../build_ios/lib/libLLVMWebAssemblyCodeGen.a; sourceTree = "<group>"; };
 		89DD5C5F239CDE3D00382F34 /* libLLVMWebAssemblyDisassembler.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyDisassembler.a; path = ../build_ios/lib/libLLVMWebAssemblyDisassembler.a; sourceTree = "<group>"; };
 		89DD5C60239CDE3D00382F34 /* libLLVMWebAssemblyInfo.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyInfo.a; path = ../build_ios/lib/libLLVMWebAssemblyInfo.a; sourceTree = "<group>"; };
-		89058C31239E66D10094F4DE /* llc.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = llc.cpp.o; path = ../build_ios/tools/llc/CMakeFiles/llc.dir/llc.cpp.o; sourceTree = "<group>"; };
-		89058C34239E7EFB0094F4DE /* llc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = llc.h; sourceTree = "<group>"; };
-		89058C35239E7EFB0094F4DE /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		89DD5C73239D1A1D00382F34 /* llc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = llc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -454,6 +678,124 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		228B13EC23A81EC700FE5B43 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				228B143023A8200200FE5B43 /* libc++.tbd in Frameworks */,
+				228B13ED23A81EC700FE5B43 /* libLLVM.framework in Frameworks */,
+				228B142323A81FA200FE5B43 /* LTO.cpp.o in Frameworks */,
+				228B142423A81FA200FE5B43 /* MarkLive.cpp.o in Frameworks */,
+				228B142523A81FA200FE5B43 /* WriterUtils.cpp.o in Frameworks */,
+				228B142623A81FA200FE5B43 /* Writer.cpp.o in Frameworks */,
+				228B142723A81FA200FE5B43 /* InputChunks.cpp.o in Frameworks */,
+				228B142823A81FA300FE5B43 /* OutputSections.cpp.o in Frameworks */,
+				228B142923A81FA300FE5B43 /* InputFiles.cpp.o in Frameworks */,
+				228B142A23A81FA300FE5B43 /* Relocations.cpp.o in Frameworks */,
+				228B142B23A81FA300FE5B43 /* Symbols.cpp.o in Frameworks */,
+				228B142C23A81FA300FE5B43 /* Driver.cpp.o in Frameworks */,
+				228B142D23A81FA300FE5B43 /* SymbolTable.cpp.o in Frameworks */,
+				228B142E23A81FA300FE5B43 /* SyntheticSections.cpp.o in Frameworks */,
+				228B140E23A81EC700FE5B43 /* ios_system.framework in Frameworks */,
+				228B14EB23A8210000FE5B43 /* File.cpp.o in Frameworks */,
+				228B14EC23A8210000FE5B43 /* SymbolTable.cpp.o in Frameworks */,
+				228B14ED23A8210000FE5B43 /* Writer.cpp.o in Frameworks */,
+				228B14EE23A8210000FE5B43 /* Error.cpp.o in Frameworks */,
+				228B14EF23A8210000FE5B43 /* Reader.cpp.o in Frameworks */,
+				228B14F023A8210100FE5B43 /* LinkingContext.cpp.o in Frameworks */,
+				228B14F123A8210100FE5B43 /* DefinedAtom.cpp.o in Frameworks */,
+				228B14F223A8210100FE5B43 /* Resolver.cpp.o in Frameworks */,
+				228B14E223A820F700FE5B43 /* DarwinLdDriver.cpp.o in Frameworks */,
+				228B14E023A820E900FE5B43 /* FileArchive.cpp.o in Frameworks */,
+				228B14DE23A820E100FE5B43 /* ReaderWriterYAML.cpp.o in Frameworks */,
+				228B14CA23A820D300FE5B43 /* CompactUnwindPass.cpp.o in Frameworks */,
+				228B14CB23A820D300FE5B43 /* MachONormalizedFileFromAtoms.cpp.o in Frameworks */,
+				228B14CC23A820D300FE5B43 /* MachONormalizedFileBinaryWriter.cpp.o in Frameworks */,
+				228B14CD23A820D300FE5B43 /* ArchHandler_arm64.cpp.o in Frameworks */,
+				228B14CE23A820D300FE5B43 /* ArchHandler_x86_64.cpp.o in Frameworks */,
+				228B14CF23A820D300FE5B43 /* MachOLinkingContext.cpp.o in Frameworks */,
+				228B14D023A820D300FE5B43 /* StubsPass.cpp.o in Frameworks */,
+				228B14D123A820D300FE5B43 /* MachONormalizedFileBinaryReader.cpp.o in Frameworks */,
+				228B14D223A820D300FE5B43 /* GOTPass.cpp.o in Frameworks */,
+				228B14D323A820D300FE5B43 /* LayoutPass.cpp.o in Frameworks */,
+				228B14D423A820D300FE5B43 /* ArchHandler_x86.cpp.o in Frameworks */,
+				228B14D523A820D300FE5B43 /* MachONormalizedFileToAtoms.cpp.o in Frameworks */,
+				228B14D623A820D300FE5B43 /* ArchHandler_arm.cpp.o in Frameworks */,
+				228B14D723A820D300FE5B43 /* TLVPass.cpp.o in Frameworks */,
+				228B14D823A820D300FE5B43 /* WriterMachO.cpp.o in Frameworks */,
+				228B14D923A820D300FE5B43 /* MachONormalizedFileYAML.cpp.o in Frameworks */,
+				228B14DA23A820D300FE5B43 /* ArchHandler.cpp.o in Frameworks */,
+				228B14DB23A820D300FE5B43 /* ObjCPass.cpp.o in Frameworks */,
+				228B14DC23A820D300FE5B43 /* ShimPass.cpp.o in Frameworks */,
+				228B14B623A8209F00FE5B43 /* Driver.cpp.o in Frameworks */,
+				228B148023A8206A00FE5B43 /* Writer.cpp.o in Frameworks */,
+				228B148123A8206A00FE5B43 /* InputSection.cpp.o in Frameworks */,
+				228B148223A8206A00FE5B43 /* DWARF.cpp.o in Frameworks */,
+				228B148323A8206A00FE5B43 /* AArch64ErrataFix.cpp.o in Frameworks */,
+				228B148423A8206A00FE5B43 /* EhFrame.cpp.o in Frameworks */,
+				228B148523A8206A00FE5B43 /* Target.cpp.o in Frameworks */,
+				228B148623A8206A00FE5B43 /* DriverUtils.cpp.o in Frameworks */,
+				228B148723A8206A00FE5B43 /* InputFiles.cpp.o in Frameworks */,
+				228B148823A8206A00FE5B43 /* Relocations.cpp.o in Frameworks */,
+				228B148923A8206A00FE5B43 /* OutputSections.cpp.o in Frameworks */,
+				228B148A23A8206A00FE5B43 /* Driver.cpp.o in Frameworks */,
+				228B148B23A8206A00FE5B43 /* ICF.cpp.o in Frameworks */,
+				228B148C23A8206A00FE5B43 /* MarkLive.cpp.o in Frameworks */,
+				228B148D23A8206A00FE5B43 /* ScriptParser.cpp.o in Frameworks */,
+				228B148E23A8206A00FE5B43 /* CallGraphSort.cpp.o in Frameworks */,
+				228B148F23A8206A00FE5B43 /* LTO.cpp.o in Frameworks */,
+				228B149023A8206A00FE5B43 /* SyntheticSections.cpp.o in Frameworks */,
+				228B149223A8206A00FE5B43 /* ScriptLexer.cpp.o in Frameworks */,
+				228B149323A8206A00FE5B43 /* SymbolTable.cpp.o in Frameworks */,
+				228B149423A8206A00FE5B43 /* MapFile.cpp.o in Frameworks */,
+				228B149523A8206A00FE5B43 /* ARMErrataFix.cpp.o in Frameworks */,
+				228B149623A8206A00FE5B43 /* Thunks.cpp.o in Frameworks */,
+				228B149723A8206A00FE5B43 /* Symbols.cpp.o in Frameworks */,
+				228B149823A8206A00FE5B43 /* LinkerScript.cpp.o in Frameworks */,
+				228B143223A8201F00FE5B43 /* lld.cpp.o in Frameworks */,
+				228B144223A8203300FE5B43 /* PDB.cpp.o in Frameworks */,
+				228B144323A8203300FE5B43 /* InputFiles.cpp.o in Frameworks */,
+				228B144423A8203300FE5B43 /* LTO.cpp.o in Frameworks */,
+				228B144523A8203300FE5B43 /* DLL.cpp.o in Frameworks */,
+				228B144623A8203400FE5B43 /* MinGW.cpp.o in Frameworks */,
+				228B144723A8203400FE5B43 /* SymbolTable.cpp.o in Frameworks */,
+				228B144823A8203400FE5B43 /* DebugTypes.cpp.o in Frameworks */,
+				228B144923A8203400FE5B43 /* ICF.cpp.o in Frameworks */,
+				228B144A23A8203400FE5B43 /* DriverUtils.cpp.o in Frameworks */,
+				228B144B23A8203400FE5B43 /* Symbols.cpp.o in Frameworks */,
+				228B144C23A8203400FE5B43 /* Chunks.cpp.o in Frameworks */,
+				228B144D23A8203400FE5B43 /* Driver.cpp.o in Frameworks */,
+				228B144E23A8203400FE5B43 /* MarkLive.cpp.o in Frameworks */,
+				228B144F23A8203400FE5B43 /* Writer.cpp.o in Frameworks */,
+				228B145023A8203400FE5B43 /* MapFile.cpp.o in Frameworks */,
+				228B145C23A8204A00FE5B43 /* Memory.cpp.o in Frameworks */,
+				228B145D23A8204A00FE5B43 /* Version.cpp.o in Frameworks */,
+				228B145E23A8204A00FE5B43 /* Strings.cpp.o in Frameworks */,
+				228B145F23A8204A00FE5B43 /* Timer.cpp.o in Frameworks */,
+				228B146023A8204A00FE5B43 /* Reproduce.cpp.o in Frameworks */,
+				228B146123A8204A00FE5B43 /* TargetOptionsCommandFlags.cpp.o in Frameworks */,
+				228B146223A8204A00FE5B43 /* Filesystem.cpp.o in Frameworks */,
+				228B146323A8204A00FE5B43 /* ErrorHandler.cpp.o in Frameworks */,
+				228B146423A8204A00FE5B43 /* DWARF.cpp.o in Frameworks */,
+				228B146523A8204A00FE5B43 /* Args.cpp.o in Frameworks */,
+				228B146623A8204A00FE5B43 /* Threads.cpp.o in Frameworks */,
+				228B14A723A8208100FE5B43 /* RISCV.cpp.o in Frameworks */,
+				228B14A823A8208100FE5B43 /* X86_64.cpp.o in Frameworks */,
+				228B14A923A8208100FE5B43 /* ARM.cpp.o in Frameworks */,
+				228B14AA23A8208100FE5B43 /* MipsArchTree.cpp.o in Frameworks */,
+				228B14AB23A8208100FE5B43 /* AArch64.cpp.o in Frameworks */,
+				228B14AC23A8208100FE5B43 /* AMDGPU.cpp.o in Frameworks */,
+				228B14AD23A8208100FE5B43 /* Hexagon.cpp.o in Frameworks */,
+				228B14AE23A8208100FE5B43 /* MSP430.cpp.o in Frameworks */,
+				228B14AF23A8208100FE5B43 /* PPC64.cpp.o in Frameworks */,
+				228B14B023A8208100FE5B43 /* PPC.cpp.o in Frameworks */,
+				228B14B123A8208100FE5B43 /* AVR.cpp.o in Frameworks */,
+				228B14B223A8208200FE5B43 /* SPARCV9.cpp.o in Frameworks */,
+				228B14B323A8208200FE5B43 /* Mips.cpp.o in Frameworks */,
+				228B14B423A8208200FE5B43 /* X86.cpp.o in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22C505B8209A3B5800FDDFA9 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -545,6 +887,7 @@
 				2237943F209B523500B15016 /* libLLVM */,
 				22C505BD209A3B5800FDDFA9 /* Products */,
 				22C505C7209A3B8700FDDFA9 /* Frameworks */,
+				228B141623A81ECE00FE5B43 /* clang copy-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -559,6 +902,7 @@
 				22379425209B4F2300B15016 /* link.framework */,
 				2237943E209B523500B15016 /* libLLVM.framework */,
 				89DD5C73239D1A1D00382F34 /* llc.framework */,
+				228B141523A81EC700FE5B43 /* lld.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -566,6 +910,116 @@
 		22C505C7209A3B8700FDDFA9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				228B14E923A8210000FE5B43 /* DefinedAtom.cpp.o */,
+				228B14E623A8210000FE5B43 /* Error.cpp.o */,
+				228B14E323A8210000FE5B43 /* File.cpp.o */,
+				228B14E823A8210000FE5B43 /* LinkingContext.cpp.o */,
+				228B14E723A8210000FE5B43 /* Reader.cpp.o */,
+				228B14EA23A8210000FE5B43 /* Resolver.cpp.o */,
+				228B14E423A8210000FE5B43 /* SymbolTable.cpp.o */,
+				228B14E523A8210000FE5B43 /* Writer.cpp.o */,
+				228B14E123A820F700FE5B43 /* DarwinLdDriver.cpp.o */,
+				228B14DF23A820E900FE5B43 /* FileArchive.cpp.o */,
+				228B14DD23A820E100FE5B43 /* ReaderWriterYAML.cpp.o */,
+				228B14C323A820D300FE5B43 /* ArchHandler_arm.cpp.o */,
+				228B14BA23A820D200FE5B43 /* ArchHandler_arm64.cpp.o */,
+				228B14BB23A820D200FE5B43 /* ArchHandler_x86_64.cpp.o */,
+				228B14C123A820D300FE5B43 /* ArchHandler_x86.cpp.o */,
+				228B14C723A820D300FE5B43 /* ArchHandler.cpp.o */,
+				228B14B723A820D200FE5B43 /* CompactUnwindPass.cpp.o */,
+				228B14BF23A820D200FE5B43 /* GOTPass.cpp.o */,
+				228B14C023A820D200FE5B43 /* LayoutPass.cpp.o */,
+				228B14BC23A820D200FE5B43 /* MachOLinkingContext.cpp.o */,
+				228B14BE23A820D200FE5B43 /* MachONormalizedFileBinaryReader.cpp.o */,
+				228B14B923A820D200FE5B43 /* MachONormalizedFileBinaryWriter.cpp.o */,
+				228B14B823A820D200FE5B43 /* MachONormalizedFileFromAtoms.cpp.o */,
+				228B14C223A820D300FE5B43 /* MachONormalizedFileToAtoms.cpp.o */,
+				228B14C623A820D300FE5B43 /* MachONormalizedFileYAML.cpp.o */,
+				228B14C823A820D300FE5B43 /* ObjCPass.cpp.o */,
+				228B14C923A820D300FE5B43 /* ShimPass.cpp.o */,
+				228B14BD23A820D200FE5B43 /* StubsPass.cpp.o */,
+				228B14C423A820D300FE5B43 /* TLVPass.cpp.o */,
+				228B14C523A820D300FE5B43 /* WriterMachO.cpp.o */,
+				228B14B523A8209F00FE5B43 /* Driver.cpp.o */,
+				228B149D23A8208100FE5B43 /* AArch64.cpp.o */,
+				228B149E23A8208100FE5B43 /* AMDGPU.cpp.o */,
+				228B149B23A8208100FE5B43 /* ARM.cpp.o */,
+				228B14A323A8208100FE5B43 /* AVR.cpp.o */,
+				228B149F23A8208100FE5B43 /* Hexagon.cpp.o */,
+				228B14A523A8208100FE5B43 /* Mips.cpp.o */,
+				228B149C23A8208100FE5B43 /* MipsArchTree.cpp.o */,
+				228B14A023A8208100FE5B43 /* MSP430.cpp.o */,
+				228B14A223A8208100FE5B43 /* PPC.cpp.o */,
+				228B14A123A8208100FE5B43 /* PPC64.cpp.o */,
+				228B149923A8208100FE5B43 /* RISCV.cpp.o */,
+				228B14A423A8208100FE5B43 /* SPARCV9.cpp.o */,
+				228B149A23A8208100FE5B43 /* X86_64.cpp.o */,
+				228B14A623A8208100FE5B43 /* X86.cpp.o */,
+				228B146A23A8206700FE5B43 /* AArch64ErrataFix.cpp.o */,
+				228B147823A8206900FE5B43 /* Arch */,
+				228B147C23A8206900FE5B43 /* ARMErrataFix.cpp.o */,
+				228B147523A8206900FE5B43 /* CallGraphSort.cpp.o */,
+				228B147123A8206800FE5B43 /* Driver.cpp.o */,
+				228B146D23A8206800FE5B43 /* DriverUtils.cpp.o */,
+				228B146923A8206700FE5B43 /* DWARF.cpp.o */,
+				228B146B23A8206800FE5B43 /* EhFrame.cpp.o */,
+				228B147223A8206800FE5B43 /* ICF.cpp.o */,
+				228B146E23A8206800FE5B43 /* InputFiles.cpp.o */,
+				228B146823A8206700FE5B43 /* InputSection.cpp.o */,
+				228B147F23A8206A00FE5B43 /* LinkerScript.cpp.o */,
+				228B147623A8206900FE5B43 /* LTO.cpp.o */,
+				228B147B23A8206900FE5B43 /* MapFile.cpp.o */,
+				228B147323A8206800FE5B43 /* MarkLive.cpp.o */,
+				228B147023A8206800FE5B43 /* OutputSections.cpp.o */,
+				228B146F23A8206800FE5B43 /* Relocations.cpp.o */,
+				228B147923A8206900FE5B43 /* ScriptLexer.cpp.o */,
+				228B147423A8206900FE5B43 /* ScriptParser.cpp.o */,
+				228B147E23A8206900FE5B43 /* Symbols.cpp.o */,
+				228B147A23A8206900FE5B43 /* SymbolTable.cpp.o */,
+				228B147723A8206900FE5B43 /* SyntheticSections.cpp.o */,
+				228B146C23A8206800FE5B43 /* Target.cpp.o */,
+				228B147D23A8206900FE5B43 /* Thunks.cpp.o */,
+				228B146723A8206700FE5B43 /* Writer.cpp.o */,
+				228B145A23A8204A00FE5B43 /* Args.cpp.o */,
+				228B145923A8204A00FE5B43 /* DWARF.cpp.o */,
+				228B145823A8204A00FE5B43 /* ErrorHandler.cpp.o */,
+				228B145723A8204A00FE5B43 /* Filesystem.cpp.o */,
+				228B145123A8204A00FE5B43 /* Memory.cpp.o */,
+				228B145523A8204A00FE5B43 /* Reproduce.cpp.o */,
+				228B145323A8204A00FE5B43 /* Strings.cpp.o */,
+				228B145623A8204A00FE5B43 /* TargetOptionsCommandFlags.cpp.o */,
+				228B145B23A8204A00FE5B43 /* Threads.cpp.o */,
+				228B145423A8204A00FE5B43 /* Timer.cpp.o */,
+				228B145223A8204A00FE5B43 /* Version.cpp.o */,
+				228B143D23A8203300FE5B43 /* Chunks.cpp.o */,
+				228B143923A8203300FE5B43 /* DebugTypes.cpp.o */,
+				228B143623A8203300FE5B43 /* DLL.cpp.o */,
+				228B143E23A8203300FE5B43 /* Driver.cpp.o */,
+				228B143B23A8203300FE5B43 /* DriverUtils.cpp.o */,
+				228B143A23A8203300FE5B43 /* ICF.cpp.o */,
+				228B143423A8203300FE5B43 /* InputFiles.cpp.o */,
+				228B143523A8203300FE5B43 /* LTO.cpp.o */,
+				228B144123A8203300FE5B43 /* MapFile.cpp.o */,
+				228B143F23A8203300FE5B43 /* MarkLive.cpp.o */,
+				228B143723A8203300FE5B43 /* MinGW.cpp.o */,
+				228B143323A8203300FE5B43 /* PDB.cpp.o */,
+				228B143C23A8203300FE5B43 /* Symbols.cpp.o */,
+				228B143823A8203300FE5B43 /* SymbolTable.cpp.o */,
+				228B144023A8203300FE5B43 /* Writer.cpp.o */,
+				228B143123A8201F00FE5B43 /* lld.cpp.o */,
+				228B142F23A8200200FE5B43 /* libc++.tbd */,
+				228B142023A81FA200FE5B43 /* Driver.cpp.o */,
+				228B141B23A81FA200FE5B43 /* InputChunks.cpp.o */,
+				228B141D23A81FA200FE5B43 /* InputFiles.cpp.o */,
+				228B141723A81FA200FE5B43 /* LTO.cpp.o */,
+				228B141823A81FA200FE5B43 /* MarkLive.cpp.o */,
+				228B141C23A81FA200FE5B43 /* OutputSections.cpp.o */,
+				228B141E23A81FA200FE5B43 /* Relocations.cpp.o */,
+				228B141F23A81FA200FE5B43 /* Symbols.cpp.o */,
+				228B142123A81FA200FE5B43 /* SymbolTable.cpp.o */,
+				228B142223A81FA200FE5B43 /* SyntheticSections.cpp.o */,
+				228B141A23A81FA200FE5B43 /* Writer.cpp.o */,
+				228B141923A81FA200FE5B43 /* WriterUtils.cpp.o */,
 				89058C31239E66D10094F4DE /* llc.cpp.o */,
 				89DD5C5D239CDE3D00382F34 /* libLLVMWebAssemblyAsmParser.a */,
 				89DD5C5E239CDE3D00382F34 /* libLLVMWebAssemblyCodeGen.a */,
@@ -749,6 +1203,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		228B140F23A81EC700FE5B43 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				228B141023A81EC700FE5B43 /* clang.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22C505B9209A3B5800FDDFA9 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -876,6 +1338,24 @@
 			productReference = 2237943E209B523500B15016 /* libLLVM.framework */;
 			productType = "com.apple.product-type.framework";
 		};
+		228B13EA23A81EC700FE5B43 /* lld */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 228B141223A81EC700FE5B43 /* Build configuration list for PBXNativeTarget "lld" */;
+			buildPhases = (
+				228B13EB23A81EC700FE5B43 /* Sources */,
+				228B13EC23A81EC700FE5B43 /* Frameworks */,
+				228B140F23A81EC700FE5B43 /* Headers */,
+				228B141123A81EC700FE5B43 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = lld;
+			productName = clang;
+			productReference = 228B141523A81EC700FE5B43 /* lld.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		22C505BB209A3B5800FDDFA9 /* lli */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 22C505C4209A3B5800FDDFA9 /* Build configuration list for PBXNativeTarget "lli" */;
@@ -945,6 +1425,9 @@
 						CreatedOnToolsVersion = 9.4;
 						ProvisioningStyle = Automatic;
 					};
+					228B13EA23A81EC700FE5B43 = {
+						ProvisioningStyle = Automatic;
+					};
 					22C505BB209A3B5800FDDFA9 = {
 						CreatedOnToolsVersion = 9.4;
 						ProvisioningStyle = Automatic;
@@ -974,6 +1457,7 @@
 				22379410209B4E3900B15016 /* dis */,
 				22379424209B4F2300B15016 /* link */,
 				89DD5C66239D1A1D00382F34 /* llc */,
+				228B13EA23A81EC700FE5B43 /* lld */,
 			);
 		};
 /* End PBXProject section */
@@ -1015,6 +1499,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		2237943C209B523500B15016 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		228B141123A81EC700FE5B43 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1074,6 +1565,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		22379439209B523500B15016 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		228B13EB23A81EC700FE5B43 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1400,6 +1898,65 @@
 			};
 			name = Release;
 		};
+		228B141323A81EC700FE5B43 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = "clang copy-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				OTHER_LDFLAGS = (
+					"-L",
+					../build_ios/lib/,
+					"-all_load",
+					"-F",
+					"../../ios_system/build/Debug-iphoneos/",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.clang";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		228B141423A81EC700FE5B43 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = "clang copy-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				OTHER_LDFLAGS = (
+					"-L",
+					../build_ios/lib/,
+					"-all_load",
+					"-F",
+					"../../ios_system/build/Debug-iphoneos/",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.clang";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		22C505C2209A3B5800FDDFA9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1697,6 +2254,15 @@
 			buildConfigurations = (
 				22379444209B523600B15016 /* Debug */,
 				22379445209B523600B15016 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		228B141223A81EC700FE5B43 /* Build configuration list for PBXNativeTarget "lld" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				228B141323A81EC700FE5B43 /* Debug */,
+				228B141423A81EC700FE5B43 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
