@@ -46,7 +46,7 @@ fi
 # Easier to make a framework with
 pushd $OSX_BUILDDIR
 cmake -G Ninja \
--DLLVM_TARGETS_TO_BUILD="AArch64;X86" \
+-DLLVM_TARGETS_TO_BUILD="AArch64;X86;WebAssembly" \
 -DLLVM_LINK_LLVM_DYLIB=ON \
 -DCMAKE_BUILD_TYPE=Release \
 ..
@@ -97,7 +97,7 @@ pushd $IOS_BUILDDIR
 cmake -G Ninja \
 -DLLVM_LINK_LLVM_DYLIB=ON \
 -DLLVM_TARGET_ARCH=AArch64 \
--DLLVM_TARGETS_TO_BUILD="AArch64;WebAssembly" \
+-DLLVM_TARGETS_TO_BUILD="AArch64;X86;WebAssembly" \
 -DLLVM_DEFAULT_TARGET_TRIPLE=arm64-apple-darwin19.0.0 \
 -DLLVM_ENABLE_FFI=ON \
 -DLLVM_ENABLE_THREADS=OFF \
