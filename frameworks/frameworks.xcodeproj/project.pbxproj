@@ -1615,7 +1615,7 @@
 					../build_ios/lib/,
 					"-all_load",
 					"-F",
-					"../../ios_system/build/Debug-iphoneos/",
+					"../../ios_system/build/Release-iphoneos/",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.clang";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -1645,7 +1645,7 @@
 					../build_ios/lib/,
 					"-all_load",
 					"-F",
-					"../../ios_system/build/Debug-iphoneos/",
+					"../../ios_system/build/Release-iphoneos/",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.clang";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -1857,7 +1857,7 @@
 					"-L",
 					../build_ios/lib,
 					"-F",
-					"../../ios_system/build/Debug-iphoneos/",
+					"../../ios_system/build/Release-iphoneos/",
 					"-L",
 					"../libffi-3.2.1/build/Debug-iphoneos/",
 				);
@@ -1887,7 +1887,7 @@
 					"-L",
 					../build_ios/lib,
 					"-F",
-					"../../ios_system/build/Debug-iphoneos/",
+					"../../ios_system/build/Release-iphoneos/",
 					"-L",
 					"../libffi-3.2.1/build/Debug-iphoneos/",
 				);
@@ -1918,7 +1918,7 @@
 					../build_ios/lib/,
 					"-all_load",
 					"-F",
-					"../../ios_system/build/Debug-iphoneos/",
+					"../../ios_system/build/Release-iphoneos/",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.lld";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1948,7 +1948,7 @@
 					../build_ios/lib/,
 					"-all_load",
 					"-F",
-					"../../ios_system/build/Debug-iphoneos/",
+					"../../ios_system/build/Release-iphoneos/",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.lld";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2016,7 +2016,7 @@
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-F",
-					"../../ios_system/build/Debug-iphoneos/",
+					"../../ios_system/build/Release-iphoneos/",
 				);
 				SDKROOT = iphoneos;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -2076,7 +2076,7 @@
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-F",
-					"../../ios_system/build/Debug-iphoneos/",
+					"../../ios_system/build/Release-iphoneos/",
 				);
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
@@ -2105,7 +2105,7 @@
 					"-L",
 					../build_ios/lib/,
 					"-F",
-					"../../ios_system/build/Debug-iphoneos/",
+					"../../ios_system/build/Release-iphoneos/",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.lli";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -2134,7 +2134,7 @@
 					"-L",
 					../build_ios/lib/,
 					"-F",
-					"../../ios_system/build/Debug-iphoneos/",
+					"../../ios_system/build/Release-iphoneos/",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.lli";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -2163,7 +2163,7 @@
 					"-L",
 					../build_ios/lib/,
 					"-F",
-					"../../ios_system/build/Debug-iphoneos/",
+					"../../ios_system/build/Release-iphoneos/",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.llc";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2192,7 +2192,7 @@
 					"-L",
 					../build_ios/lib/,
 					"-F",
-					"../../ios_system/build/Debug-iphoneos/",
+					"../../ios_system/build/Release-iphoneos/",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.llc";
 				PRODUCT_NAME = "$(TARGET_NAME)";
