@@ -97,7 +97,7 @@ pushd $IOS_BUILDDIR
 cmake -G Ninja \
 -DLLVM_LINK_LLVM_DYLIB=ON \
 -DLLVM_TARGET_ARCH=AArch64 \
--DLLVM_TARGETS_TO_BUILD="AArch64;X86;WebAssembly" \
+-DLLVM_TARGETS_TO_BUILD="AArch64;WebAssembly" \
 -DLLVM_DEFAULT_TARGET_TRIPLE=arm64-apple-darwin19.0.0 \
 -DLLVM_ENABLE_FFI=ON \
 -DLLVM_ENABLE_THREADS=OFF \
@@ -118,6 +118,7 @@ cmake -G Ninja \
 -DCMAKE_EXE_LINKER_FLAGS="-nostdlib -F${IOS_SYSTEM}/build/Release-iphoneos/ -O2 -framework ios_system -lobjc -lc -lc++" \
 ..
 ninja
+# We could add X86 to target architectures, but that increases the app size too much
 # Now build the static libraries for the executables:
 # -stdlib=libc++: not required with OSX > Mavericks
 # -nostdlib: so ios_system is linked *before* libc and libc++ 
@@ -137,7 +138,7 @@ ar -r lib/libopt.a  tools/opt/CMakeFiles/opt.dir/AnalysisWrappers.cpp.o tools/op
 # llvm-nm:  tools/llvm-nm/CMakeFiles/llvm-nm.dir/llvm-nm.cpp.o
 # llvm-dis:  tools/llvm-dis/CMakeFiles/llvm-dis.dir/llvm-dis.cpp.o
 # llc: tools/llc/CMakeFiles/llc.dir/llc.cpp.o
-# TODO, for Wasm: ld.lld 
+# lld, wasm-ld, etc: done in Xcode.
 popd
 # Move libcxx, libcxxabi back in place:
 # pushd projects
