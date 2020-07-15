@@ -3,14 +3,15 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 48;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2207FAAD244B916A00C28F86 /* libLLVM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237943E209B523500B15016 /* libLLVM.framework */; };
+		2207FAAF244B916A00C28F86 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
 		22379399209B047C00B15016 /* opt.h in Headers */ = {isa = PBXBuildFile; fileRef = 22379397209B047C00B15016 /* opt.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2237939E209B048C00B15016 /* libopt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237939D209B048C00B15016 /* libopt.a */; };
 		223793A0209B04D300B15016 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
-		223793A6209B0B9B00B15016 /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505D0209A3CF700FDDFA9 /* ios_system.framework */; };
 		223793AD209B277E00B15016 /* libclang_tool.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793AC209B277E00B15016 /* libclang_tool.a */; };
 		223793AE209B27FF00B15016 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
 		223793CC209B293C00B15016 /* libclangFrontend.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 223793CB209B293C00B15016 /* libclangFrontend.a */; };
@@ -48,7 +49,6 @@
 		22379415209B4E3900B15016 /* dis.h in Headers */ = {isa = PBXBuildFile; fileRef = 22379413209B4E3900B15016 /* dis.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2237941A209B4E6200B15016 /* llvm-dis.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379419209B4E6200B15016 /* llvm-dis.cpp.o */; };
 		2237941C209B4EAE00B15016 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
-		2237941D209B4EC000B15016 /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505D0209A3CF700FDDFA9 /* ios_system.framework */; };
 		22379429209B4F2300B15016 /* link.h in Headers */ = {isa = PBXBuildFile; fileRef = 22379427209B4F2300B15016 /* link.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2237942E209B4F9200B15016 /* llvm-link.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237942D209B4F9200B15016 /* llvm-link.cpp.o */; };
 		22379430209B4FB600B15016 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
@@ -114,7 +114,6 @@
 		223794C4209B557A00B15016 /* libLLVMCodeGen.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379486209B557A00B15016 /* libLLVMCodeGen.a */; };
 		223794C5209B557A00B15016 /* libLLVMBitReader.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22379487209B557A00B15016 /* libLLVMBitReader.a */; };
 		223794C6209B563C00B15016 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
-		223794C7209B565D00B15016 /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505D0209A3CF700FDDFA9 /* ios_system.framework */; };
 		223794C9209B566E00B15016 /* libxml2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 223794C8209B566E00B15016 /* libxml2.tbd */; };
 		223794CB209B568A00B15016 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 223794CA209B568A00B15016 /* libz.tbd */; };
 		223794CD209B56AF00B15016 /* libcurses.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 223794CC209B56AF00B15016 /* libcurses.tbd */; };
@@ -124,6 +123,8 @@
 		223794D1209B574B00B15016 /* libLLVM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237943E209B523500B15016 /* libLLVM.framework */; };
 		223794D2209B575100B15016 /* libLLVM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237943E209B523500B15016 /* libLLVM.framework */; };
 		223794D3209B575700B15016 /* libLLVM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237943E209B523500B15016 /* libLLVM.framework */; };
+		22608588244C3B4E00B88587 /* llvm-ar.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 22608587244C3B4E00B88587 /* llvm-ar.cpp.o */; };
+		2260858C244C3C7700B88587 /* ar.h in Headers */ = {isa = PBXBuildFile; fileRef = 2260858B244C3C7700B88587 /* ar.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		22720AA52386E2CB005BEB9E /* libLLVMBitstreamReader.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AA42386E2CB005BEB9E /* libLLVMBitstreamReader.a */; };
 		22720AA72386E6E9005BEB9E /* libLLVMTextAPI.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AA62386E6E9005BEB9E /* libLLVMTextAPI.a */; };
 		22720AA92386E7F0005BEB9E /* libLLVMRemarks.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AA82386E7EF005BEB9E /* libLLVMRemarks.a */; };
@@ -131,7 +132,6 @@
 		22720AAF2386EBF7005BEB9E /* libclangToolingInclusions.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AAE2386EBF6005BEB9E /* libclangToolingInclusions.a */; };
 		22720AB12386EC03005BEB9E /* libclangToolingSyntax.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22720AB02386EC02005BEB9E /* libclangToolingSyntax.a */; };
 		228B13ED23A81EC700FE5B43 /* libLLVM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2237943E209B523500B15016 /* libLLVM.framework */; };
-		228B140E23A81EC700FE5B43 /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505D0209A3CF700FDDFA9 /* ios_system.framework */; };
 		228B141023A81EC700FE5B43 /* clang.h in Headers */ = {isa = PBXBuildFile; fileRef = 22379388209B028600B15016 /* clang.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		228B142323A81FA200FE5B43 /* LTO.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B141723A81FA200FE5B43 /* LTO.cpp.o */; };
 		228B142423A81FA200FE5B43 /* MarkLive.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B141823A81FA200FE5B43 /* MarkLive.cpp.o */; };
@@ -242,8 +242,19 @@
 		228B14F023A8210100FE5B43 /* LinkingContext.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14E823A8210000FE5B43 /* LinkingContext.cpp.o */; };
 		228B14F123A8210100FE5B43 /* DefinedAtom.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14E923A8210000FE5B43 /* DefinedAtom.cpp.o */; };
 		228B14F223A8210100FE5B43 /* Resolver.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 228B14EA23A8210000FE5B43 /* Resolver.cpp.o */; };
+		22C1E8A924BEF21A00C57472 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22DCD8BA24B9121800203A0E /* ios_system.xcframework */; };
+		22C1E8AA24BF37BE00C57472 /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22DCD8BA24B9121800203A0E /* ios_system.xcframework */; };
+		22C1E8B024BF70D600C57472 /* libLLVMX86AsmParser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C1E8AB24BF70D500C57472 /* libLLVMX86AsmParser.a */; };
+		22C1E8B124BF70D600C57472 /* libLLVMX86Desc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C1E8AC24BF70D500C57472 /* libLLVMX86Desc.a */; };
+		22C1E8B224BF70D600C57472 /* libLLVMX86Disassembler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C1E8AD24BF70D500C57472 /* libLLVMX86Disassembler.a */; };
+		22C1E8B324BF70D600C57472 /* libLLVMX86Info.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C1E8AE24BF70D500C57472 /* libLLVMX86Info.a */; };
+		22C1E8B424BF70D600C57472 /* libLLVMX86Utils.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C1E8AF24BF70D500C57472 /* libLLVMX86Utils.a */; };
+		22C1E8B624BF715100C57472 /* libLLVMX86CodeGen.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C1E8B524BF715100C57472 /* libLLVMX86CodeGen.a */; };
 		22C505CD209A3CB500FDDFA9 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505CC209A3CB500FDDFA9 /* libc++.tbd */; };
-		22C505D1209A3CF700FDDFA9 /* ios_system.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C505D0209A3CF700FDDFA9 /* ios_system.framework */; };
+		22DCD8BB24B9123500203A0E /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22DCD8BA24B9121800203A0E /* ios_system.xcframework */; };
+		22DCD8BC24B9124900203A0E /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22DCD8BA24B9121800203A0E /* ios_system.xcframework */; };
+		22DCD8BD24B9126200203A0E /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22DCD8BA24B9121800203A0E /* ios_system.xcframework */; };
+		22DCD8BE24B9127100203A0E /* ios_system.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22DCD8BA24B9121800203A0E /* ios_system.xcframework */; };
 		22F4B308238C8BD8002C1DD6 /* lli.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 22F4B307238C8BD8002C1DD6 /* lli.cpp.o */; };
 		22F9512F20AF0677006268D5 /* libobjc.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C1D2E720A841E60093127F /* libobjc.tbd */; };
 		89058C32239E66F20094F4DE /* llc.cpp.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 89058C31239E66D10094F4DE /* llc.cpp.o */; };
@@ -258,268 +269,286 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2207FAB6244B916A00C28F86 /* ar.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ar.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		22379386209B028600B15016 /* clang.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = clang.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		22379388209B028600B15016 /* clang.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = clang.h; sourceTree = "<group>"; };
-		22379389209B028600B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		2237938E209B03BE00B15016 /* libclang.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclang.a; path = ../build_ios/lib/libclang.a; sourceTree = "<group>"; };
+		22379388209B028600B15016 /* clang.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = clang.h; path = ../frameworks/clang/clang.h; sourceTree = SOURCE_ROOT; };
+		22379389209B028600B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = clang/Info.plist; sourceTree = SOURCE_ROOT; };
 		22379395209B047C00B15016 /* opt.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = opt.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		22379397209B047C00B15016 /* opt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = opt.h; sourceTree = "<group>"; };
-		22379398209B047C00B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		2237939D209B048C00B15016 /* libopt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libopt.a; path = ../build_ios/lib/libopt.a; sourceTree = "<group>"; };
-		223793A3209B093500B15016 /* libclang.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclang.dylib; path = ../build_ios/lib/libclang.dylib; sourceTree = "<group>"; };
-		223793AC209B277E00B15016 /* libclang_tool.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclang_tool.a; path = ../build_ios/lib/libclang_tool.a; sourceTree = "<group>"; };
-		223793AF209B285D00B15016 /* libclangFrontendTool.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangFrontendTool.a; path = ../build_ios/lib/libclangFrontendTool.a; sourceTree = "<group>"; };
-		223793B0209B285D00B15016 /* libclangAST.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangAST.a; path = ../build_ios/lib/libclangAST.a; sourceTree = "<group>"; };
-		223793B1209B285D00B15016 /* libclangToolingASTDiff.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangToolingASTDiff.a; path = ../build_ios/lib/libclangToolingASTDiff.a; sourceTree = "<group>"; };
-		223793B2209B285D00B15016 /* libclangDriver.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangDriver.a; path = ../build_ios/lib/libclangDriver.a; sourceTree = "<group>"; };
-		223793B3209B285D00B15016 /* libclangStaticAnalyzerCore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangStaticAnalyzerCore.a; path = ../build_ios/lib/libclangStaticAnalyzerCore.a; sourceTree = "<group>"; };
-		223793B4209B285D00B15016 /* libclangToolingCore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangToolingCore.a; path = ../build_ios/lib/libclangToolingCore.a; sourceTree = "<group>"; };
-		223793B5209B285D00B15016 /* libclangRewrite.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangRewrite.a; path = ../build_ios/lib/libclangRewrite.a; sourceTree = "<group>"; };
-		223793B6209B285D00B15016 /* libclangAnalysis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangAnalysis.a; path = ../build_ios/lib/libclangAnalysis.a; sourceTree = "<group>"; };
-		223793B7209B285D00B15016 /* libclangRewriteFrontend.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangRewriteFrontend.a; path = ../build_ios/lib/libclangRewriteFrontend.a; sourceTree = "<group>"; };
-		223793B8209B285D00B15016 /* libclangEdit.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangEdit.a; path = ../build_ios/lib/libclangEdit.a; sourceTree = "<group>"; };
-		223793B9209B285D00B15016 /* libclangTooling.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangTooling.a; path = ../build_ios/lib/libclangTooling.a; sourceTree = "<group>"; };
-		223793BA209B285E00B15016 /* libclangSerialization.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangSerialization.a; path = ../build_ios/lib/libclangSerialization.a; sourceTree = "<group>"; };
-		223793BB209B285E00B15016 /* libclangARCMigrate.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangARCMigrate.a; path = ../build_ios/lib/libclangARCMigrate.a; sourceTree = "<group>"; };
-		223793CB209B293C00B15016 /* libclangFrontend.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangFrontend.a; path = ../build_ios/lib/libclangFrontend.a; sourceTree = "<group>"; };
-		223793CD209B296100B15016 /* libclangToolingRefactoring.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangToolingRefactoring.a; path = ../build_ios/lib/libclangToolingRefactoring.a; sourceTree = "<group>"; };
-		223793CE209B296100B15016 /* libclangIndex.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangIndex.a; path = ../build_ios/lib/libclangIndex.a; sourceTree = "<group>"; };
-		223793CF209B296100B15016 /* libclangCodeGen.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangCodeGen.a; path = ../build_ios/lib/libclangCodeGen.a; sourceTree = "<group>"; };
-		223793D0209B296100B15016 /* libclangSema.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangSema.a; path = ../build_ios/lib/libclangSema.a; sourceTree = "<group>"; };
-		223793D1209B296100B15016 /* libclangStaticAnalyzerCheckers.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangStaticAnalyzerCheckers.a; path = ../build_ios/lib/libclangStaticAnalyzerCheckers.a; sourceTree = "<group>"; };
-		223793E4209B299500B15016 /* libclangFormat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangFormat.a; path = ../build_ios/lib/libclangFormat.a; sourceTree = "<group>"; };
-		223793E5209B299500B15016 /* libclangParse.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangParse.a; path = ../build_ios/lib/libclangParse.a; sourceTree = "<group>"; };
-		223793E6209B299500B15016 /* libclangStaticAnalyzerFrontend.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangStaticAnalyzerFrontend.a; path = ../build_ios/lib/libclangStaticAnalyzerFrontend.a; sourceTree = "<group>"; };
-		223793E7209B299500B15016 /* libclangASTMatchers.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangASTMatchers.a; path = ../build_ios/lib/libclangASTMatchers.a; sourceTree = "<group>"; };
-		223793E8209B299500B15016 /* libclangDynamicASTMatchers.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangDynamicASTMatchers.a; path = ../build_ios/lib/libclangDynamicASTMatchers.a; sourceTree = "<group>"; };
-		223793E9209B299500B15016 /* libclangCrossTU.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangCrossTU.a; path = ../build_ios/lib/libclangCrossTU.a; sourceTree = "<group>"; };
-		223793EA209B299500B15016 /* libclangHandleCXX.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangHandleCXX.a; path = ../build_ios/lib/libclangHandleCXX.a; sourceTree = "<group>"; };
-		223793F2209B29B200B15016 /* libclangLex.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangLex.a; path = ../build_ios/lib/libclangLex.a; sourceTree = "<group>"; };
-		223793F3209B29B200B15016 /* libclangBasic.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangBasic.a; path = ../build_ios/lib/libclangBasic.a; sourceTree = "<group>"; };
+		22379397209B047C00B15016 /* opt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = opt.h; path = ../frameworks/opt/opt.h; sourceTree = SOURCE_ROOT; };
+		22379398209B047C00B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = opt/Info.plist; sourceTree = SOURCE_ROOT; };
+		2237939D209B048C00B15016 /* libopt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libopt.a; path = ./lib/libopt.a; sourceTree = "<group>"; };
+		223793A3209B093500B15016 /* libclang.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libclang.dylib; path = ./lib/libclang.dylib; sourceTree = "<group>"; };
+		223793AC209B277E00B15016 /* libclang_tool.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclang_tool.a; path = ./lib/libclang_tool.a; sourceTree = "<group>"; };
+		223793AF209B285D00B15016 /* libclangFrontendTool.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangFrontendTool.a; path = ./lib/libclangFrontendTool.a; sourceTree = "<group>"; };
+		223793B0209B285D00B15016 /* libclangAST.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangAST.a; path = ./lib/libclangAST.a; sourceTree = "<group>"; };
+		223793B1209B285D00B15016 /* libclangToolingASTDiff.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangToolingASTDiff.a; path = ./lib/libclangToolingASTDiff.a; sourceTree = "<group>"; };
+		223793B2209B285D00B15016 /* libclangDriver.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangDriver.a; path = ./lib/libclangDriver.a; sourceTree = "<group>"; };
+		223793B3209B285D00B15016 /* libclangStaticAnalyzerCore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangStaticAnalyzerCore.a; path = ./lib/libclangStaticAnalyzerCore.a; sourceTree = "<group>"; };
+		223793B4209B285D00B15016 /* libclangToolingCore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangToolingCore.a; path = ./lib/libclangToolingCore.a; sourceTree = "<group>"; };
+		223793B5209B285D00B15016 /* libclangRewrite.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangRewrite.a; path = ./lib/libclangRewrite.a; sourceTree = "<group>"; };
+		223793B6209B285D00B15016 /* libclangAnalysis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangAnalysis.a; path = ./lib/libclangAnalysis.a; sourceTree = "<group>"; };
+		223793B7209B285D00B15016 /* libclangRewriteFrontend.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangRewriteFrontend.a; path = ./lib/libclangRewriteFrontend.a; sourceTree = "<group>"; };
+		223793B8209B285D00B15016 /* libclangEdit.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangEdit.a; path = ./lib/libclangEdit.a; sourceTree = "<group>"; };
+		223793B9209B285D00B15016 /* libclangTooling.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangTooling.a; path = ./lib/libclangTooling.a; sourceTree = "<group>"; };
+		223793BA209B285E00B15016 /* libclangSerialization.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangSerialization.a; path = ./lib/libclangSerialization.a; sourceTree = "<group>"; };
+		223793BB209B285E00B15016 /* libclangARCMigrate.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangARCMigrate.a; path = ./lib/libclangARCMigrate.a; sourceTree = "<group>"; };
+		223793CB209B293C00B15016 /* libclangFrontend.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangFrontend.a; path = ./lib/libclangFrontend.a; sourceTree = "<group>"; };
+		223793CD209B296100B15016 /* libclangToolingRefactoring.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangToolingRefactoring.a; path = ./lib/libclangToolingRefactoring.a; sourceTree = "<group>"; };
+		223793CE209B296100B15016 /* libclangIndex.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangIndex.a; path = ./lib/libclangIndex.a; sourceTree = "<group>"; };
+		223793CF209B296100B15016 /* libclangCodeGen.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangCodeGen.a; path = ./lib/libclangCodeGen.a; sourceTree = "<group>"; };
+		223793D0209B296100B15016 /* libclangSema.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangSema.a; path = ./lib/libclangSema.a; sourceTree = "<group>"; };
+		223793D1209B296100B15016 /* libclangStaticAnalyzerCheckers.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangStaticAnalyzerCheckers.a; path = ./lib/libclangStaticAnalyzerCheckers.a; sourceTree = "<group>"; };
+		223793E4209B299500B15016 /* libclangFormat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangFormat.a; path = ./lib/libclangFormat.a; sourceTree = "<group>"; };
+		223793E5209B299500B15016 /* libclangParse.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangParse.a; path = ./lib/libclangParse.a; sourceTree = "<group>"; };
+		223793E6209B299500B15016 /* libclangStaticAnalyzerFrontend.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangStaticAnalyzerFrontend.a; path = ./lib/libclangStaticAnalyzerFrontend.a; sourceTree = "<group>"; };
+		223793E7209B299500B15016 /* libclangASTMatchers.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangASTMatchers.a; path = ./lib/libclangASTMatchers.a; sourceTree = "<group>"; };
+		223793E8209B299500B15016 /* libclangDynamicASTMatchers.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangDynamicASTMatchers.a; path = ./lib/libclangDynamicASTMatchers.a; sourceTree = "<group>"; };
+		223793E9209B299500B15016 /* libclangCrossTU.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangCrossTU.a; path = ./lib/libclangCrossTU.a; sourceTree = "<group>"; };
+		223793EA209B299500B15016 /* libclangHandleCXX.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangHandleCXX.a; path = ./lib/libclangHandleCXX.a; sourceTree = "<group>"; };
+		223793F2209B29B200B15016 /* libclangLex.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangLex.a; path = ./lib/libclangLex.a; sourceTree = "<group>"; };
+		223793F3209B29B200B15016 /* libclangBasic.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangBasic.a; path = ./lib/libclangBasic.a; sourceTree = "<group>"; };
 		223793FE209B2B8B00B15016 /* nm.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = nm.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		22379400209B2B8B00B15016 /* nm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = nm.h; sourceTree = "<group>"; };
-		22379401209B2B8B00B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		22379406209B2BCE00B15016 /* llvm-nm.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = "llvm-nm.cpp.o"; path = "../build_ios/tools/llvm-nm/CMakeFiles/llvm-nm.dir/llvm-nm.cpp.o"; sourceTree = "<group>"; };
+		22379400209B2B8B00B15016 /* nm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = nm.h; path = ../frameworks/nm/nm.h; sourceTree = SOURCE_ROOT; };
+		22379401209B2B8B00B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = nm/Info.plist; sourceTree = SOURCE_ROOT; };
+		22379406209B2BCE00B15016 /* llvm-nm.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = "llvm-nm.cpp.o"; path = "./tools/llvm-nm/CMakeFiles/llvm-nm.dir/llvm-nm.cpp.o"; sourceTree = "<group>"; };
 		22379411209B4E3900B15016 /* dis.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = dis.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		22379413209B4E3900B15016 /* dis.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dis.h; sourceTree = "<group>"; };
-		22379414209B4E3900B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		22379419209B4E6200B15016 /* llvm-dis.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = "llvm-dis.cpp.o"; path = "../build_ios/tools/llvm-dis/CMakeFiles/llvm-dis.dir/llvm-dis.cpp.o"; sourceTree = "<group>"; };
+		22379413209B4E3900B15016 /* dis.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = dis.h; path = ../frameworks/dis/dis.h; sourceTree = SOURCE_ROOT; };
+		22379414209B4E3900B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = dis/Info.plist; sourceTree = SOURCE_ROOT; };
+		22379419209B4E6200B15016 /* llvm-dis.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = "llvm-dis.cpp.o"; path = "./tools/llvm-dis/CMakeFiles/llvm-dis.dir/llvm-dis.cpp.o"; sourceTree = "<group>"; };
 		22379425209B4F2300B15016 /* link.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = link.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		22379427209B4F2300B15016 /* link.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = link.h; sourceTree = "<group>"; };
-		22379428209B4F2300B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		2237942D209B4F9200B15016 /* llvm-link.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = "llvm-link.cpp.o"; path = "../build_ios/tools/llvm-link/CMakeFiles/llvm-link.dir/llvm-link.cpp.o"; sourceTree = "<group>"; };
-		22379437209B51F200B15016 /* lli.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = lli.h; path = lli/lli.h; sourceTree = "<group>"; };
+		22379427209B4F2300B15016 /* link.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = link.h; path = ../frameworks/link/link.h; sourceTree = SOURCE_ROOT; };
+		22379428209B4F2300B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = link/Info.plist; sourceTree = SOURCE_ROOT; };
+		2237942D209B4F9200B15016 /* llvm-link.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = "llvm-link.cpp.o"; path = "./tools/llvm-link/CMakeFiles/llvm-link.dir/llvm-link.cpp.o"; sourceTree = "<group>"; };
+		22379437209B51F200B15016 /* lli.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = lli.h; path = ../frameworks/lli/lli.h; sourceTree = SOURCE_ROOT; };
 		2237943E209B523500B15016 /* libLLVM.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = libLLVM.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		22379440209B523500B15016 /* libLLVM.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libLLVM.h; sourceTree = "<group>"; };
-		22379441209B523500B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		22379446209B553100B15016 /* libllvm.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = libllvm.cpp.o; path = "../build_ios/tools/llvm-shlib/CMakeFiles/LLVM.dir/libllvm.cpp.o"; sourceTree = "<group>"; };
+		22379440209B523500B15016 /* libLLVM.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = libLLVM.h; path = ../frameworks/libLLVM/libLLVM.h; sourceTree = SOURCE_ROOT; };
+		22379441209B523500B15016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../frameworks/libLLVM/Info.plist; sourceTree = SOURCE_ROOT; };
+		22379446209B553100B15016 /* libllvm.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = libllvm.cpp.o; path = "./tools/llvm-shlib/CMakeFiles/LLVM.dir/libllvm.cpp.o"; sourceTree = "<group>"; };
 		22379448209B554900B15016 /* libffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libffi.a; path = "../libffi-3.2.1/build/Debug-iphoneos/libffi.a"; sourceTree = "<group>"; };
-		2237944A209B557800B15016 /* libLLVMMCDisassembler.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMMCDisassembler.a; path = ../build_ios/lib/libLLVMMCDisassembler.a; sourceTree = "<group>"; };
-		2237944B209B557800B15016 /* libLLVMBinaryFormat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMBinaryFormat.a; path = ../build_ios/lib/libLLVMBinaryFormat.a; sourceTree = "<group>"; };
-		2237944C209B557800B15016 /* libLLVMCoverage.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMCoverage.a; path = ../build_ios/lib/libLLVMCoverage.a; sourceTree = "<group>"; };
-		2237944D209B557800B15016 /* libLLVMCore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMCore.a; path = ../build_ios/lib/libLLVMCore.a; sourceTree = "<group>"; };
-		2237944E209B557800B15016 /* libLLVMDlltoolDriver.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMDlltoolDriver.a; path = ../build_ios/lib/libLLVMDlltoolDriver.a; sourceTree = "<group>"; };
-		2237944F209B557800B15016 /* libLLVMExegesis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMExegesis.a; path = ../build_ios/lib/libLLVMExegesis.a; sourceTree = "<group>"; };
-		22379450209B557800B15016 /* libLLVMInterpreter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMInterpreter.a; path = ../build_ios/lib/libLLVMInterpreter.a; sourceTree = "<group>"; };
-		22379451209B557800B15016 /* libLLVMWindowsManifest.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWindowsManifest.a; path = ../build_ios/lib/libLLVMWindowsManifest.a; sourceTree = "<group>"; };
-		22379452209B557800B15016 /* libLLVMAArch64Utils.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAArch64Utils.a; path = ../build_ios/lib/libLLVMAArch64Utils.a; sourceTree = "<group>"; };
-		22379453209B557800B15016 /* libLLVMMIRParser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMMIRParser.a; path = ../build_ios/lib/libLLVMMIRParser.a; sourceTree = "<group>"; };
-		22379454209B557800B15016 /* libLLVMVectorize.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMVectorize.a; path = ../build_ios/lib/libLLVMVectorize.a; sourceTree = "<group>"; };
-		22379455209B557800B15016 /* libLLVMLibDriver.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMLibDriver.a; path = ../build_ios/lib/libLLVMLibDriver.a; sourceTree = "<group>"; };
-		22379456209B557800B15016 /* libLLVMCoroutines.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMCoroutines.a; path = ../build_ios/lib/libLLVMCoroutines.a; sourceTree = "<group>"; };
-		22379457209B557800B15016 /* libLLVMPasses.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMPasses.a; path = ../build_ios/lib/libLLVMPasses.a; sourceTree = "<group>"; };
-		22379458209B557800B15016 /* libLLVMInstCombine.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMInstCombine.a; path = ../build_ios/lib/libLLVMInstCombine.a; sourceTree = "<group>"; };
-		22379459209B557800B15016 /* libLLVMProfileData.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMProfileData.a; path = ../build_ios/lib/libLLVMProfileData.a; sourceTree = "<group>"; };
-		2237945A209B557800B15016 /* libLLVMXRay.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMXRay.a; path = ../build_ios/lib/libLLVMXRay.a; sourceTree = "<group>"; };
-		2237945B209B557800B15016 /* libLLVMExecutionEngine.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMExecutionEngine.a; path = ../build_ios/lib/libLLVMExecutionEngine.a; sourceTree = "<group>"; };
-		2237945C209B557800B15016 /* libLLVMDebugInfoCodeView.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMDebugInfoCodeView.a; path = ../build_ios/lib/libLLVMDebugInfoCodeView.a; sourceTree = "<group>"; };
-		2237945D209B557800B15016 /* libLLVMAArch64Info.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAArch64Info.a; path = ../build_ios/lib/libLLVMAArch64Info.a; sourceTree = "<group>"; };
-		2237945E209B557800B15016 /* libLLVMAsmPrinter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAsmPrinter.a; path = ../build_ios/lib/libLLVMAsmPrinter.a; sourceTree = "<group>"; };
-		2237945F209B557900B15016 /* libLLVMOption.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMOption.a; path = ../build_ios/lib/libLLVMOption.a; sourceTree = "<group>"; };
-		22379460209B557900B15016 /* libLLVMMC.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMMC.a; path = ../build_ios/lib/libLLVMMC.a; sourceTree = "<group>"; };
-		22379461209B557900B15016 /* libLLVMDebugInfoDWARF.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMDebugInfoDWARF.a; path = ../build_ios/lib/libLLVMDebugInfoDWARF.a; sourceTree = "<group>"; };
-		22379462209B557900B15016 /* libLLVMipo.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMipo.a; path = ../build_ios/lib/libLLVMipo.a; sourceTree = "<group>"; };
-		22379463209B557900B15016 /* libLLVMAArch64CodeGen.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAArch64CodeGen.a; path = ../build_ios/lib/libLLVMAArch64CodeGen.a; sourceTree = "<group>"; };
-		22379464209B557900B15016 /* libLLVMTestingSupport.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMTestingSupport.a; path = ../build_ios/lib/libLLVMTestingSupport.a; sourceTree = "<group>"; };
-		22379465209B557900B15016 /* libLLVMObjCARCOpts.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMObjCARCOpts.a; path = ../build_ios/lib/libLLVMObjCARCOpts.a; sourceTree = "<group>"; };
-		22379466209B557900B15016 /* libLLVMSymbolize.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMSymbolize.a; path = ../build_ios/lib/libLLVMSymbolize.a; sourceTree = "<group>"; };
-		22379467209B557900B15016 /* libLLVMTransformUtils.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMTransformUtils.a; path = ../build_ios/lib/libLLVMTransformUtils.a; sourceTree = "<group>"; };
-		22379468209B557900B15016 /* libLLVMMCParser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMMCParser.a; path = ../build_ios/lib/libLLVMMCParser.a; sourceTree = "<group>"; };
-		22379469209B557900B15016 /* libLLVMFuzzMutate.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMFuzzMutate.a; path = ../build_ios/lib/libLLVMFuzzMutate.a; sourceTree = "<group>"; };
-		2237946A209B557900B15016 /* libLLVMScalarOpts.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMScalarOpts.a; path = ../build_ios/lib/libLLVMScalarOpts.a; sourceTree = "<group>"; };
-		2237946B209B557900B15016 /* libLLVMAsmParser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAsmParser.a; path = ../build_ios/lib/libLLVMAsmParser.a; sourceTree = "<group>"; };
-		2237946C209B557900B15016 /* libLLVMAnalysis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAnalysis.a; path = ../build_ios/lib/libLLVMAnalysis.a; sourceTree = "<group>"; };
-		2237946D209B557900B15016 /* libLLVMLinker.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMLinker.a; path = ../build_ios/lib/libLLVMLinker.a; sourceTree = "<group>"; };
-		2237946E209B557900B15016 /* libLLVMTarget.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMTarget.a; path = ../build_ios/lib/libLLVMTarget.a; sourceTree = "<group>"; };
-		2237946F209B557900B15016 /* libLLVMLTO.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMLTO.a; path = ../build_ios/lib/libLLVMLTO.a; sourceTree = "<group>"; };
-		22379470209B557900B15016 /* libLLVMDemangle.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMDemangle.a; path = ../build_ios/lib/libLLVMDemangle.a; sourceTree = "<group>"; };
-		22379471209B557900B15016 /* libLLVMInstrumentation.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMInstrumentation.a; path = ../build_ios/lib/libLLVMInstrumentation.a; sourceTree = "<group>"; };
-		22379472209B557900B15016 /* libLLVMBitWriter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMBitWriter.a; path = ../build_ios/lib/libLLVMBitWriter.a; sourceTree = "<group>"; };
-		22379473209B557900B15016 /* libLLVMLineEditor.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMLineEditor.a; path = ../build_ios/lib/libLLVMLineEditor.a; sourceTree = "<group>"; };
-		22379474209B557900B15016 /* libLLVMDebugInfoPDB.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMDebugInfoPDB.a; path = ../build_ios/lib/libLLVMDebugInfoPDB.a; sourceTree = "<group>"; };
-		22379475209B557900B15016 /* libLLVMMCJIT.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMMCJIT.a; path = ../build_ios/lib/libLLVMMCJIT.a; sourceTree = "<group>"; };
-		22379476209B557900B15016 /* libLLVMAArch64Desc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAArch64Desc.a; path = ../build_ios/lib/libLLVMAArch64Desc.a; sourceTree = "<group>"; };
-		22379477209B557A00B15016 /* libLLVMOrcJIT.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMOrcJIT.a; path = ../build_ios/lib/libLLVMOrcJIT.a; sourceTree = "<group>"; };
-		22379478209B557A00B15016 /* libLLVMIRReader.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMIRReader.a; path = ../build_ios/lib/libLLVMIRReader.a; sourceTree = "<group>"; };
-		22379479209B557A00B15016 /* libLLVMGlobalISel.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMGlobalISel.a; path = ../build_ios/lib/libLLVMGlobalISel.a; sourceTree = "<group>"; };
-		2237947A209B557A00B15016 /* libLLVMTableGen.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMTableGen.a; path = ../build_ios/lib/libLLVMTableGen.a; sourceTree = "<group>"; };
-		2237947B209B557A00B15016 /* libLLVMDebugInfoMSF.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMDebugInfoMSF.a; path = ../build_ios/lib/libLLVMDebugInfoMSF.a; sourceTree = "<group>"; };
-		2237947C209B557A00B15016 /* libLLVMAggressiveInstCombine.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAggressiveInstCombine.a; path = ../build_ios/lib/libLLVMAggressiveInstCombine.a; sourceTree = "<group>"; };
-		2237947D209B557A00B15016 /* libLLVMObjectYAML.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMObjectYAML.a; path = ../build_ios/lib/libLLVMObjectYAML.a; sourceTree = "<group>"; };
-		2237947E209B557A00B15016 /* libLLVMSupport.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMSupport.a; path = ../build_ios/lib/libLLVMSupport.a; sourceTree = "<group>"; };
-		2237947F209B557A00B15016 /* libLLVMObject.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMObject.a; path = ../build_ios/lib/libLLVMObject.a; sourceTree = "<group>"; };
-		22379480209B557A00B15016 /* libLLVMAArch64Disassembler.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAArch64Disassembler.a; path = ../build_ios/lib/libLLVMAArch64Disassembler.a; sourceTree = "<group>"; };
-		22379481209B557A00B15016 /* libLLVMAArch64AsmParser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAArch64AsmParser.a; path = ../build_ios/lib/libLLVMAArch64AsmParser.a; sourceTree = "<group>"; };
-		22379482209B557A00B15016 /* libLLVMSelectionDAG.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMSelectionDAG.a; path = ../build_ios/lib/libLLVMSelectionDAG.a; sourceTree = "<group>"; };
-		22379484209B557A00B15016 /* libLLVMRuntimeDyld.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMRuntimeDyld.a; path = ../build_ios/lib/libLLVMRuntimeDyld.a; sourceTree = "<group>"; };
-		22379485209B557A00B15016 /* libLLVMCFIVerify.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMCFIVerify.a; path = ../build_ios/lib/libLLVMCFIVerify.a; sourceTree = "<group>"; };
-		22379486209B557A00B15016 /* libLLVMCodeGen.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMCodeGen.a; path = ../build_ios/lib/libLLVMCodeGen.a; sourceTree = "<group>"; };
-		22379487209B557A00B15016 /* libLLVMBitReader.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMBitReader.a; path = ../build_ios/lib/libLLVMBitReader.a; sourceTree = "<group>"; };
+		2237944A209B557800B15016 /* libLLVMMCDisassembler.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMMCDisassembler.a; path = ./lib/libLLVMMCDisassembler.a; sourceTree = "<group>"; };
+		2237944B209B557800B15016 /* libLLVMBinaryFormat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMBinaryFormat.a; path = ./lib/libLLVMBinaryFormat.a; sourceTree = "<group>"; };
+		2237944C209B557800B15016 /* libLLVMCoverage.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMCoverage.a; path = ./lib/libLLVMCoverage.a; sourceTree = "<group>"; };
+		2237944D209B557800B15016 /* libLLVMCore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMCore.a; path = ./lib/libLLVMCore.a; sourceTree = "<group>"; };
+		2237944E209B557800B15016 /* libLLVMDlltoolDriver.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMDlltoolDriver.a; path = ./lib/libLLVMDlltoolDriver.a; sourceTree = "<group>"; };
+		2237944F209B557800B15016 /* libLLVMExegesis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMExegesis.a; path = ./lib/libLLVMExegesis.a; sourceTree = "<group>"; };
+		22379450209B557800B15016 /* libLLVMInterpreter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMInterpreter.a; path = ./lib/libLLVMInterpreter.a; sourceTree = "<group>"; };
+		22379451209B557800B15016 /* libLLVMWindowsManifest.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWindowsManifest.a; path = ./lib/libLLVMWindowsManifest.a; sourceTree = "<group>"; };
+		22379452209B557800B15016 /* libLLVMAArch64Utils.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAArch64Utils.a; path = ./lib/libLLVMAArch64Utils.a; sourceTree = "<group>"; };
+		22379453209B557800B15016 /* libLLVMMIRParser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMMIRParser.a; path = ./lib/libLLVMMIRParser.a; sourceTree = "<group>"; };
+		22379454209B557800B15016 /* libLLVMVectorize.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMVectorize.a; path = ./lib/libLLVMVectorize.a; sourceTree = "<group>"; };
+		22379455209B557800B15016 /* libLLVMLibDriver.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMLibDriver.a; path = ./lib/libLLVMLibDriver.a; sourceTree = "<group>"; };
+		22379456209B557800B15016 /* libLLVMCoroutines.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMCoroutines.a; path = ./lib/libLLVMCoroutines.a; sourceTree = "<group>"; };
+		22379457209B557800B15016 /* libLLVMPasses.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMPasses.a; path = ./lib/libLLVMPasses.a; sourceTree = "<group>"; };
+		22379458209B557800B15016 /* libLLVMInstCombine.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMInstCombine.a; path = ./lib/libLLVMInstCombine.a; sourceTree = "<group>"; };
+		22379459209B557800B15016 /* libLLVMProfileData.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMProfileData.a; path = ./lib/libLLVMProfileData.a; sourceTree = "<group>"; };
+		2237945A209B557800B15016 /* libLLVMXRay.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMXRay.a; path = ./lib/libLLVMXRay.a; sourceTree = "<group>"; };
+		2237945B209B557800B15016 /* libLLVMExecutionEngine.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMExecutionEngine.a; path = ./lib/libLLVMExecutionEngine.a; sourceTree = "<group>"; };
+		2237945C209B557800B15016 /* libLLVMDebugInfoCodeView.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMDebugInfoCodeView.a; path = ./lib/libLLVMDebugInfoCodeView.a; sourceTree = "<group>"; };
+		2237945D209B557800B15016 /* libLLVMAArch64Info.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAArch64Info.a; path = ./lib/libLLVMAArch64Info.a; sourceTree = "<group>"; };
+		2237945E209B557800B15016 /* libLLVMAsmPrinter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAsmPrinter.a; path = ./lib/libLLVMAsmPrinter.a; sourceTree = "<group>"; };
+		2237945F209B557900B15016 /* libLLVMOption.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMOption.a; path = ./lib/libLLVMOption.a; sourceTree = "<group>"; };
+		22379460209B557900B15016 /* libLLVMMC.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMMC.a; path = ./lib/libLLVMMC.a; sourceTree = "<group>"; };
+		22379461209B557900B15016 /* libLLVMDebugInfoDWARF.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMDebugInfoDWARF.a; path = ./lib/libLLVMDebugInfoDWARF.a; sourceTree = "<group>"; };
+		22379462209B557900B15016 /* libLLVMipo.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMipo.a; path = ./lib/libLLVMipo.a; sourceTree = "<group>"; };
+		22379463209B557900B15016 /* libLLVMAArch64CodeGen.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAArch64CodeGen.a; path = ./lib/libLLVMAArch64CodeGen.a; sourceTree = "<group>"; };
+		22379464209B557900B15016 /* libLLVMTestingSupport.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMTestingSupport.a; path = ./lib/libLLVMTestingSupport.a; sourceTree = "<group>"; };
+		22379465209B557900B15016 /* libLLVMObjCARCOpts.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMObjCARCOpts.a; path = ./lib/libLLVMObjCARCOpts.a; sourceTree = "<group>"; };
+		22379466209B557900B15016 /* libLLVMSymbolize.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMSymbolize.a; path = ./lib/libLLVMSymbolize.a; sourceTree = "<group>"; };
+		22379467209B557900B15016 /* libLLVMTransformUtils.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMTransformUtils.a; path = ./lib/libLLVMTransformUtils.a; sourceTree = "<group>"; };
+		22379468209B557900B15016 /* libLLVMMCParser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMMCParser.a; path = ./lib/libLLVMMCParser.a; sourceTree = "<group>"; };
+		22379469209B557900B15016 /* libLLVMFuzzMutate.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMFuzzMutate.a; path = ./lib/libLLVMFuzzMutate.a; sourceTree = "<group>"; };
+		2237946A209B557900B15016 /* libLLVMScalarOpts.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMScalarOpts.a; path = ./lib/libLLVMScalarOpts.a; sourceTree = "<group>"; };
+		2237946B209B557900B15016 /* libLLVMAsmParser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAsmParser.a; path = ./lib/libLLVMAsmParser.a; sourceTree = "<group>"; };
+		2237946C209B557900B15016 /* libLLVMAnalysis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAnalysis.a; path = ./lib/libLLVMAnalysis.a; sourceTree = "<group>"; };
+		2237946D209B557900B15016 /* libLLVMLinker.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMLinker.a; path = ./lib/libLLVMLinker.a; sourceTree = "<group>"; };
+		2237946E209B557900B15016 /* libLLVMTarget.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMTarget.a; path = ./lib/libLLVMTarget.a; sourceTree = "<group>"; };
+		2237946F209B557900B15016 /* libLLVMLTO.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMLTO.a; path = ./lib/libLLVMLTO.a; sourceTree = "<group>"; };
+		22379470209B557900B15016 /* libLLVMDemangle.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMDemangle.a; path = ./lib/libLLVMDemangle.a; sourceTree = "<group>"; };
+		22379471209B557900B15016 /* libLLVMInstrumentation.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMInstrumentation.a; path = ./lib/libLLVMInstrumentation.a; sourceTree = "<group>"; };
+		22379472209B557900B15016 /* libLLVMBitWriter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMBitWriter.a; path = ./lib/libLLVMBitWriter.a; sourceTree = "<group>"; };
+		22379473209B557900B15016 /* libLLVMLineEditor.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMLineEditor.a; path = ./lib/libLLVMLineEditor.a; sourceTree = "<group>"; };
+		22379474209B557900B15016 /* libLLVMDebugInfoPDB.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMDebugInfoPDB.a; path = ./lib/libLLVMDebugInfoPDB.a; sourceTree = "<group>"; };
+		22379475209B557900B15016 /* libLLVMMCJIT.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMMCJIT.a; path = ./lib/libLLVMMCJIT.a; sourceTree = "<group>"; };
+		22379476209B557900B15016 /* libLLVMAArch64Desc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAArch64Desc.a; path = ./lib/libLLVMAArch64Desc.a; sourceTree = "<group>"; };
+		22379477209B557A00B15016 /* libLLVMOrcJIT.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMOrcJIT.a; path = ./lib/libLLVMOrcJIT.a; sourceTree = "<group>"; };
+		22379478209B557A00B15016 /* libLLVMIRReader.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMIRReader.a; path = ./lib/libLLVMIRReader.a; sourceTree = "<group>"; };
+		22379479209B557A00B15016 /* libLLVMGlobalISel.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMGlobalISel.a; path = ./lib/libLLVMGlobalISel.a; sourceTree = "<group>"; };
+		2237947A209B557A00B15016 /* libLLVMTableGen.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMTableGen.a; path = ./lib/libLLVMTableGen.a; sourceTree = "<group>"; };
+		2237947B209B557A00B15016 /* libLLVMDebugInfoMSF.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMDebugInfoMSF.a; path = ./lib/libLLVMDebugInfoMSF.a; sourceTree = "<group>"; };
+		2237947C209B557A00B15016 /* libLLVMAggressiveInstCombine.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAggressiveInstCombine.a; path = ./lib/libLLVMAggressiveInstCombine.a; sourceTree = "<group>"; };
+		2237947D209B557A00B15016 /* libLLVMObjectYAML.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMObjectYAML.a; path = ./lib/libLLVMObjectYAML.a; sourceTree = "<group>"; };
+		2237947E209B557A00B15016 /* libLLVMSupport.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMSupport.a; path = ./lib/libLLVMSupport.a; sourceTree = "<group>"; };
+		2237947F209B557A00B15016 /* libLLVMObject.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMObject.a; path = ./lib/libLLVMObject.a; sourceTree = "<group>"; };
+		22379480209B557A00B15016 /* libLLVMAArch64Disassembler.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAArch64Disassembler.a; path = ./lib/libLLVMAArch64Disassembler.a; sourceTree = "<group>"; };
+		22379481209B557A00B15016 /* libLLVMAArch64AsmParser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMAArch64AsmParser.a; path = ./lib/libLLVMAArch64AsmParser.a; sourceTree = "<group>"; };
+		22379482209B557A00B15016 /* libLLVMSelectionDAG.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMSelectionDAG.a; path = ./lib/libLLVMSelectionDAG.a; sourceTree = "<group>"; };
+		22379484209B557A00B15016 /* libLLVMRuntimeDyld.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMRuntimeDyld.a; path = ./lib/libLLVMRuntimeDyld.a; sourceTree = "<group>"; };
+		22379485209B557A00B15016 /* libLLVMCFIVerify.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMCFIVerify.a; path = ./lib/libLLVMCFIVerify.a; sourceTree = "<group>"; };
+		22379486209B557A00B15016 /* libLLVMCodeGen.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMCodeGen.a; path = ./lib/libLLVMCodeGen.a; sourceTree = "<group>"; };
+		22379487209B557A00B15016 /* libLLVMBitReader.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMBitReader.a; path = ./lib/libLLVMBitReader.a; sourceTree = "<group>"; };
 		223794C8209B566E00B15016 /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
 		223794CA209B568A00B15016 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		223794CC209B56AF00B15016 /* libcurses.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurses.tbd; path = usr/lib/libcurses.tbd; sourceTree = SDKROOT; };
-		22720AA42386E2CB005BEB9E /* libLLVMBitstreamReader.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMBitstreamReader.a; path = ../build_ios/lib/libLLVMBitstreamReader.a; sourceTree = "<group>"; };
-		22720AA62386E6E9005BEB9E /* libLLVMTextAPI.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMTextAPI.a; path = ../build_ios/lib/libLLVMTextAPI.a; sourceTree = "<group>"; };
-		22720AA82386E7EF005BEB9E /* libLLVMRemarks.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMRemarks.a; path = ../build_ios/lib/libLLVMRemarks.a; sourceTree = "<group>"; };
-		22720AAA2386E9A3005BEB9E /* libLLVMJITLink.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMJITLink.a; path = ../build_ios/lib/libLLVMJITLink.a; sourceTree = "<group>"; };
-		22720AAE2386EBF6005BEB9E /* libclangToolingInclusions.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangToolingInclusions.a; path = ../build_ios/lib/libclangToolingInclusions.a; sourceTree = "<group>"; };
-		22720AB02386EC02005BEB9E /* libclangToolingSyntax.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangToolingSyntax.a; path = ../build_ios/lib/libclangToolingSyntax.a; sourceTree = "<group>"; };
+		22608587244C3B4E00B88587 /* llvm-ar.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = "llvm-ar.cpp.o"; path = "./tools/llvm-ar/CMakeFiles/llvm-ar.dir/llvm-ar.cpp.o"; sourceTree = "<group>"; };
+		2260858B244C3C7700B88587 /* ar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ar.h; path = ../frameworks/ar/ar.h; sourceTree = SOURCE_ROOT; };
+		22720AA42386E2CB005BEB9E /* libLLVMBitstreamReader.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMBitstreamReader.a; path = ./lib/libLLVMBitstreamReader.a; sourceTree = "<group>"; };
+		22720AA62386E6E9005BEB9E /* libLLVMTextAPI.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMTextAPI.a; path = ./lib/libLLVMTextAPI.a; sourceTree = "<group>"; };
+		22720AA82386E7EF005BEB9E /* libLLVMRemarks.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMRemarks.a; path = ./lib/libLLVMRemarks.a; sourceTree = "<group>"; };
+		22720AAA2386E9A3005BEB9E /* libLLVMJITLink.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMJITLink.a; path = ./lib/libLLVMJITLink.a; sourceTree = "<group>"; };
+		22720AAE2386EBF6005BEB9E /* libclangToolingInclusions.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangToolingInclusions.a; path = ./lib/libclangToolingInclusions.a; sourceTree = "<group>"; };
+		22720AB02386EC02005BEB9E /* libclangToolingSyntax.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libclangToolingSyntax.a; path = ./lib/libclangToolingSyntax.a; sourceTree = "<group>"; };
 		228B141523A81EC700FE5B43 /* lld.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = lld.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		228B141623A81ECE00FE5B43 /* clang copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "clang copy-Info.plist"; path = "/Users/holzschu/src/Xcode_iPad/llvm/frameworks/clang copy-Info.plist"; sourceTree = "<absolute>"; };
-		228B141723A81FA200FE5B43 /* LTO.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LTO.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/LTO.cpp.o; sourceTree = "<group>"; };
-		228B141823A81FA200FE5B43 /* MarkLive.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MarkLive.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/MarkLive.cpp.o; sourceTree = "<group>"; };
-		228B141923A81FA200FE5B43 /* WriterUtils.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = WriterUtils.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/WriterUtils.cpp.o; sourceTree = "<group>"; };
-		228B141A23A81FA200FE5B43 /* Writer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Writer.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/Writer.cpp.o; sourceTree = "<group>"; };
-		228B141B23A81FA200FE5B43 /* InputChunks.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = InputChunks.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/InputChunks.cpp.o; sourceTree = "<group>"; };
-		228B141C23A81FA200FE5B43 /* OutputSections.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = OutputSections.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/OutputSections.cpp.o; sourceTree = "<group>"; };
-		228B141D23A81FA200FE5B43 /* InputFiles.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = InputFiles.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/InputFiles.cpp.o; sourceTree = "<group>"; };
-		228B141E23A81FA200FE5B43 /* Relocations.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Relocations.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/Relocations.cpp.o; sourceTree = "<group>"; };
-		228B141F23A81FA200FE5B43 /* Symbols.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Symbols.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/Symbols.cpp.o; sourceTree = "<group>"; };
-		228B142023A81FA200FE5B43 /* Driver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Driver.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/Driver.cpp.o; sourceTree = "<group>"; };
-		228B142123A81FA200FE5B43 /* SymbolTable.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SymbolTable.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/SymbolTable.cpp.o; sourceTree = "<group>"; };
-		228B142223A81FA200FE5B43 /* SyntheticSections.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SyntheticSections.cpp.o; path = ../build_ios/tools/lld/wasm/CMakeFiles/lldWasm.dir/SyntheticSections.cpp.o; sourceTree = "<group>"; };
+		228B141723A81FA200FE5B43 /* LTO.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LTO.cpp.o; path = ./tools/lld/wasm/CMakeFiles/lldWasm.dir/LTO.cpp.o; sourceTree = "<group>"; };
+		228B141823A81FA200FE5B43 /* MarkLive.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MarkLive.cpp.o; path = ./tools/lld/wasm/CMakeFiles/lldWasm.dir/MarkLive.cpp.o; sourceTree = "<group>"; };
+		228B141923A81FA200FE5B43 /* WriterUtils.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = WriterUtils.cpp.o; path = ./tools/lld/wasm/CMakeFiles/lldWasm.dir/WriterUtils.cpp.o; sourceTree = "<group>"; };
+		228B141A23A81FA200FE5B43 /* Writer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Writer.cpp.o; path = ./tools/lld/wasm/CMakeFiles/lldWasm.dir/Writer.cpp.o; sourceTree = "<group>"; };
+		228B141B23A81FA200FE5B43 /* InputChunks.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = InputChunks.cpp.o; path = ./tools/lld/wasm/CMakeFiles/lldWasm.dir/InputChunks.cpp.o; sourceTree = "<group>"; };
+		228B141C23A81FA200FE5B43 /* OutputSections.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = OutputSections.cpp.o; path = ./tools/lld/wasm/CMakeFiles/lldWasm.dir/OutputSections.cpp.o; sourceTree = "<group>"; };
+		228B141D23A81FA200FE5B43 /* InputFiles.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = InputFiles.cpp.o; path = ./tools/lld/wasm/CMakeFiles/lldWasm.dir/InputFiles.cpp.o; sourceTree = "<group>"; };
+		228B141E23A81FA200FE5B43 /* Relocations.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Relocations.cpp.o; path = ./tools/lld/wasm/CMakeFiles/lldWasm.dir/Relocations.cpp.o; sourceTree = "<group>"; };
+		228B141F23A81FA200FE5B43 /* Symbols.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Symbols.cpp.o; path = ./tools/lld/wasm/CMakeFiles/lldWasm.dir/Symbols.cpp.o; sourceTree = "<group>"; };
+		228B142023A81FA200FE5B43 /* Driver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Driver.cpp.o; path = ./tools/lld/wasm/CMakeFiles/lldWasm.dir/Driver.cpp.o; sourceTree = "<group>"; };
+		228B142123A81FA200FE5B43 /* SymbolTable.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SymbolTable.cpp.o; path = ./tools/lld/wasm/CMakeFiles/lldWasm.dir/SymbolTable.cpp.o; sourceTree = "<group>"; };
+		228B142223A81FA200FE5B43 /* SyntheticSections.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SyntheticSections.cpp.o; path = ./tools/lld/wasm/CMakeFiles/lldWasm.dir/SyntheticSections.cpp.o; sourceTree = "<group>"; };
 		228B142F23A8200200FE5B43 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
-		228B143123A8201F00FE5B43 /* lld.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = lld.cpp.o; path = ../build_ios/tools/lld/tools/lld/CMakeFiles/lld.dir/lld.cpp.o; sourceTree = "<group>"; };
-		228B143323A8203300FE5B43 /* PDB.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = PDB.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/PDB.cpp.o; sourceTree = "<group>"; };
-		228B143423A8203300FE5B43 /* InputFiles.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = InputFiles.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/InputFiles.cpp.o; sourceTree = "<group>"; };
-		228B143523A8203300FE5B43 /* LTO.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LTO.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/LTO.cpp.o; sourceTree = "<group>"; };
-		228B143623A8203300FE5B43 /* DLL.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DLL.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/DLL.cpp.o; sourceTree = "<group>"; };
-		228B143723A8203300FE5B43 /* MinGW.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MinGW.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/MinGW.cpp.o; sourceTree = "<group>"; };
-		228B143823A8203300FE5B43 /* SymbolTable.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SymbolTable.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/SymbolTable.cpp.o; sourceTree = "<group>"; };
-		228B143923A8203300FE5B43 /* DebugTypes.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DebugTypes.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/DebugTypes.cpp.o; sourceTree = "<group>"; };
-		228B143A23A8203300FE5B43 /* ICF.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ICF.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/ICF.cpp.o; sourceTree = "<group>"; };
-		228B143B23A8203300FE5B43 /* DriverUtils.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DriverUtils.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/DriverUtils.cpp.o; sourceTree = "<group>"; };
-		228B143C23A8203300FE5B43 /* Symbols.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Symbols.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/Symbols.cpp.o; sourceTree = "<group>"; };
-		228B143D23A8203300FE5B43 /* Chunks.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Chunks.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/Chunks.cpp.o; sourceTree = "<group>"; };
-		228B143E23A8203300FE5B43 /* Driver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Driver.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/Driver.cpp.o; sourceTree = "<group>"; };
-		228B143F23A8203300FE5B43 /* MarkLive.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MarkLive.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/MarkLive.cpp.o; sourceTree = "<group>"; };
-		228B144023A8203300FE5B43 /* Writer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Writer.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/Writer.cpp.o; sourceTree = "<group>"; };
-		228B144123A8203300FE5B43 /* MapFile.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MapFile.cpp.o; path = ../build_ios/tools/lld/COFF/CMakeFiles/lldCOFF.dir/MapFile.cpp.o; sourceTree = "<group>"; };
-		228B145123A8204A00FE5B43 /* Memory.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Memory.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Memory.cpp.o; sourceTree = "<group>"; };
-		228B145223A8204A00FE5B43 /* Version.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Version.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Version.cpp.o; sourceTree = "<group>"; };
-		228B145323A8204A00FE5B43 /* Strings.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Strings.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Strings.cpp.o; sourceTree = "<group>"; };
-		228B145423A8204A00FE5B43 /* Timer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Timer.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Timer.cpp.o; sourceTree = "<group>"; };
-		228B145523A8204A00FE5B43 /* Reproduce.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Reproduce.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Reproduce.cpp.o; sourceTree = "<group>"; };
-		228B145623A8204A00FE5B43 /* TargetOptionsCommandFlags.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = TargetOptionsCommandFlags.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/TargetOptionsCommandFlags.cpp.o; sourceTree = "<group>"; };
-		228B145723A8204A00FE5B43 /* Filesystem.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Filesystem.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Filesystem.cpp.o; sourceTree = "<group>"; };
-		228B145823A8204A00FE5B43 /* ErrorHandler.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ErrorHandler.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/ErrorHandler.cpp.o; sourceTree = "<group>"; };
-		228B145923A8204A00FE5B43 /* DWARF.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DWARF.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/DWARF.cpp.o; sourceTree = "<group>"; };
-		228B145A23A8204A00FE5B43 /* Args.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Args.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Args.cpp.o; sourceTree = "<group>"; };
-		228B145B23A8204A00FE5B43 /* Threads.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Threads.cpp.o; path = ../build_ios/tools/lld/Common/CMakeFiles/lldCommon.dir/Threads.cpp.o; sourceTree = "<group>"; };
-		228B146723A8206700FE5B43 /* Writer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Writer.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Writer.cpp.o; sourceTree = "<group>"; };
-		228B146823A8206700FE5B43 /* InputSection.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = InputSection.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/InputSection.cpp.o; sourceTree = "<group>"; };
-		228B146923A8206700FE5B43 /* DWARF.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DWARF.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/DWARF.cpp.o; sourceTree = "<group>"; };
-		228B146A23A8206700FE5B43 /* AArch64ErrataFix.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = AArch64ErrataFix.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/AArch64ErrataFix.cpp.o; sourceTree = "<group>"; };
-		228B146B23A8206800FE5B43 /* EhFrame.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = EhFrame.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/EhFrame.cpp.o; sourceTree = "<group>"; };
-		228B146C23A8206800FE5B43 /* Target.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Target.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Target.cpp.o; sourceTree = "<group>"; };
-		228B146D23A8206800FE5B43 /* DriverUtils.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DriverUtils.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/DriverUtils.cpp.o; sourceTree = "<group>"; };
-		228B146E23A8206800FE5B43 /* InputFiles.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = InputFiles.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/InputFiles.cpp.o; sourceTree = "<group>"; };
-		228B146F23A8206800FE5B43 /* Relocations.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Relocations.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Relocations.cpp.o; sourceTree = "<group>"; };
-		228B147023A8206800FE5B43 /* OutputSections.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = OutputSections.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/OutputSections.cpp.o; sourceTree = "<group>"; };
-		228B147123A8206800FE5B43 /* Driver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Driver.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Driver.cpp.o; sourceTree = "<group>"; };
-		228B147223A8206800FE5B43 /* ICF.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ICF.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/ICF.cpp.o; sourceTree = "<group>"; };
-		228B147323A8206800FE5B43 /* MarkLive.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MarkLive.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/MarkLive.cpp.o; sourceTree = "<group>"; };
-		228B147423A8206900FE5B43 /* ScriptParser.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ScriptParser.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/ScriptParser.cpp.o; sourceTree = "<group>"; };
-		228B147523A8206900FE5B43 /* CallGraphSort.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = CallGraphSort.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/CallGraphSort.cpp.o; sourceTree = "<group>"; };
-		228B147623A8206900FE5B43 /* LTO.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LTO.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/LTO.cpp.o; sourceTree = "<group>"; };
-		228B147723A8206900FE5B43 /* SyntheticSections.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SyntheticSections.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/SyntheticSections.cpp.o; sourceTree = "<group>"; };
-		228B147823A8206900FE5B43 /* Arch */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Arch; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch; sourceTree = "<group>"; };
-		228B147923A8206900FE5B43 /* ScriptLexer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ScriptLexer.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/ScriptLexer.cpp.o; sourceTree = "<group>"; };
-		228B147A23A8206900FE5B43 /* SymbolTable.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SymbolTable.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/SymbolTable.cpp.o; sourceTree = "<group>"; };
-		228B147B23A8206900FE5B43 /* MapFile.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MapFile.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/MapFile.cpp.o; sourceTree = "<group>"; };
-		228B147C23A8206900FE5B43 /* ARMErrataFix.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ARMErrataFix.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/ARMErrataFix.cpp.o; sourceTree = "<group>"; };
-		228B147D23A8206900FE5B43 /* Thunks.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Thunks.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Thunks.cpp.o; sourceTree = "<group>"; };
-		228B147E23A8206900FE5B43 /* Symbols.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Symbols.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Symbols.cpp.o; sourceTree = "<group>"; };
-		228B147F23A8206A00FE5B43 /* LinkerScript.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LinkerScript.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/LinkerScript.cpp.o; sourceTree = "<group>"; };
-		228B149923A8208100FE5B43 /* RISCV.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = RISCV.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/RISCV.cpp.o; sourceTree = "<group>"; };
-		228B149A23A8208100FE5B43 /* X86_64.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = X86_64.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/X86_64.cpp.o; sourceTree = "<group>"; };
-		228B149B23A8208100FE5B43 /* ARM.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ARM.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/ARM.cpp.o; sourceTree = "<group>"; };
-		228B149C23A8208100FE5B43 /* MipsArchTree.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MipsArchTree.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/MipsArchTree.cpp.o; sourceTree = "<group>"; };
-		228B149D23A8208100FE5B43 /* AArch64.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = AArch64.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/AArch64.cpp.o; sourceTree = "<group>"; };
-		228B149E23A8208100FE5B43 /* AMDGPU.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = AMDGPU.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/AMDGPU.cpp.o; sourceTree = "<group>"; };
-		228B149F23A8208100FE5B43 /* Hexagon.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Hexagon.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/Hexagon.cpp.o; sourceTree = "<group>"; };
-		228B14A023A8208100FE5B43 /* MSP430.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MSP430.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/MSP430.cpp.o; sourceTree = "<group>"; };
-		228B14A123A8208100FE5B43 /* PPC64.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = PPC64.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/PPC64.cpp.o; sourceTree = "<group>"; };
-		228B14A223A8208100FE5B43 /* PPC.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = PPC.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/PPC.cpp.o; sourceTree = "<group>"; };
-		228B14A323A8208100FE5B43 /* AVR.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = AVR.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/AVR.cpp.o; sourceTree = "<group>"; };
-		228B14A423A8208100FE5B43 /* SPARCV9.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SPARCV9.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/SPARCV9.cpp.o; sourceTree = "<group>"; };
-		228B14A523A8208100FE5B43 /* Mips.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Mips.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/Mips.cpp.o; sourceTree = "<group>"; };
-		228B14A623A8208100FE5B43 /* X86.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = X86.cpp.o; path = ../build_ios/tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/X86.cpp.o; sourceTree = "<group>"; };
-		228B14B523A8209F00FE5B43 /* Driver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Driver.cpp.o; path = ../build_ios/tools/lld/MinGW/CMakeFiles/lldMinGW.dir/Driver.cpp.o; sourceTree = "<group>"; };
-		228B14B723A820D200FE5B43 /* CompactUnwindPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = CompactUnwindPass.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/CompactUnwindPass.cpp.o; sourceTree = "<group>"; };
-		228B14B823A820D200FE5B43 /* MachONormalizedFileFromAtoms.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachONormalizedFileFromAtoms.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachONormalizedFileFromAtoms.cpp.o; sourceTree = "<group>"; };
-		228B14B923A820D200FE5B43 /* MachONormalizedFileBinaryWriter.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachONormalizedFileBinaryWriter.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachONormalizedFileBinaryWriter.cpp.o; sourceTree = "<group>"; };
-		228B14BA23A820D200FE5B43 /* ArchHandler_arm64.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ArchHandler_arm64.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ArchHandler_arm64.cpp.o; sourceTree = "<group>"; };
-		228B14BB23A820D200FE5B43 /* ArchHandler_x86_64.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ArchHandler_x86_64.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ArchHandler_x86_64.cpp.o; sourceTree = "<group>"; };
-		228B14BC23A820D200FE5B43 /* MachOLinkingContext.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachOLinkingContext.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachOLinkingContext.cpp.o; sourceTree = "<group>"; };
-		228B14BD23A820D200FE5B43 /* StubsPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = StubsPass.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/StubsPass.cpp.o; sourceTree = "<group>"; };
-		228B14BE23A820D200FE5B43 /* MachONormalizedFileBinaryReader.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachONormalizedFileBinaryReader.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachONormalizedFileBinaryReader.cpp.o; sourceTree = "<group>"; };
-		228B14BF23A820D200FE5B43 /* GOTPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = GOTPass.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/GOTPass.cpp.o; sourceTree = "<group>"; };
-		228B14C023A820D200FE5B43 /* LayoutPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LayoutPass.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/LayoutPass.cpp.o; sourceTree = "<group>"; };
-		228B14C123A820D300FE5B43 /* ArchHandler_x86.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ArchHandler_x86.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ArchHandler_x86.cpp.o; sourceTree = "<group>"; };
-		228B14C223A820D300FE5B43 /* MachONormalizedFileToAtoms.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachONormalizedFileToAtoms.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachONormalizedFileToAtoms.cpp.o; sourceTree = "<group>"; };
-		228B14C323A820D300FE5B43 /* ArchHandler_arm.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ArchHandler_arm.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ArchHandler_arm.cpp.o; sourceTree = "<group>"; };
-		228B14C423A820D300FE5B43 /* TLVPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = TLVPass.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/TLVPass.cpp.o; sourceTree = "<group>"; };
-		228B14C523A820D300FE5B43 /* WriterMachO.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = WriterMachO.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/WriterMachO.cpp.o; sourceTree = "<group>"; };
-		228B14C623A820D300FE5B43 /* MachONormalizedFileYAML.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachONormalizedFileYAML.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachONormalizedFileYAML.cpp.o; sourceTree = "<group>"; };
-		228B14C723A820D300FE5B43 /* ArchHandler.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ArchHandler.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ArchHandler.cpp.o; sourceTree = "<group>"; };
-		228B14C823A820D300FE5B43 /* ObjCPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ObjCPass.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ObjCPass.cpp.o; sourceTree = "<group>"; };
-		228B14C923A820D300FE5B43 /* ShimPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ShimPass.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ShimPass.cpp.o; sourceTree = "<group>"; };
-		228B14DD23A820E100FE5B43 /* ReaderWriterYAML.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ReaderWriterYAML.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/YAML/CMakeFiles/lldYAML.dir/ReaderWriterYAML.cpp.o; sourceTree = "<group>"; };
-		228B14DF23A820E900FE5B43 /* FileArchive.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = FileArchive.cpp.o; path = ../build_ios/tools/lld/lib/ReaderWriter/CMakeFiles/lldReaderWriter.dir/FileArchive.cpp.o; sourceTree = "<group>"; };
-		228B14E123A820F700FE5B43 /* DarwinLdDriver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DarwinLdDriver.cpp.o; path = ../build_ios/tools/lld/lib/Driver/CMakeFiles/lldDriver.dir/DarwinLdDriver.cpp.o; sourceTree = "<group>"; };
-		228B14E323A8210000FE5B43 /* File.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = File.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/File.cpp.o; sourceTree = "<group>"; };
-		228B14E423A8210000FE5B43 /* SymbolTable.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SymbolTable.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/SymbolTable.cpp.o; sourceTree = "<group>"; };
-		228B14E523A8210000FE5B43 /* Writer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Writer.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/Writer.cpp.o; sourceTree = "<group>"; };
-		228B14E623A8210000FE5B43 /* Error.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Error.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/Error.cpp.o; sourceTree = "<group>"; };
-		228B14E723A8210000FE5B43 /* Reader.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Reader.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/Reader.cpp.o; sourceTree = "<group>"; };
-		228B14E823A8210000FE5B43 /* LinkingContext.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LinkingContext.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/LinkingContext.cpp.o; sourceTree = "<group>"; };
-		228B14E923A8210000FE5B43 /* DefinedAtom.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DefinedAtom.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/DefinedAtom.cpp.o; sourceTree = "<group>"; };
-		228B14EA23A8210000FE5B43 /* Resolver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Resolver.cpp.o; path = ../build_ios/tools/lld/lib/Core/CMakeFiles/lldCore.dir/Resolver.cpp.o; sourceTree = "<group>"; };
+		228B143123A8201F00FE5B43 /* lld.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = lld.cpp.o; path = ./tools/lld/tools/lld/CMakeFiles/lld.dir/lld.cpp.o; sourceTree = "<group>"; };
+		228B143323A8203300FE5B43 /* PDB.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = PDB.cpp.o; path = ./tools/lld/COFF/CMakeFiles/lldCOFF.dir/PDB.cpp.o; sourceTree = "<group>"; };
+		228B143423A8203300FE5B43 /* InputFiles.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = InputFiles.cpp.o; path = ./tools/lld/COFF/CMakeFiles/lldCOFF.dir/InputFiles.cpp.o; sourceTree = "<group>"; };
+		228B143523A8203300FE5B43 /* LTO.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LTO.cpp.o; path = ./tools/lld/COFF/CMakeFiles/lldCOFF.dir/LTO.cpp.o; sourceTree = "<group>"; };
+		228B143623A8203300FE5B43 /* DLL.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DLL.cpp.o; path = ./tools/lld/COFF/CMakeFiles/lldCOFF.dir/DLL.cpp.o; sourceTree = "<group>"; };
+		228B143723A8203300FE5B43 /* MinGW.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MinGW.cpp.o; path = ./tools/lld/COFF/CMakeFiles/lldCOFF.dir/MinGW.cpp.o; sourceTree = "<group>"; };
+		228B143823A8203300FE5B43 /* SymbolTable.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SymbolTable.cpp.o; path = ./tools/lld/COFF/CMakeFiles/lldCOFF.dir/SymbolTable.cpp.o; sourceTree = "<group>"; };
+		228B143923A8203300FE5B43 /* DebugTypes.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DebugTypes.cpp.o; path = ./tools/lld/COFF/CMakeFiles/lldCOFF.dir/DebugTypes.cpp.o; sourceTree = "<group>"; };
+		228B143A23A8203300FE5B43 /* ICF.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ICF.cpp.o; path = ./tools/lld/COFF/CMakeFiles/lldCOFF.dir/ICF.cpp.o; sourceTree = "<group>"; };
+		228B143B23A8203300FE5B43 /* DriverUtils.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DriverUtils.cpp.o; path = ./tools/lld/COFF/CMakeFiles/lldCOFF.dir/DriverUtils.cpp.o; sourceTree = "<group>"; };
+		228B143C23A8203300FE5B43 /* Symbols.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Symbols.cpp.o; path = ./tools/lld/COFF/CMakeFiles/lldCOFF.dir/Symbols.cpp.o; sourceTree = "<group>"; };
+		228B143D23A8203300FE5B43 /* Chunks.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Chunks.cpp.o; path = ./tools/lld/COFF/CMakeFiles/lldCOFF.dir/Chunks.cpp.o; sourceTree = "<group>"; };
+		228B143E23A8203300FE5B43 /* Driver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Driver.cpp.o; path = ./tools/lld/COFF/CMakeFiles/lldCOFF.dir/Driver.cpp.o; sourceTree = "<group>"; };
+		228B143F23A8203300FE5B43 /* MarkLive.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MarkLive.cpp.o; path = ./tools/lld/COFF/CMakeFiles/lldCOFF.dir/MarkLive.cpp.o; sourceTree = "<group>"; };
+		228B144023A8203300FE5B43 /* Writer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Writer.cpp.o; path = ./tools/lld/COFF/CMakeFiles/lldCOFF.dir/Writer.cpp.o; sourceTree = "<group>"; };
+		228B144123A8203300FE5B43 /* MapFile.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MapFile.cpp.o; path = ./tools/lld/COFF/CMakeFiles/lldCOFF.dir/MapFile.cpp.o; sourceTree = "<group>"; };
+		228B145123A8204A00FE5B43 /* Memory.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Memory.cpp.o; path = ./tools/lld/Common/CMakeFiles/lldCommon.dir/Memory.cpp.o; sourceTree = "<group>"; };
+		228B145223A8204A00FE5B43 /* Version.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Version.cpp.o; path = ./tools/lld/Common/CMakeFiles/lldCommon.dir/Version.cpp.o; sourceTree = "<group>"; };
+		228B145323A8204A00FE5B43 /* Strings.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Strings.cpp.o; path = ./tools/lld/Common/CMakeFiles/lldCommon.dir/Strings.cpp.o; sourceTree = "<group>"; };
+		228B145423A8204A00FE5B43 /* Timer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Timer.cpp.o; path = ./tools/lld/Common/CMakeFiles/lldCommon.dir/Timer.cpp.o; sourceTree = "<group>"; };
+		228B145523A8204A00FE5B43 /* Reproduce.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Reproduce.cpp.o; path = ./tools/lld/Common/CMakeFiles/lldCommon.dir/Reproduce.cpp.o; sourceTree = "<group>"; };
+		228B145623A8204A00FE5B43 /* TargetOptionsCommandFlags.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = TargetOptionsCommandFlags.cpp.o; path = ./tools/lld/Common/CMakeFiles/lldCommon.dir/TargetOptionsCommandFlags.cpp.o; sourceTree = "<group>"; };
+		228B145723A8204A00FE5B43 /* Filesystem.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Filesystem.cpp.o; path = ./tools/lld/Common/CMakeFiles/lldCommon.dir/Filesystem.cpp.o; sourceTree = "<group>"; };
+		228B145823A8204A00FE5B43 /* ErrorHandler.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ErrorHandler.cpp.o; path = ./tools/lld/Common/CMakeFiles/lldCommon.dir/ErrorHandler.cpp.o; sourceTree = "<group>"; };
+		228B145923A8204A00FE5B43 /* DWARF.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DWARF.cpp.o; path = ./tools/lld/Common/CMakeFiles/lldCommon.dir/DWARF.cpp.o; sourceTree = "<group>"; };
+		228B145A23A8204A00FE5B43 /* Args.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Args.cpp.o; path = ./tools/lld/Common/CMakeFiles/lldCommon.dir/Args.cpp.o; sourceTree = "<group>"; };
+		228B145B23A8204A00FE5B43 /* Threads.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Threads.cpp.o; path = ./tools/lld/Common/CMakeFiles/lldCommon.dir/Threads.cpp.o; sourceTree = "<group>"; };
+		228B146723A8206700FE5B43 /* Writer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Writer.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Writer.cpp.o; sourceTree = "<group>"; };
+		228B146823A8206700FE5B43 /* InputSection.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = InputSection.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/InputSection.cpp.o; sourceTree = "<group>"; };
+		228B146923A8206700FE5B43 /* DWARF.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DWARF.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/DWARF.cpp.o; sourceTree = "<group>"; };
+		228B146A23A8206700FE5B43 /* AArch64ErrataFix.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = AArch64ErrataFix.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/AArch64ErrataFix.cpp.o; sourceTree = "<group>"; };
+		228B146B23A8206800FE5B43 /* EhFrame.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = EhFrame.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/EhFrame.cpp.o; sourceTree = "<group>"; };
+		228B146C23A8206800FE5B43 /* Target.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Target.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Target.cpp.o; sourceTree = "<group>"; };
+		228B146D23A8206800FE5B43 /* DriverUtils.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DriverUtils.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/DriverUtils.cpp.o; sourceTree = "<group>"; };
+		228B146E23A8206800FE5B43 /* InputFiles.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = InputFiles.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/InputFiles.cpp.o; sourceTree = "<group>"; };
+		228B146F23A8206800FE5B43 /* Relocations.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Relocations.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Relocations.cpp.o; sourceTree = "<group>"; };
+		228B147023A8206800FE5B43 /* OutputSections.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = OutputSections.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/OutputSections.cpp.o; sourceTree = "<group>"; };
+		228B147123A8206800FE5B43 /* Driver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Driver.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Driver.cpp.o; sourceTree = "<group>"; };
+		228B147223A8206800FE5B43 /* ICF.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ICF.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/ICF.cpp.o; sourceTree = "<group>"; };
+		228B147323A8206800FE5B43 /* MarkLive.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MarkLive.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/MarkLive.cpp.o; sourceTree = "<group>"; };
+		228B147423A8206900FE5B43 /* ScriptParser.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ScriptParser.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/ScriptParser.cpp.o; sourceTree = "<group>"; };
+		228B147523A8206900FE5B43 /* CallGraphSort.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = CallGraphSort.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/CallGraphSort.cpp.o; sourceTree = "<group>"; };
+		228B147623A8206900FE5B43 /* LTO.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LTO.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/LTO.cpp.o; sourceTree = "<group>"; };
+		228B147723A8206900FE5B43 /* SyntheticSections.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SyntheticSections.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/SyntheticSections.cpp.o; sourceTree = "<group>"; };
+		228B147823A8206900FE5B43 /* Arch */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Arch; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Arch; sourceTree = "<group>"; };
+		228B147923A8206900FE5B43 /* ScriptLexer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ScriptLexer.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/ScriptLexer.cpp.o; sourceTree = "<group>"; };
+		228B147A23A8206900FE5B43 /* SymbolTable.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SymbolTable.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/SymbolTable.cpp.o; sourceTree = "<group>"; };
+		228B147B23A8206900FE5B43 /* MapFile.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MapFile.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/MapFile.cpp.o; sourceTree = "<group>"; };
+		228B147C23A8206900FE5B43 /* ARMErrataFix.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ARMErrataFix.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/ARMErrataFix.cpp.o; sourceTree = "<group>"; };
+		228B147D23A8206900FE5B43 /* Thunks.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Thunks.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Thunks.cpp.o; sourceTree = "<group>"; };
+		228B147E23A8206900FE5B43 /* Symbols.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Symbols.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Symbols.cpp.o; sourceTree = "<group>"; };
+		228B147F23A8206A00FE5B43 /* LinkerScript.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LinkerScript.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/LinkerScript.cpp.o; sourceTree = "<group>"; };
+		228B149923A8208100FE5B43 /* RISCV.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = RISCV.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/RISCV.cpp.o; sourceTree = "<group>"; };
+		228B149A23A8208100FE5B43 /* X86_64.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = X86_64.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/X86_64.cpp.o; sourceTree = "<group>"; };
+		228B149B23A8208100FE5B43 /* ARM.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ARM.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/ARM.cpp.o; sourceTree = "<group>"; };
+		228B149C23A8208100FE5B43 /* MipsArchTree.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MipsArchTree.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/MipsArchTree.cpp.o; sourceTree = "<group>"; };
+		228B149D23A8208100FE5B43 /* AArch64.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = AArch64.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/AArch64.cpp.o; sourceTree = "<group>"; };
+		228B149E23A8208100FE5B43 /* AMDGPU.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = AMDGPU.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/AMDGPU.cpp.o; sourceTree = "<group>"; };
+		228B149F23A8208100FE5B43 /* Hexagon.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Hexagon.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/Hexagon.cpp.o; sourceTree = "<group>"; };
+		228B14A023A8208100FE5B43 /* MSP430.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MSP430.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/MSP430.cpp.o; sourceTree = "<group>"; };
+		228B14A123A8208100FE5B43 /* PPC64.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = PPC64.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/PPC64.cpp.o; sourceTree = "<group>"; };
+		228B14A223A8208100FE5B43 /* PPC.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = PPC.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/PPC.cpp.o; sourceTree = "<group>"; };
+		228B14A323A8208100FE5B43 /* AVR.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = AVR.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/AVR.cpp.o; sourceTree = "<group>"; };
+		228B14A423A8208100FE5B43 /* SPARCV9.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SPARCV9.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/SPARCV9.cpp.o; sourceTree = "<group>"; };
+		228B14A523A8208100FE5B43 /* Mips.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Mips.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/Mips.cpp.o; sourceTree = "<group>"; };
+		228B14A623A8208100FE5B43 /* X86.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = X86.cpp.o; path = ./tools/lld/ELF/CMakeFiles/lldELF.dir/Arch/X86.cpp.o; sourceTree = "<group>"; };
+		228B14B523A8209F00FE5B43 /* Driver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Driver.cpp.o; path = ./tools/lld/MinGW/CMakeFiles/lldMinGW.dir/Driver.cpp.o; sourceTree = "<group>"; };
+		228B14B723A820D200FE5B43 /* CompactUnwindPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = CompactUnwindPass.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/CompactUnwindPass.cpp.o; sourceTree = "<group>"; };
+		228B14B823A820D200FE5B43 /* MachONormalizedFileFromAtoms.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachONormalizedFileFromAtoms.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachONormalizedFileFromAtoms.cpp.o; sourceTree = "<group>"; };
+		228B14B923A820D200FE5B43 /* MachONormalizedFileBinaryWriter.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachONormalizedFileBinaryWriter.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachONormalizedFileBinaryWriter.cpp.o; sourceTree = "<group>"; };
+		228B14BA23A820D200FE5B43 /* ArchHandler_arm64.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ArchHandler_arm64.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ArchHandler_arm64.cpp.o; sourceTree = "<group>"; };
+		228B14BB23A820D200FE5B43 /* ArchHandler_x86_64.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ArchHandler_x86_64.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ArchHandler_x86_64.cpp.o; sourceTree = "<group>"; };
+		228B14BC23A820D200FE5B43 /* MachOLinkingContext.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachOLinkingContext.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachOLinkingContext.cpp.o; sourceTree = "<group>"; };
+		228B14BD23A820D200FE5B43 /* StubsPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = StubsPass.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/StubsPass.cpp.o; sourceTree = "<group>"; };
+		228B14BE23A820D200FE5B43 /* MachONormalizedFileBinaryReader.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachONormalizedFileBinaryReader.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachONormalizedFileBinaryReader.cpp.o; sourceTree = "<group>"; };
+		228B14BF23A820D200FE5B43 /* GOTPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = GOTPass.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/GOTPass.cpp.o; sourceTree = "<group>"; };
+		228B14C023A820D200FE5B43 /* LayoutPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LayoutPass.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/LayoutPass.cpp.o; sourceTree = "<group>"; };
+		228B14C123A820D300FE5B43 /* ArchHandler_x86.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ArchHandler_x86.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ArchHandler_x86.cpp.o; sourceTree = "<group>"; };
+		228B14C223A820D300FE5B43 /* MachONormalizedFileToAtoms.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachONormalizedFileToAtoms.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachONormalizedFileToAtoms.cpp.o; sourceTree = "<group>"; };
+		228B14C323A820D300FE5B43 /* ArchHandler_arm.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ArchHandler_arm.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ArchHandler_arm.cpp.o; sourceTree = "<group>"; };
+		228B14C423A820D300FE5B43 /* TLVPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = TLVPass.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/TLVPass.cpp.o; sourceTree = "<group>"; };
+		228B14C523A820D300FE5B43 /* WriterMachO.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = WriterMachO.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/WriterMachO.cpp.o; sourceTree = "<group>"; };
+		228B14C623A820D300FE5B43 /* MachONormalizedFileYAML.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = MachONormalizedFileYAML.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/MachONormalizedFileYAML.cpp.o; sourceTree = "<group>"; };
+		228B14C723A820D300FE5B43 /* ArchHandler.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ArchHandler.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ArchHandler.cpp.o; sourceTree = "<group>"; };
+		228B14C823A820D300FE5B43 /* ObjCPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ObjCPass.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ObjCPass.cpp.o; sourceTree = "<group>"; };
+		228B14C923A820D300FE5B43 /* ShimPass.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ShimPass.cpp.o; path = ./tools/lld/lib/ReaderWriter/MachO/CMakeFiles/lldMachO.dir/ShimPass.cpp.o; sourceTree = "<group>"; };
+		228B14DD23A820E100FE5B43 /* ReaderWriterYAML.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = ReaderWriterYAML.cpp.o; path = ./tools/lld/lib/ReaderWriter/YAML/CMakeFiles/lldYAML.dir/ReaderWriterYAML.cpp.o; sourceTree = "<group>"; };
+		228B14DF23A820E900FE5B43 /* FileArchive.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = FileArchive.cpp.o; path = ./tools/lld/lib/ReaderWriter/CMakeFiles/lldReaderWriter.dir/FileArchive.cpp.o; sourceTree = "<group>"; };
+		228B14E123A820F700FE5B43 /* DarwinLdDriver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DarwinLdDriver.cpp.o; path = ./tools/lld/lib/Driver/CMakeFiles/lldDriver.dir/DarwinLdDriver.cpp.o; sourceTree = "<group>"; };
+		228B14E323A8210000FE5B43 /* File.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = File.cpp.o; path = ./tools/lld/lib/Core/CMakeFiles/lldCore.dir/File.cpp.o; sourceTree = "<group>"; };
+		228B14E423A8210000FE5B43 /* SymbolTable.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = SymbolTable.cpp.o; path = ./tools/lld/lib/Core/CMakeFiles/lldCore.dir/SymbolTable.cpp.o; sourceTree = "<group>"; };
+		228B14E523A8210000FE5B43 /* Writer.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Writer.cpp.o; path = ./tools/lld/lib/Core/CMakeFiles/lldCore.dir/Writer.cpp.o; sourceTree = "<group>"; };
+		228B14E623A8210000FE5B43 /* Error.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Error.cpp.o; path = ./tools/lld/lib/Core/CMakeFiles/lldCore.dir/Error.cpp.o; sourceTree = "<group>"; };
+		228B14E723A8210000FE5B43 /* Reader.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Reader.cpp.o; path = ./tools/lld/lib/Core/CMakeFiles/lldCore.dir/Reader.cpp.o; sourceTree = "<group>"; };
+		228B14E823A8210000FE5B43 /* LinkingContext.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = LinkingContext.cpp.o; path = ./tools/lld/lib/Core/CMakeFiles/lldCore.dir/LinkingContext.cpp.o; sourceTree = "<group>"; };
+		228B14E923A8210000FE5B43 /* DefinedAtom.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = DefinedAtom.cpp.o; path = ./tools/lld/lib/Core/CMakeFiles/lldCore.dir/DefinedAtom.cpp.o; sourceTree = "<group>"; };
+		228B14EA23A8210000FE5B43 /* Resolver.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = Resolver.cpp.o; path = ./tools/lld/lib/Core/CMakeFiles/lldCore.dir/Resolver.cpp.o; sourceTree = "<group>"; };
 		22C1D2E720A841E60093127F /* libobjc.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libobjc.tbd; path = usr/lib/libobjc.tbd; sourceTree = SDKROOT; };
+		22C1E8AB24BF70D500C57472 /* libLLVMX86AsmParser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMX86AsmParser.a; path = lib/libLLVMX86AsmParser.a; sourceTree = "<group>"; };
+		22C1E8AC24BF70D500C57472 /* libLLVMX86Desc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMX86Desc.a; path = lib/libLLVMX86Desc.a; sourceTree = "<group>"; };
+		22C1E8AD24BF70D500C57472 /* libLLVMX86Disassembler.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMX86Disassembler.a; path = lib/libLLVMX86Disassembler.a; sourceTree = "<group>"; };
+		22C1E8AE24BF70D500C57472 /* libLLVMX86Info.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMX86Info.a; path = lib/libLLVMX86Info.a; sourceTree = "<group>"; };
+		22C1E8AF24BF70D500C57472 /* libLLVMX86Utils.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMX86Utils.a; path = lib/libLLVMX86Utils.a; sourceTree = "<group>"; };
+		22C1E8B524BF715100C57472 /* libLLVMX86CodeGen.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMX86CodeGen.a; path = lib/libLLVMX86CodeGen.a; sourceTree = "<group>"; };
 		22C505BC209A3B5800FDDFA9 /* lli.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = lli.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		22C505C8209A3B8700FDDFA9 /* liblli.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblli.a; path = ../build_ios/lib/liblli.a; sourceTree = "<group>"; };
-		22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVM.dylib; path = ../build_ios/lib/libLLVM.dylib; sourceTree = "<group>"; };
+		22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLLVM.dylib; path = ./lib/libLLVM.dylib; sourceTree = "<group>"; };
 		22C505CC209A3CB500FDDFA9 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
-		22C505D0209A3CF700FDDFA9 /* ios_system.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ios_system.framework; path = "../../ios_system/build/Debug-iphoneos/ios_system.framework"; sourceTree = "<group>"; };
-		22F4B307238C8BD8002C1DD6 /* lli.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = lli.cpp.o; path = ../build_ios/tools/lli/CMakeFiles/lli.dir/lli.cpp.o; sourceTree = "<group>"; };
-		89058C31239E66D10094F4DE /* llc.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = llc.cpp.o; path = ../build_ios/tools/llc/CMakeFiles/llc.dir/llc.cpp.o; sourceTree = "<group>"; };
-		89058C34239E7EFB0094F4DE /* llc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = llc.h; sourceTree = "<group>"; };
-		89058C35239E7EFB0094F4DE /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		89DD5C5C239CDE3D00382F34 /* libLLVMWebAssemblyDesc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyDesc.a; path = ../build_ios/lib/libLLVMWebAssemblyDesc.a; sourceTree = "<group>"; };
-		89DD5C5D239CDE3D00382F34 /* libLLVMWebAssemblyAsmParser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyAsmParser.a; path = ../build_ios/lib/libLLVMWebAssemblyAsmParser.a; sourceTree = "<group>"; };
-		89DD5C5E239CDE3D00382F34 /* libLLVMWebAssemblyCodeGen.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyCodeGen.a; path = ../build_ios/lib/libLLVMWebAssemblyCodeGen.a; sourceTree = "<group>"; };
-		89DD5C5F239CDE3D00382F34 /* libLLVMWebAssemblyDisassembler.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyDisassembler.a; path = ../build_ios/lib/libLLVMWebAssemblyDisassembler.a; sourceTree = "<group>"; };
-		89DD5C60239CDE3D00382F34 /* libLLVMWebAssemblyInfo.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyInfo.a; path = ../build_ios/lib/libLLVMWebAssemblyInfo.a; sourceTree = "<group>"; };
+		22DCD8BA24B9121800203A0E /* ios_system.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ios_system.xcframework; path = "../../../../Library/Developer/Xcode/DerivedData/frameworks-dkazyipphcelboeacbkxrtvwuafd/SourcePackages/artifacts/ios_system/ios_system.xcframework"; sourceTree = "<group>"; };
+		22F4B307238C8BD8002C1DD6 /* lli.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = lli.cpp.o; path = ./tools/lli/CMakeFiles/lli.dir/lli.cpp.o; sourceTree = "<group>"; };
+		89058C31239E66D10094F4DE /* llc.cpp.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; name = llc.cpp.o; path = ./tools/llc/CMakeFiles/llc.dir/llc.cpp.o; sourceTree = "<group>"; };
+		89058C34239E7EFB0094F4DE /* llc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = llc.h; path = ../frameworks/llc/llc.h; sourceTree = SOURCE_ROOT; };
+		89058C35239E7EFB0094F4DE /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = llc/Info.plist; sourceTree = SOURCE_ROOT; };
+		89DD5C5C239CDE3D00382F34 /* libLLVMWebAssemblyDesc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyDesc.a; path = ./lib/libLLVMWebAssemblyDesc.a; sourceTree = "<group>"; };
+		89DD5C5D239CDE3D00382F34 /* libLLVMWebAssemblyAsmParser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyAsmParser.a; path = ./lib/libLLVMWebAssemblyAsmParser.a; sourceTree = "<group>"; };
+		89DD5C5E239CDE3D00382F34 /* libLLVMWebAssemblyCodeGen.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyCodeGen.a; path = ./lib/libLLVMWebAssemblyCodeGen.a; sourceTree = "<group>"; };
+		89DD5C5F239CDE3D00382F34 /* libLLVMWebAssemblyDisassembler.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyDisassembler.a; path = ./lib/libLLVMWebAssemblyDisassembler.a; sourceTree = "<group>"; };
+		89DD5C60239CDE3D00382F34 /* libLLVMWebAssemblyInfo.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libLLVMWebAssemblyInfo.a; path = ./lib/libLLVMWebAssemblyInfo.a; sourceTree = "<group>"; };
 		89DD5C73239D1A1D00382F34 /* llc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = llc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		2207FAAC244B916A00C28F86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2207FAAD244B916A00C28F86 /* libLLVM.framework in Frameworks */,
+				22608588244C3B4E00B88587 /* llvm-ar.cpp.o in Frameworks */,
+				2207FAAF244B916A00C28F86 /* libc++.tbd in Frameworks */,
+				22DCD8BE24B9127100203A0E /* ios_system.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22379382209B028600B15016 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				223794CF209B573A00B15016 /* libLLVM.framework in Frameworks */,
+				22C1E8AA24BF37BE00C57472 /* ios_system.xcframework in Frameworks */,
 				22720AB12386EC03005BEB9E /* libclangToolingSyntax.a in Frameworks */,
 				223793AD209B277E00B15016 /* libclang_tool.a in Frameworks */,
 				223793F4209B29B200B15016 /* libclangLex.a in Frameworks */,
@@ -552,7 +581,6 @@
 				223793CC209B293C00B15016 /* libclangFrontend.a in Frameworks */,
 				22720AAF2386EBF7005BEB9E /* libclangToolingInclusions.a in Frameworks */,
 				223793AE209B27FF00B15016 /* libc++.tbd in Frameworks */,
-				223793A6209B0B9B00B15016 /* ios_system.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -583,7 +611,7 @@
 				223794D2209B575100B15016 /* libLLVM.framework in Frameworks */,
 				2237941A209B4E6200B15016 /* llvm-dis.cpp.o in Frameworks */,
 				2237941C209B4EAE00B15016 /* libc++.tbd in Frameworks */,
-				2237941D209B4EC000B15016 /* ios_system.framework in Frameworks */,
+				22DCD8BD24B9126200203A0E /* ios_system.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -605,7 +633,7 @@
 				223794CD209B56AF00B15016 /* libcurses.tbd in Frameworks */,
 				223794CB209B568A00B15016 /* libz.tbd in Frameworks */,
 				223794C9209B566E00B15016 /* libxml2.tbd in Frameworks */,
-				223794C7209B565D00B15016 /* ios_system.framework in Frameworks */,
+				22DCD8BB24B9123500203A0E /* ios_system.xcframework in Frameworks */,
 				223794C6209B563C00B15016 /* libc++.tbd in Frameworks */,
 				22379488209B557A00B15016 /* libLLVMMCDisassembler.a in Frameworks */,
 				22379489209B557A00B15016 /* libLLVMBinaryFormat.a in Frameworks */,
@@ -675,6 +703,12 @@
 				89DD5C63239CDE7100382F34 /* libLLVMWebAssemblyDesc.a in Frameworks */,
 				89DD5C64239CDE7100382F34 /* libLLVMWebAssemblyDisassembler.a in Frameworks */,
 				89DD5C65239CDE7100382F34 /* libLLVMWebAssemblyInfo.a in Frameworks */,
+				22C1E8B624BF715100C57472 /* libLLVMX86CodeGen.a in Frameworks */,
+				22C1E8B024BF70D600C57472 /* libLLVMX86AsmParser.a in Frameworks */,
+				22C1E8B124BF70D600C57472 /* libLLVMX86Desc.a in Frameworks */,
+				22C1E8B224BF70D600C57472 /* libLLVMX86Disassembler.a in Frameworks */,
+				22C1E8B324BF70D600C57472 /* libLLVMX86Info.a in Frameworks */,
+				22C1E8B424BF70D600C57472 /* libLLVMX86Utils.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -684,6 +718,7 @@
 			files = (
 				228B143023A8200200FE5B43 /* libc++.tbd in Frameworks */,
 				228B13ED23A81EC700FE5B43 /* libLLVM.framework in Frameworks */,
+				22C1E8A924BEF21A00C57472 /* ios_system.xcframework in Frameworks */,
 				228B142323A81FA200FE5B43 /* LTO.cpp.o in Frameworks */,
 				228B142423A81FA200FE5B43 /* MarkLive.cpp.o in Frameworks */,
 				228B142523A81FA200FE5B43 /* WriterUtils.cpp.o in Frameworks */,
@@ -696,7 +731,6 @@
 				228B142C23A81FA300FE5B43 /* Driver.cpp.o in Frameworks */,
 				228B142D23A81FA300FE5B43 /* SymbolTable.cpp.o in Frameworks */,
 				228B142E23A81FA300FE5B43 /* SyntheticSections.cpp.o in Frameworks */,
-				228B140E23A81EC700FE5B43 /* ios_system.framework in Frameworks */,
 				228B14EB23A8210000FE5B43 /* File.cpp.o in Frameworks */,
 				228B14EC23A8210000FE5B43 /* SymbolTable.cpp.o in Frameworks */,
 				228B14ED23A8210000FE5B43 /* Writer.cpp.o in Frameworks */,
@@ -802,7 +836,7 @@
 			files = (
 				223794CE209B571000B15016 /* libLLVM.framework in Frameworks */,
 				22F4B308238C8BD8002C1DD6 /* lli.cpp.o in Frameworks */,
-				22C505D1209A3CF700FDDFA9 /* ios_system.framework in Frameworks */,
+				22DCD8BC24B9124900203A0E /* ios_system.xcframework in Frameworks */,
 				22C505CD209A3CB500FDDFA9 /* libc++.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -845,7 +879,7 @@
 				22379401209B2B8B00B15016 /* Info.plist */,
 			);
 			path = nm;
-			sourceTree = "<group>";
+			sourceTree = SOURCE_ROOT;
 		};
 		22379412209B4E3900B15016 /* dis */ = {
 			isa = PBXGroup;
@@ -877,6 +911,7 @@
 		22C505B2209A3B5800FDDFA9 = {
 			isa = PBXGroup;
 			children = (
+				2260858B244C3C7700B88587 /* ar.h */,
 				22379437209B51F200B15016 /* lli.h */,
 				89058C33239E7EFB0094F4DE /* llc */,
 				22379387209B028600B15016 /* clang */,
@@ -887,7 +922,6 @@
 				2237943F209B523500B15016 /* libLLVM */,
 				22C505BD209A3B5800FDDFA9 /* Products */,
 				22C505C7209A3B8700FDDFA9 /* Frameworks */,
-				228B141623A81ECE00FE5B43 /* clang copy-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -903,6 +937,7 @@
 				2237943E209B523500B15016 /* libLLVM.framework */,
 				89DD5C73239D1A1D00382F34 /* llc.framework */,
 				228B141523A81EC700FE5B43 /* lld.framework */,
+				2207FAB6244B916A00C28F86 /* ar.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -910,6 +945,14 @@
 		22C505C7209A3B8700FDDFA9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				22C1E8B524BF715100C57472 /* libLLVMX86CodeGen.a */,
+				22C1E8AB24BF70D500C57472 /* libLLVMX86AsmParser.a */,
+				22C1E8AC24BF70D500C57472 /* libLLVMX86Desc.a */,
+				22C1E8AD24BF70D500C57472 /* libLLVMX86Disassembler.a */,
+				22C1E8AE24BF70D500C57472 /* libLLVMX86Info.a */,
+				22C1E8AF24BF70D500C57472 /* libLLVMX86Utils.a */,
+				22DCD8BA24B9121800203A0E /* ios_system.xcframework */,
+				22608587244C3B4E00B88587 /* llvm-ar.cpp.o */,
 				228B14E923A8210000FE5B43 /* DefinedAtom.cpp.o */,
 				228B14E623A8210000FE5B43 /* Error.cpp.o */,
 				228B14E323A8210000FE5B43 /* File.cpp.o */,
@@ -1134,11 +1177,8 @@
 				223793AC209B277E00B15016 /* libclang_tool.a */,
 				223793A3209B093500B15016 /* libclang.dylib */,
 				2237939D209B048C00B15016 /* libopt.a */,
-				2237938E209B03BE00B15016 /* libclang.a */,
-				22C505D0209A3CF700FDDFA9 /* ios_system.framework */,
 				22C505CC209A3CB500FDDFA9 /* libc++.tbd */,
 				22C505CA209A3BF400FDDFA9 /* libLLVM.dylib */,
-				22C505C8209A3B8700FDDFA9 /* liblli.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1155,6 +1195,14 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		2207FAB0244B916A00C28F86 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2260858C244C3C7700B88587 /* ar.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22379383209B028600B15016 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -1230,6 +1278,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		2207FAAA244B916A00C28F86 /* ar */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2207FAB3244B916A00C28F86 /* Build configuration list for PBXNativeTarget "ar" */;
+			buildPhases = (
+				2207FAAB244B916A00C28F86 /* Sources */,
+				2207FAAC244B916A00C28F86 /* Frameworks */,
+				2207FAB0244B916A00C28F86 /* Headers */,
+				2207FAB2244B916A00C28F86 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ar;
+			productName = nm;
+			productReference = 2207FAB6244B916A00C28F86 /* ar.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		22379385209B028600B15016 /* clang */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2237938D209B028600B15016 /* Build configuration list for PBXNativeTarget "clang" */;
@@ -1334,6 +1400,8 @@
 			dependencies = (
 			);
 			name = libLLVM;
+			packageProductDependencies = (
+			);
 			productName = libLLVM;
 			productReference = 2237943E209B523500B15016 /* libLLVM.framework */;
 			productType = "com.apple.product-type.framework";
@@ -1401,6 +1469,9 @@
 				LastUpgradeCheck = 0940;
 				ORGANIZATIONNAME = "Nicolas Holzschuch";
 				TargetAttributes = {
+					2207FAAA244B916A00C28F86 = {
+						ProvisioningStyle = Automatic;
+					};
 					22379385209B028600B15016 = {
 						CreatedOnToolsVersion = 9.4;
 						ProvisioningStyle = Automatic;
@@ -1445,6 +1516,9 @@
 				en,
 			);
 			mainGroup = 22C505B2209A3B5800FDDFA9;
+			packageReferences = (
+				22DCD8B724B9120300203A0E /* XCRemoteSwiftPackageReference "ios_system" */,
+			);
 			productRefGroup = 22C505BD209A3B5800FDDFA9 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -1458,11 +1532,19 @@
 				22379424209B4F2300B15016 /* link */,
 				89DD5C66239D1A1D00382F34 /* llc */,
 				228B13EA23A81EC700FE5B43 /* lld */,
+				2207FAAA244B916A00C28F86 /* ar */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		2207FAB2244B916A00C28F86 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22379384209B028600B15016 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1529,6 +1611,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		2207FAAB244B916A00C28F86 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		22379381209B028600B15016 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1595,6 +1684,60 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		2207FAB4244B916A00C28F86 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = ../frameworks/ar/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				OTHER_LDFLAGS = "-all_load";
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.ar";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		2207FAB5244B916A00C28F86 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = VG8Z23C8YL;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = ../frameworks/ar/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				OTHER_LDFLAGS = "-all_load";
+				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.ar";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		2237938B209B028600B15016 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1606,16 +1749,18 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = clang/Info.plist;
+				INFOPLIST_FILE = ../frameworks/clang/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				OTHER_LDFLAGS = (
 					"-L",
-					../build_ios/lib/,
+					"../build${EFFECTIVE_PLATFORM_NAME}/lib",
 					"-all_load",
-					"-F",
-					"../../ios_system/build/Release-iphoneos/",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.clang";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -1636,16 +1781,18 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = clang/Info.plist;
+				INFOPLIST_FILE = ../frameworks/clang/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				OTHER_LDFLAGS = (
 					"-L",
-					../build_ios/lib/,
+					"../build${EFFECTIVE_PLATFORM_NAME}/lib",
 					"-all_load",
-					"-F",
-					"../../ios_system/build/Release-iphoneos/",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.clang";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -1665,14 +1812,18 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = opt/Info.plist;
+				INFOPLIST_FILE = ../frameworks/opt/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-L",
-					../build_ios/lib/,
+					"../build${EFFECTIVE_PLATFORM_NAME}/lib",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.opt";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -1692,14 +1843,18 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = opt/Info.plist;
+				INFOPLIST_FILE = ../frameworks/opt/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-L",
-					../build_ios/lib/,
+					"../build${EFFECTIVE_PLATFORM_NAME}/lib",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.opt";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -1719,10 +1874,15 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = nm/Info.plist;
+				INFOPLIST_FILE = ../frameworks/nm/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				OTHER_LDFLAGS = "-all_load";
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.nm";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1741,10 +1901,15 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = nm/Info.plist;
+				INFOPLIST_FILE = ../frameworks/nm/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				OTHER_LDFLAGS = "-all_load";
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.nm";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1763,10 +1928,15 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = dis/Info.plist;
+				INFOPLIST_FILE = ../frameworks/dis/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				OTHER_LDFLAGS = "-all_load";
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.dis";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1785,10 +1955,15 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = dis/Info.plist;
+				INFOPLIST_FILE = ../frameworks/dis/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				OTHER_LDFLAGS = "-all_load";
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.dis";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1806,10 +1981,15 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = link/Info.plist;
+				INFOPLIST_FILE = ../frameworks/link/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				OTHER_LDFLAGS = "-all_load";
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.link";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1827,10 +2007,15 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = link/Info.plist;
+				INFOPLIST_FILE = ../frameworks/link/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				OTHER_LDFLAGS = "-all_load";
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.link";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1848,18 +2033,24 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = libLLVM/Info.plist;
+				INFOPLIST_FILE = ../frameworks/libLLVM/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/lib",
+				);
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-L",
-					../build_ios/lib,
-					"-F",
-					"../../ios_system/build/Release-iphoneos/",
+					"../build${EFFECTIVE_PLATFORM_NAME}/lib",
 					"-L",
-					"../libffi-3.2.1/build/Debug-iphoneos/",
+					"../libffi/build/Debug${EFFECTIVE_PLATFORM_NAME}",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.libLLVM";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -1878,18 +2069,24 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = libLLVM/Info.plist;
+				INFOPLIST_FILE = ../frameworks/libLLVM/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/lib",
+				);
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-L",
-					../build_ios/lib,
-					"-F",
-					"../../ios_system/build/Release-iphoneos/",
+					"../build${EFFECTIVE_PLATFORM_NAME}/lib",
 					"-L",
-					"../libffi-3.2.1/build/Debug-iphoneos/",
+					"../libffi/build/Debug${EFFECTIVE_PLATFORM_NAME}",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.libLLVM";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -1909,16 +2106,18 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = "lld-Info.plist";
+				INFOPLIST_FILE = "../frameworks/lld-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				OTHER_LDFLAGS = (
 					"-L",
-					../build_ios/lib/,
+					"../build${EFFECTIVE_PLATFORM_NAME}/lib",
 					"-all_load",
-					"-F",
-					"../../ios_system/build/Release-iphoneos/",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.lld";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1939,16 +2138,18 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = "lld-Info.plist";
+				INFOPLIST_FILE = "../frameworks/lld-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				OTHER_LDFLAGS = (
 					"-L",
-					../build_ios/lib/,
+					"../build${EFFECTIVE_PLATFORM_NAME}/lib",
 					"-all_load",
-					"-F",
-					"../../ios_system/build/Release-iphoneos/",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.lld";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2013,11 +2214,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"-all_load",
-					"-F",
-					"../../ios_system/build/Release-iphoneos/",
-				);
+				OTHER_LDFLAGS = "-all_load";
 				SDKROOT = iphoneos;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -2073,11 +2270,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = (
-					"-all_load",
-					"-F",
-					"../../ios_system/build/Release-iphoneos/",
-				);
+				OTHER_LDFLAGS = "-all_load";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -2096,16 +2289,18 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = frameworks/Info.plist;
+				INFOPLIST_FILE = ../frameworks/frameworks/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-L",
-					../build_ios/lib/,
-					"-F",
-					"../../ios_system/build/Release-iphoneos/",
+					"../build${EFFECTIVE_PLATFORM_NAME}/lib",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.lli";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -2125,16 +2320,18 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = frameworks/Info.plist;
+				INFOPLIST_FILE = ../frameworks/frameworks/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-L",
-					../build_ios/lib/,
-					"-F",
-					"../../ios_system/build/Release-iphoneos/",
+					"../build${EFFECTIVE_PLATFORM_NAME}/lib",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.lli";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -2154,16 +2351,18 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = "$(SRCROOT)/llc/Info.plist";
+				INFOPLIST_FILE = ../frameworks/llc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-L",
-					../build_ios/lib/,
-					"-F",
-					"../../ios_system/build/Release-iphoneos/",
+					"../build${EFFECTIVE_PLATFORM_NAME}/lib",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.llc";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2183,16 +2382,18 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = "$(SRCROOT)/llc/Info.plist";
+				INFOPLIST_FILE = ../frameworks/llc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-L",
-					../build_ios/lib/,
-					"-F",
-					"../../ios_system/build/Release-iphoneos/",
+					"../build${EFFECTIVE_PLATFORM_NAME}/lib",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "Nicolas-Holzschuch.llc";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2204,6 +2405,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		2207FAB3244B916A00C28F86 /* Build configuration list for PBXNativeTarget "ar" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2207FAB4244B916A00C28F86 /* Debug */,
+				2207FAB5244B916A00C28F86 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		2237938D209B028600B15016 /* Build configuration list for PBXNativeTarget "clang" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -2295,6 +2505,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		22DCD8B724B9120300203A0E /* XCRemoteSwiftPackageReference "ios_system" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/holzschu/ios_system.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = 22C505B3209A3B5800FDDFA9 /* Project object */;
 }
