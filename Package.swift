@@ -3,9 +3,9 @@
 import PackageDescription
 
 let package = Package(
-    name: "Python-aux",
+    name: "llvm",
     products: [
-        .library(name: "Python-aux", targets: ["ar", "lld", "llc", "clang", "dis", "libLLVM", "link", "lli", "nm", "opt"])
+        .library(name: "llvm", targets: ["ar", "lld", "llc", "clang", "dis", "libLLVM", "link", "lli", "nm", "opt"])
     ],
     dependencies: [
     ],
