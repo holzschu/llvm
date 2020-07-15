@@ -19,7 +19,7 @@ let package = Package(
             name: "lld",
             url: "https://github.com/holzschu/llvm/releases/download/1.0/lld.xcframework.zip",
             checksum: "c510fba90f82a6f7978b66be2090c07344c32807afe207830aee19badaddee66"
-        )
+        ),
         .binaryTarget(
             name: "llc",
             url: "https://github.com/holzschu/llvm/releases/download/1.0/llc.xcframework.zip",
