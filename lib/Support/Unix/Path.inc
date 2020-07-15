@@ -177,8 +177,8 @@ std::string getMainExecutable(const char *argv0, void *MainAddr) {
 char exe_path[MAXPATHLEN];
 #if TARGET_OS_IPHONE || TARGET_OS_SIMULATOR
   // On iOS, we can't get the actual executable path (because of ios_system)
-  // We pretend it's in $APPDIR/usr/bin
-  sprintf(exe_path, "%s/usr/bin/%s", ::getenv("APPDIR"), argv0);
+  // We pretend it's in $HOME/Library/usr/bin
+  sprintf(exe_path, "%s/Library/usr/bin/%s", ::getenv("HOME"), argv0);
   return exe_path;
 #endif
   // On OS X the executable path is saved to the stack by dyld. Reading it

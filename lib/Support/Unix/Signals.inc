@@ -77,6 +77,10 @@
 #endif
 #endif
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 using namespace llvm;
 
 static RETSIGTYPE SignalHandler(int Sig);  // defined below.
@@ -212,7 +216,13 @@ static StringRef Argv0;
 /// if there is, it's not our direct responsibility. For whatever reason, our
 /// continued execution is no longer desirable.
 static const int IntSigs[] = {
+#if !TARGET_OS_IPHONE
   SIGHUP, SIGINT, SIGPIPE, SIGTERM, SIGUSR2
+#else 
+	// leave SIGUSR2 alone when running on iPhone (we need it for Python)
+	// This is not perfect, but signals and threads is a difficult combination.
+  SIGHUP, SIGINT, SIGPIPE, SIGTERM
+#endif
 };
 
 /// Signals that represent that we have a bug, and our prompt termination has

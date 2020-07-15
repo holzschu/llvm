@@ -91,4 +91,21 @@ void llvm::llvm_shutdown() {
 
   while (StaticList)
     StaticList->destroy();
+#if TARGET_OS_IPHONE
+  // Reset signal handler(s) (except SIGUSR2, reserved by Python):
+  (void)signal(SIGUSR1, SIG_DFL);
+  (void)signal(SIGHUP, SIG_DFL);
+  (void)signal(SIGINT, SIG_DFL);
+  (void)signal(SIGPIPE, SIG_DFL);
+  (void)signal(SIGTERM, SIG_DFL);
+  (void)signal(SIGILL, SIG_DFL);
+  (void)signal(SIGTRAP, SIG_DFL);
+  (void)signal(SIGABRT, SIG_DFL);
+  (void)signal(SIGFPE, SIG_DFL);
+  (void)signal(SIGBUS, SIG_DFL);
+  (void)signal(SIGSEGV, SIG_DFL);
+  (void)signal(SIGQUIT, SIG_DFL);
+  (void)signal(SIGINFO, SIG_DFL);
+#endif
 }
+
