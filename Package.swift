@@ -59,7 +59,7 @@ let package = Package(
             name: "opt",
             url: "https://github.com/holzschu/llvm/releases/download/1.0/opt.xcframework.zip",
             checksum: "910b87ba09daab59ad078d042467c3c71a9bf8bdedd2caca0d1400f3c99f8e90"
-        ),
+        )
     ]
 )
 
