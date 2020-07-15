@@ -1,0 +1,29 @@
+diff -Naurbw libffi/libffi.xcodeproj/project.pbxproj libffi_patched/libffi.xcodeproj/project.pbxproj
+--- libffi/libffi.xcodeproj/project.pbxproj	2020-07-10 18:54:35.000000000 +0200
++++ libffi_patched/libffi.xcodeproj/project.pbxproj	2020-07-10 18:57:12.000000000 +0200
+@@ -433,6 +433,7 @@
+ 			developmentRegion = English;
+ 			hasScannedForEncodings = 0;
+ 			knownRegions = (
++				English,
+ 				en,
+ 			);
+ 			mainGroup = DB13B15B1849DEB70010F42D;
+@@ -662,7 +663,7 @@
+ 					"$(inherited)",
+ 					darwin_ios/include,
+ 				);
+-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
++				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+ 				PRODUCT_NAME = ffi;
+ 				SDKROOT = iphoneos;
+ 				SKIP_INSTALL = YES;
+@@ -695,7 +696,7 @@
+ 					"$(inherited)",
+ 					darwin_ios/include,
+ 				);
+-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
++				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+ 				PRODUCT_NAME = ffi;
+ 				SDKROOT = iphoneos;
+ 				SKIP_INSTALL = YES;

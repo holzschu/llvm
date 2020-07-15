@@ -10,3 +10,6 @@
 [submodule "tools/lld"]
 	path = tools/lld
 	url = https://github.com/holzschu/lld.git
+[submodule "libffi"]
+	path = libffi
+	url = https://github.com/libffi/libffi.git
