@@ -19,6 +19,8 @@ suggestions.
 iOS version specific information
 ================================
 
+** This repository is now archived. Please move to https://github.com/holzschu/llvm-project for an up-to-date version of LLVM for iOS **
+
 This is a very experimental port. It's is designed to work inside ios_system
 (https://github.com/holzschu/ios_system), which itself is supposed to be 
 embedded inside shell applications such as OpenTerm or Blink:
